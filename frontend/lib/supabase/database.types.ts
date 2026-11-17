@@ -171,6 +171,7 @@ export type Database = {
           listing_id: string
           order_id: string
           quantity_allocated: number
+          status: string
         }
         Insert: {
           agreed_unit_price: number
@@ -179,6 +180,7 @@ export type Database = {
           listing_id: string
           order_id: string
           quantity_allocated: number
+          status?: string
         }
         Update: {
           agreed_unit_price?: number
@@ -187,6 +189,7 @@ export type Database = {
           listing_id?: string
           order_id?: string
           quantity_allocated?: number
+          status?: string
         }
         Relationships: [
           {
@@ -551,6 +554,31 @@ export type Database = {
       current_role_name: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      fulfill_order_allocation: {
+        Args: { p_allocation_id: string }
+        Returns: {
+          buyer_id: string
+          collection_method: string | null
+          collection_point: string | null
+          collection_window_end: string | null
+          collection_window_start: string | null
+          created_at: string
+          currency: string
+          id: string
+          listing_id: string | null
+          quantity_agreed: number
+          status: Database["public"]["Enums"]["order_status"]
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       reject_buyer_request: {
         Args: { p_request_id: string }
