@@ -1,0 +1,171 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { AppNav } from "@/components/app-nav";
+import { createClient } from "@/lib/supabase/server";
+import { BarChart3, Info, MapPin, Sprout } from "lucide-react";
+
+type ListingSignal = {
+  produce_name: string;
+  category: string;
+  quantity_available: number | string;
+  reserved_quantity: number | string;
+  quantity_sold: number | string;
+  unit: string;
+  asking_price: number | string;
+  price_unit: string;
+  locality: string;
+  available_from: string;
+};
+
+type CropGroup = {
+  key: string;
+  name: string;
+  category: string;
+  unit: string;
+  priceUnit: string;
+  listings: number;
+  available: number;
+  averagePrice: number;
+  lowestPrice: number;
+  highestPrice: number;
+  localities: Set<string>;
+};
+
+const money = (value: number) =>
+  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 2 }).format(value);
+
+const quantity = (value: number) =>
+  new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 1 }).format(value);
+
+export default async function MarketInsightsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // Only active, buyer-visible listings are used. RLS remains the access boundary.
+  const { data, error } = await supabase
+    .from("produce_listings")
+    .select("produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,price_unit,locality,available_from")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  const groups = new Map<string, CropGroup>();
+  for (const row of (data ?? []) as ListingSignal[]) {
+    const key = [row.produce_name.trim().toLocaleLowerCase(), row.unit, row.price_unit].join("|");
+    const available = Math.max(
+      0,
+      Number(row.quantity_available) - Number(row.reserved_quantity) - Number(row.quantity_sold),
+    );
+    if (available <= 0) continue;
+
+    const current = groups.get(key);
+    if (current) {
+      current.listings += 1;
+      current.available += available;
+      current.averagePrice += Number(row.asking_price);
+      current.lowestPrice = Math.min(current.lowestPrice, Number(row.asking_price));
+      current.highestPrice = Math.max(current.highestPrice, Number(row.asking_price));
+      current.localities.add(row.locality);
+    } else {
+      groups.set(key, {
+        key,
+        name: row.produce_name,
+        category: row.category,
+        unit: row.unit,
+        priceUnit: row.price_unit,
+        listings: 1,
+        available,
+        averagePrice: Number(row.asking_price),
+        lowestPrice: Number(row.asking_price),
+        highestPrice: Number(row.asking_price),
+        localities: new Set([row.locality]),
+      });
+    }
+  }
+
+  const signals = [...groups.values()]
+    .map((group) => ({ ...group, averagePrice: group.averagePrice / group.listings }))
+    .sort((a, b) => b.listings - a.listings || b.available - a.available);
+
+  const totalListings = signals.reduce((sum, item) => sum + item.listings, 0);
+  const localities = new Set(signals.flatMap((item) => [...item.localities]));
+
+  return (
+    <main className="min-h-screen bg-[#f7faf7]">
+      <AppNav active="insights" />
+      <section className="bg-forest text-white">
+        <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-emerald-200">
+            <BarChart3 size={15} /> AgriConnect market intelligence
+          </p>
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">See what is being offered nearby</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/85">
+            A live snapshot of active AgriConnect produce listings, seller asking prices and available supply.
+            Use it as one input when planning what to list or source.
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-5 py-8">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
+            <p className="text-sm text-slate-500">Active listings represented</p>
+            <p className="mt-2 text-3xl font-bold text-forest">{totalListings}</p>
+          </article>
+          <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
+            <p className="text-sm text-slate-500">Produce groups</p>
+            <p className="mt-2 text-3xl font-bold text-forest">{signals.length}</p>
+          </article>
+          <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
+            <p className="text-sm text-slate-500">Localities represented</p>
+            <p className="mt-2 text-3xl font-bold text-forest">{localities.size}</p>
+          </article>
+        </div>
+
+        {error ? (
+          <div role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+            Market insights could not be loaded. Please try again later.
+          </div>
+        ) : signals.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-emerald-900/20 bg-white p-10 text-center">
+            <Sprout size={30} className="mx-auto text-leaf" />
+            <h2 className="mt-3 font-bold text-forest">No active supply data yet</h2>
+            <p className="mt-2 text-sm text-slate-500">Once farmers publish available produce, this page will summarise the listings.</p>
+            <Link href="/marketplace" className="mt-4 inline-block text-sm font-bold text-leaf">Browse marketplace</Link>
+          </div>
+        ) : (
+          <div className="mt-6 overflow-hidden rounded-2xl border border-emerald-900/10 bg-white">
+            <div className="border-b border-slate-100 px-5 py-4">
+              <h2 className="font-bold text-forest">Produce supply and asking-price snapshot</h2>
+              <p className="mt-1 text-xs text-slate-500">Groups are kept separate by quantity unit and price unit so unlike measures are not combined.</p>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {signals.map((item) => (
+                <article key={item.key} className="grid gap-3 px-5 py-5 sm:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))] sm:items-center">
+                  <div>
+                    <p className="text-xs font-semibold text-leaf">{item.category}</p>
+                    <h3 className="mt-1 font-bold text-forest">{item.name}</h3>
+                    <p className="mt-1 flex items-center gap-1 text-xs text-slate-500"><MapPin size={12} /> {item.localities.size} locality{item.localities.size === 1 ? "" : "ies"}</p>
+                  </div>
+                  <div><p className="text-xs text-slate-500">Available supply</p><p className="mt-1 font-semibold text-forest">{quantity(item.available)} {item.unit}</p></div>
+                  <div><p className="text-xs text-slate-500">Average asking price</p><p className="mt-1 font-semibold text-forest">{money(item.averagePrice)} / {item.priceUnit}</p><p className="text-[11px] text-slate-400">Range {money(item.lowestPrice)}–{money(item.highestPrice)}</p></div>
+                  <div><p className="text-xs text-slate-500">Active listings</p><p className="mt-1 font-semibold text-forest">{item.listings}</p></div>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
+          <Info size={17} className="mt-0.5 shrink-0" />
+          <p>
+            This is a snapshot of farmer-provided asking prices and listed supply on AgriConnect, not verified sale prices,
+            wholesale market prices, buyer demand, crop suitability or a yield forecast. Listings may be incomplete or unverified.
+            Confirm price, quality and collection terms directly before making a decision.
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
