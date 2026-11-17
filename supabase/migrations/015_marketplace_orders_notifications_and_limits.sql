@@ -11,7 +11,7 @@ create table if not exists public.listing_private_details(
  updated_at timestamptz not null default now()
 );
 insert into public.listing_private_details(listing_id,farmer_id,contact_phone,fulfilment_details)
-select l.id,l.farmer_id,coalesce(p.phone_e164,'Contact via AgricNorthX'),'Agree collection or delivery details directly with the farmer.'
+select l.id,l.farmer_id,coalesce(nullif(p.phone_e164,''),'Contact via AgricNorthX'),'Agree collection or delivery details directly with the farmer.'
 from public.produce_listings l join public.profiles p on p.id=l.farmer_id
 on conflict(listing_id) do nothing;
 alter table public.listing_private_details enable row level security;
@@ -29,7 +29,7 @@ alter table public.buyer_requests add column if not exists contact_number text;
 alter table public.buyer_requests add column if not exists fulfilment_preference text;
 alter table public.buyer_requests add column if not exists delivery_location text;
 alter table public.buyer_requests add column if not exists order_instructions text;
-update public.buyer_requests r set buyer_name=coalesce(nullif(r.buyer_name,''),p.display_name,'Buyer'),contact_number=coalesce(nullif(r.contact_number,''),p.phone_e164,'Not provided'),fulfilment_preference=coalesce(r.fulfilment_preference,'collection'),delivery_location=coalesce(r.delivery_location,'') from public.profiles p where p.id=r.buyer_id;
+update public.buyer_requests r set buyer_name=coalesce(nullif(r.buyer_name,''),p.display_name,'Buyer'),contact_number=coalesce(nullif(r.contact_number,''),nullif(p.phone_e164,''),'Not provided'),fulfilment_preference=coalesce(r.fulfilment_preference,'collection'),delivery_location=coalesce(r.delivery_location,'') from public.profiles p where p.id=r.buyer_id;
 alter table public.buyer_requests alter column buyer_name set not null;
 alter table public.buyer_requests alter column contact_number set not null;
 alter table public.buyer_requests alter column fulfilment_preference set not null;
@@ -45,7 +45,7 @@ alter table public.orders add column if not exists delivery_location text;
 alter table public.orders add column if not exists order_instructions text;
 alter table public.orders add column if not exists buyer_request_id uuid references public.buyer_requests(id);
 create unique index if not exists orders_buyer_request_unique on public.orders(buyer_request_id) where buyer_request_id is not null;
-update public.orders o set buyer_name=coalesce(o.buyer_name,p.display_name,'Buyer'),buyer_contact_number=coalesce(o.buyer_contact_number,p.phone_e164,'Not provided'),fulfilment_preference=coalesce(o.fulfilment_preference,case when lower(coalesce(o.collection_method,''))='delivery' then 'delivery' else 'collection' end),delivery_location=coalesce(o.delivery_location,o.collection_point,'') from public.profiles p where p.id=o.buyer_id;
+update public.orders o set buyer_name=coalesce(o.buyer_name,p.display_name,'Buyer'),buyer_contact_number=coalesce(o.buyer_contact_number,nullif(p.phone_e164,''),'Not provided'),fulfilment_preference=coalesce(o.fulfilment_preference,case when lower(coalesce(o.collection_method,''))='delivery' then 'delivery' else 'collection' end),delivery_location=coalesce(o.delivery_location,o.collection_point,'') from public.profiles p where p.id=o.buyer_id;
 alter table public.orders alter column buyer_name set not null;
 alter table public.orders alter column buyer_contact_number set not null;
 alter table public.orders alter column fulfilment_preference set not null;
