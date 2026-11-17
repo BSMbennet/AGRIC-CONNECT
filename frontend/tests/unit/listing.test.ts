@@ -17,11 +17,19 @@ const validListing = {
   locality: "Thohoyandou",
   municipality: "Thulamela",
   district: "Vhembe",
+  contact_phone: "+27 82 123 4567",
+  fulfilment_details: "Collection at Thohoyandou market by arrangement.",
 };
 
 describe("listingSchema", () => {
   it("accepts a valid Vhembe produce listing", () => {
     expect(listingSchema.safeParse(validListing).success).toBe(true);
+  });
+
+  it("requires harvest date, contact and fulfilment details", () => {
+    expect(listingSchema.safeParse({ ...validListing, harvest_date: "" }).success).toBe(false);
+    expect(listingSchema.safeParse({ ...validListing, contact_phone: "" }).success).toBe(false);
+    expect(listingSchema.safeParse({ ...validListing, fulfilment_details: "" }).success).toBe(false);
   });
 
   it("rejects zero and negative quantities", () => {
