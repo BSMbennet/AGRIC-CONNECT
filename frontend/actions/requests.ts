@@ -6,7 +6,7 @@ import {z} from "zod";
 import {createClient} from "@/lib/supabase/server";
 const requestSchema=z.object({
  listing_id:z.string().uuid(),quantity_requested:z.coerce.number().positive(),
- proposed_price:z.union([z.coerce.number().min(0),z.literal("")]).optional(),
+ proposed_price:z.preprocess(v=>v===""||v==null?undefined:v,z.coerce.number().min(0).optional()),
  message:z.string().trim().max(500).optional(),
  buyer_name:z.string().trim().min(2).max(120),contact_number:z.string().trim().min(7).max(30),
  fulfilment_preference:z.enum(["delivery","collection"]),delivery_location:z.string().trim().max(300).optional(),
@@ -31,7 +31,7 @@ export async function createBuyerRequest(formData:FormData){
  if(parsed.data.quantity_requested>available)redirect("/marketplace/"+parsed.data.listing_id+"?error=quantity");
  const {error}=await supabase.from("buyer_requests").insert({
   listing_id:parsed.data.listing_id,buyer_id:user.id,quantity_requested:parsed.data.quantity_requested,
-  proposed_price:parsed.data.proposed_price===""?null:parsed.data.proposed_price,message:parsed.data.message||null,
+  proposed_price:parsed.data.proposed_price??null,message:parsed.data.message||null,
   buyer_name:parsed.data.buyer_name,contact_number:parsed.data.contact_number,
   fulfilment_preference:parsed.data.fulfilment_preference,
   delivery_location:parsed.data.fulfilment_preference==="delivery"?parsed.data.delivery_location:null,
