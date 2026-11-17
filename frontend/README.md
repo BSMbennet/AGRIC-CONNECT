@@ -1,4 +1,4 @@
-# AgriConnect frontend
+# AgricNorthX frontend
 
 This folder is the standalone Next.js application and the Vercel deployment root.
 

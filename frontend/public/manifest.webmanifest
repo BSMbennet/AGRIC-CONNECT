@@ -1,7 +1,7 @@
 {
-  "name": "AgriConnect",
-  "short_name": "AgriConnect",
-  "description": "A local produce marketplace for smallholder farmers.",
+  "name": "AgricNorthX",
+  "short_name": "AgricNorthX",
+  "description": "A local farmer-to-buyer marketplace and farm planning tool.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

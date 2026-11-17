@@ -1,6 +1,6 @@
-# AGRIC-CONNECT
+# AgricNorthX
 
-AgriConnect is a farmer-to-buyer marketplace for smallholder farmers and cooperatives, piloting in Vhembe District, Limpopo, South Africa.
+AgricNorthX is a farmer-to-buyer and smart farming decision-support platform for smallholder farmers and cooperatives, piloting in Vhembe District, Limpopo, South Africa.
 
 ## Repository layout
 
@@ -12,13 +12,19 @@ AgriConnect is a farmer-to-buyer marketplace for smallholder farmers and coopera
 
 ## Product capabilities
 
-- **Market Insights** (`/market-insights`) summarises active produce listings, available supply and farmer-provided asking-price ranges using existing Supabase access controls. It is a market snapshot, not verified sale-price or demand data.
-- **Smart farming roadmap:** see [`docs/SMART_FARMING_ROADMAP.md`](docs/SMART_FARMING_ROADMAP.md) for the staged plan covering weather-aware planning, GIS, indigenous knowledge governance and sustainable monetisation.
+- **Farmer-to-buyer marketplace:** assisted onboarding, produce listings, buyer requests, stock reservation and cooperative aggregation.
+- **Offline capture:** agent-assisted farmer onboarding and listing drafts for low-connectivity settings.
+- **Market Insights** (`/market-insights`): active listed supply and farmer-provided asking-price ranges; not verified sale prices or buyer demand.
+- **Farm Weather Planner** (`/weather`): locality-selected seven-day forecast with temperature, rainfall, precipitation probability and reference ET₀. It is forecast context, not field soil-moisture measurement or an irrigation prescription.
+- **Pricing guide** (`/pricing`): cost-based price planning and comparisons with active AgricNorthX asking prices.
+- **Indigenous knowledge library** (`/knowledge`): consented, attributed public community contributions.
+
+See [the smart farming integration and monetisation roadmap](docs/SMART_FARMING_ROADMAP.md).
 
 ## Platform architecture
 
 - **GitHub:** source control, pull requests and CI.
-- **Vercel:** deploys the Next.js web application from `frontend/`.
+- **Vercel:** Next.js web application from `frontend/`.
 - **Supabase:** PostgreSQL, Auth, Storage, row-level security and transactional marketplace operations.
 - **Render:** optional integration service and background worker for notifications and provider webhooks.
 

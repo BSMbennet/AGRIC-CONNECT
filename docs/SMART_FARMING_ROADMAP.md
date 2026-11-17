@@ -1,103 +1,96 @@
-# AgriConnect + Venda Smart Farming: Integration Plan
+# AgricNorthX — Smart Farming and Commercial Roadmap
 
 ## Product decision
 
-Keep AgriConnect as the core farmer-to-buyer and cooperative fulfilment platform. Integrate the Venda Smart Farming concept as a staged decision-support layer; do not fork the product or replace the current Next.js, Supabase and Vercel architecture.
+Keep the existing Next.js, Supabase and Vercel platform. AgricNorthX is the product brand; the GitHub repository slug remains `AGRIC-CONNECT` to avoid breaking repository integrations. The core product remains the farmer-to-buyer and cooperative fulfilment workflow.
 
-The existing product's strongest proof is a complete workflow: assisted farmer onboarding, produce listing, buyer request, stock reservation, cooperative aggregation and offline sync. Smart farming should increase the value of that workflow, not delay it.
+The source concept proposes GIS crop suitability, irrigation planning, yield estimates, indigenous knowledge, local input suppliers, language inclusion and subscriptions. These should be introduced only when data, governance and customer demand support them.
 
-## What is being integrated now
+## Implemented product layers
 
-### Market Insights (implemented)
+### Marketplace and cooperative workflow
 
-Route: `/market-insights`
+- Farmer/agent onboarding, produce listings, buyer requests and order/stock workflows are the product's core.
+- Offline-first capture supports low-connectivity access; unsynced drafts are not buyer-visible.
+- Cooperative aggregation must respect member opt-in and explicit farmer allocations.
 
-- Reads active, buyer-visible produce listings from Supabase.
-- Summarises listing count, available supply, asking-price average/range and localities by crop.
-- Keeps quantity and price units separate so kg, crates, bunches and different price units are not incorrectly combined.
-- Uses existing Row Level Security and exposes no farmer phone numbers or exact farm coordinates.
-- Clearly labels the figures as farmer-provided asking prices and listed supply, not verified sale prices, wholesale prices, buyer demand, crop suitability or yield forecasts.
-- Adds a navigation link in the signed-in app and marketplace.
+### Market Insights — `/market-insights`
 
-This is an initial market-transparency feature, not a full GIS or agronomy engine.
+- Aggregates active listing supply and farmer asking-price ranges.
+- Separates unlike quantity and price units.
+- Does not claim verified transaction prices, market-wide prices or buyer demand.
 
-## What to adopt from the Venda Smart Farming concept
+### Farm Weather Planner — `/weather`
 
-| Concept | Product decision | Reason / release gate |
-|---|---|---|
-| Local crop suitability | Later phase | Requires validated soil, climate and crop-requirement datasets at an appropriate geographic resolution; never invent a suitability score. |
-| Smart irrigation | Later phase | Start with forecast rainfall, temperature and reference evapotranspiration where available. Do not claim field soil moisture or tell farmers to irrigate without measured soil/field context. |
-| Yield prediction | Defer | Requires crop, planting date, cultivar, management and local calibration data. Label any future output as an estimate with uncertainty. |
-| Indigenous knowledge | Adopt with community governance | Consent, attribution, contributor control, language review, access levels and community approval are prerequisites. Do not expose restricted knowledge to public search or AI. |
-| Tshivenda / Sepedi / Afrikaans | Adopt selectively | The existing product's target locales are English, Tshivenda, Xitsonga and Sepedi/Northern Sotho. Prioritise a locally reviewed language end-to-end; add Afrikaans only after confirming pilot demand. |
-| Fertilizer supplier marketplace | Later phase | Add verified local suppliers and product catalogues only after supplier onboarding, pricing and stock freshness can be maintained. Start with disclosed referrals, not pay-to-rank recommendations. |
-| GIS maps | Later phase | Use coarse locality first. Exact farm coordinates remain private. Map only validated data and avoid implying precision the source data cannot support. |
+- Farmer searches for a South African locality and selects a match; the app does not silently access device GPS.
+- Seven-day outlook includes min/max air temperature, forecast precipitation, precipitation probability and FAO reference evapotranspiration (ET₀).
+- Weather values are area/grid forecasts, not field sensor readings.
+- The UI provides a field-check reminder, not crop-specific irrigation instructions.
+
+### Pricing guide — `/pricing`
+
+- Compares farmer-entered unit costs and target margin with similar active AgricNorthX asking prices.
+- It is a decision aid, not a wholesale benchmark or guaranteed sale price.
+
+### Community knowledge — `/knowledge`
+
+- Public entries are shown only when published with public sharing scope.
+- Indigenous knowledge requires informed consent, attribution, contributor control, access restrictions and community governance.
+- Do not train AI on contributed knowledge without separate permission.
+
+## What remains staged
+
+| Capability | Next decision gate |
+|---|---|
+| Crop suitability / GIS | Obtain authoritative soil, elevation and land-cover datasets; document resolution/licence/date; validate crop requirements with local agronomists. |
+| Irrigation recommendations | Add plot-level soil moisture, soil type, crop, growth stage and locally validated crop coefficients. Weather alone is insufficient. |
+| Yield prediction | Collect locally calibrated crop, planting, cultivar and management data; report uncertainty and avoid guaranteed yield claims. |
+| Fertilizer suppliers | Verify suppliers, stock freshness, product details and pricing; disclose referral fees and never pay-rank agronomic advice. |
+| Tshivenda, Xitsonga, Sepedi | Complete a fluent-speaker-reviewed end-to-end journey; keep unreviewed translations clearly marked. |
+| Buyer/cooperative subscriptions | Validate repeat usage and willingness to pay before launching paid tiers. |
+| Indigenous knowledge monetisation | Require community-approved permissions, benefit sharing and legal review; no public commercialisation by default. |
 
 ## Commercial model
 
-Keep farmer registration, listing and buyer discovery free during the pilot. Monetise value-added services for organisations and buyers rather than charging smallholders to participate.
+Keep farmer registration, listing and buyer discovery free during the pilot. Test revenue on the organisation/buyer side:
 
-1. **Buyer Pro subscription (after repeat usage is demonstrated):** bulk sourcing tools, saved sourcing lists, supplier history, procurement exports and availability alerts.
-2. **Cooperative / institutional subscription:** member supply coordination, aggregate fulfilment, downloadable reports and operational dashboards.
-3. **Transparent completed-order fee:** test a clearly disclosed fee only on successfully fulfilled transactions, with farmer and buyer agreement.
-4. **Supplier referral revenue:** disclosed referral arrangements with verified agricultural input suppliers; never let payment distort agronomic advice or hide cheaper alternatives.
-5. **Sponsored training / knowledge programmes:** fund community-reviewed content and workshops with clear sponsor disclosure.
+1. Buyer Pro: bulk sourcing, saved suppliers, procurement exports and availability alerts.
+2. Cooperative/institution subscription: member coordination, fulfilment dashboards and reports.
+3. Transparent completed-order fee: only on successfully fulfilled transactions, with explicit agreement.
+4. Disclosed supplier referrals and logistics coordination.
+5. Sponsored training and community-reviewed knowledge programmes.
 
-Do not launch all revenue streams at once. First prove repeat buyer activity, successful fulfilment and a measurable time or cost saving. No revenue, partner commitment or farmer outcome should be claimed until measured.
+Do not launch all streams at once. Prove repeat buying, successful fulfilment and measurable savings first. No revenue or farmer outcome is claimed until measured.
 
-## Evidence plan for a funder or judge
+Illustration only: R100,000 completed monthly sales × 5% disclosed fee = R5,000 gross before operating costs. This is a scenario, not a forecast.
 
-Instrument and show real, privacy-safe pilot metrics:
+## Judge demonstration
 
-- active farmers and active listings;
-- buyer requests, acceptance rate and fulfilled orders;
-- time from listing to first buyer request;
-- quantity listed, requested, reserved, fulfilled and expired;
-- repeat buyers and repeat sellers;
-- offline drafts successfully synced;
-- farmer-reported price and transport cost compared with their normal channel, with sample size and survey period.
+1. Agent registers a farmer with consent.
+2. Farmer listing is created and, where possible, captured offline then synced.
+3. Buyer requests a quantity.
+4. Farmer accepts and stock is reserved.
+5. Cooperative combines two farmers' opted-in supply.
+6. Market Insights shows real demo listings and clearly labels asking prices.
+7. Farm Planner shows a selected Vhembe locality's seven-day forecast.
+8. Close with free farmer access and buyer/cooperative-side monetisation.
 
-Use synthetic accounts in public demos. Mark all sample records. Never present test records as real farmer traction.
+Use synthetic accounts/data in public demos. Never invent farmer numbers, testimonials, buyer commitments, revenue or impact.
 
-## Suggested build sequence
+## Weather provider terms
 
-### Gate 1 — Make the existing transaction loop dependable
-- Verify auth, role permissions, listing creation, buyer requests, stock reservation, cooperative aggregation and offline sync.
-- Run the existing typecheck, lint, unit, SQL and end-to-end tests.
-- Rehearse the current five-minute workflow.
+The current prototype uses the Open-Meteo Geocoding and Forecast APIs:
 
-### Gate 2 — Market intelligence
-- Ship and validate the current Market Insights page against the database.
-- Add buyer-request demand signals only through a carefully scoped aggregate database function or materialised summary with explicit privacy controls; do not bypass RLS from the browser.
-- Add date windows and export only when the underlying data volume and buyer need justify them.
+- https://open-meteo.com/en/docs/geocoding-api
+- https://open-meteo.com/en/docs
 
-### Gate 3 — Weather-aware farm planning
-- Use a farmer-selected locality or consented coarse location.
-- Integrate a documented weather source and cache results.
-- Clearly distinguish forecast data from measured soil moisture.
-- Start with neutral rainfall / heat / dry-spell context and practical checklists, not automated irrigation commands.
+The free API is for non-commercial use. Before AgricNorthX uses weather data in a revenue-generating service, obtain the appropriate commercial licence or switch to a suitably licensed provider. Weather data attribution is displayed in the planner (CC BY 4.0).
 
-### Gate 4 — GIS and agronomy
-- Obtain and document authoritative soil, elevation, land-cover and crop-requirement datasets.
-- Record dataset source, date, resolution, licence and known limitations.
-- Validate recommendations with local agricultural extension specialists before showing them as advice.
-- Add uncertainty and a human-support route.
+## Known limitations
 
-### Gate 5 — Indigenous knowledge and supplier partnerships
-- Establish community governance and contributor consent before collecting content.
-- Build access levels and takedown / correction workflows.
-- Onboard verified suppliers and disclose referral or sponsored placement arrangements.
-
-## Judge-facing positioning
-
-**AgriConnect turns fragmented smallholder harvests into coordinated local supply, then adds trusted market and farm-planning intelligence so farmers can decide what to sell, when to prepare and where value is being created.**
-
-The live demo should still lead with the working transaction: an agent helps a farmer list produce, a buyer requests it, the farmer accepts and reserves stock, and a cooperative combines supply. Then show Market Insights as the next layer. Explain GIS, irrigation intelligence and indigenous knowledge as staged capabilities with explicit data and governance gates.
-
-## Honest current limitations
-
-- Market Insights currently summarises active listing supply and farmer asking prices only.
-- It does not yet use soil maps, satellite imagery, weather forecasts, soil-moisture sensors or crop-yield models.
-- It does not prove buyer demand unless demand signals are separately and safely aggregated.
-- Supplier listings, paid subscriptions and transaction fees are business-model tests, not implemented revenue.
-- Indigenous knowledge must not be collected or commercialised without informed consent and community governance.
+- Weather data is a locality/grid forecast; no field soil-moisture sensor, infiltration measurement, soil map or crop-water model is connected.
+- Market insights reflects AgricNorthX listings only, not all local markets.
+- Asking prices are not completed sale prices.
+- No subscriptions, payment collection, supplier marketplace or transaction fee is implemented by this change.
+- GIS suitability and yield prediction are not implemented.
+- Community knowledge must not be collected or commercialised without informed consent and community governance.
