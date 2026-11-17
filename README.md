@@ -10,6 +10,11 @@ AgriConnect is a farmer-to-buyer marketplace for smallholder farmers and coopera
 - `render.yaml` — Render Blueprint for the integration adapter.
 - `.github/workflows/` — repository CI; frontend checks run from `frontend/`.
 
+## Product capabilities
+
+- **Market Insights** (`/market-insights`) summarises active produce listings, available supply and farmer-provided asking-price ranges using existing Supabase access controls. It is a market snapshot, not verified sale-price or demand data.
+- **Smart farming roadmap:** see [`docs/SMART_FARMING_ROADMAP.md`](docs/SMART_FARMING_ROADMAP.md) for the staged plan covering weather-aware planning, GIS, indigenous knowledge governance and sustainable monetisation.
+
 ## Platform architecture
 
 - **GitHub:** source control, pull requests and CI.
