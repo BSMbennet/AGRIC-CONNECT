@@ -2,27 +2,38 @@
 
 AgriConnect is a farmer-to-buyer marketplace for smallholder farmers and cooperatives, piloting in Vhembe District, Limpopo, South Africa.
 
-## Platform architecture
-- **GitHub:** source control, pull requests and CI.
-- **Vercel:** Next.js web application and installable PWA.
-- **Supabase:** PostgreSQL, Auth, Storage, row-level security and transactional marketplace operations.
-- **Render:** optional FastAPI integration service and background worker for notifications and provider webhooks.
+## Repository layout
 
-## MVP
-Farmer and buyer onboarding, agent-assisted farmer registration, produce listings, searchable marketplace, buyer requests, transactional stock reservation, cooperative aggregation, offline drafts and synchronization, admin moderation and English/Tshivenda locale scaffolding.
+- `frontend/` — standalone Next.js application. Configure Vercel **Root Directory** as `frontend`.
+- `supabase/` — database migrations, seed data and SQL tests.
+- `render_service/` — optional FastAPI integration adapter deployed separately on Render.
+- `render.yaml` — Render Blueprint for the integration adapter.
+- `.github/workflows/` — repository CI; frontend checks run from `frontend/`.
+
+## Platform architecture
+
+- **GitHub:** source control, pull requests and CI.
+- **Vercel:** deploys the Next.js web application from `frontend/`.
+- **Supabase:** PostgreSQL, Auth, Storage, row-level security and transactional marketplace operations.
+- **Render:** optional integration service and background worker for notifications and provider webhooks.
 
 ## Local setup
+
 Requires Node.js 20+ and pnpm.
 
 ```sh
+cd frontend
 cp .env.example .env.local
 pnpm install
 pnpm dev
 ```
 
-Configure a dedicated Supabase project and apply the migrations in `supabase/migrations/` in numerical order. See `DEMO.md`, `LIMITATIONS.md` and `docs/ARCHITECTURE.md`.
+Configure a dedicated Supabase project and apply migrations in `supabase/migrations/` in numerical order. See `DEMO.md`, `LIMITATIONS.md` and `docs/ARCHITECTURE.md`.
 
 ## Quality checks
+
+Run inside `frontend/`:
+
 ```sh
 pnpm typecheck
 pnpm lint
@@ -30,4 +41,4 @@ pnpm test
 pnpm build
 ```
 
-Use synthetic demo records only. Never commit secrets, production data, private farmer information or service-role keys. See `.env.example` for required environment variable names.
+Use synthetic demo records only. Never commit secrets, production data, private farmer information or service-role keys.

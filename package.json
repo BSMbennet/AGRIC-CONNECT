@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "seed": "tsx supabase/seed.ts"
+    "seed": "tsx ../supabase/seed.ts"
   },
   "dependencies": {
     "next": "15.5.6",
