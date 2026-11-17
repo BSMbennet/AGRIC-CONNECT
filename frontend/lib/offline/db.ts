@@ -4,6 +4,7 @@ export type ListingDraft = {
   client_submission_id: string;
   farmer_id?: string;
   category: string;
+  is_organic: boolean;
   produce_name: string;
   quantity_available: number;
   unit: "kg" | "bunch" | "crate" | "bag";
