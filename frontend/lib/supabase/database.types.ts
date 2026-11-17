@@ -404,6 +404,7 @@ export type Database = {
           id: string
           image_path: string | null
           image_urls: string[]
+          is_organic: boolean
           locality: string
           moderation_log: Json
           municipality: string | null
@@ -433,6 +434,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           image_urls?: string[]
+          is_organic?: boolean
           locality: string
           moderation_log?: Json
           municipality?: string | null
@@ -642,6 +644,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      switch_account_role: { Args: { p_role: Database["public"]["Enums"]["user_role"] }; Returns: undefined }
       reject_buyer_request: {
         Args: { p_request_id: string }
         Returns: undefined
