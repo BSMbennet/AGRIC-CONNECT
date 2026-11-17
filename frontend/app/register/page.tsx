@@ -7,7 +7,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const params = await searchParams;
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-5 py-12">
-      <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgriConnect</Link>
+      <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgricNorthX</Link>
       <div className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-soft sm:p-9">
         <h1 className="text-2xl font-bold text-forest">Join the local harvest exchange</h1>
         <p className="mt-2 text-sm text-slate-600">Create a farmer or buyer account for the Vhembe pilot.</p>
@@ -20,7 +20,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
           <label className="text-sm font-semibold text-slate-700 sm:col-span-2">Password<Input name="password" type="password" autoComplete="new-password" minLength={8} required className="mt-2" /></label>
           <label className="text-sm font-semibold text-slate-700">District<Input name="district" defaultValue="Vhembe" required className="mt-2" /></label>
           <label className="text-sm font-semibold text-slate-700">Locality / town<Input name="locality" required placeholder="e.g. Thohoyandou" className="mt-2" /></label>
-          <label className="flex items-start gap-3 text-xs leading-5 text-slate-600 sm:col-span-2"><input type="checkbox" name="consent" required className="mt-1 h-4 w-4 accent-forest" /><span>I agree to the account data being used to provide AgriConnect services. I understand I can request access, correction or deletion subject to lawful retention.</span></label>
+          <label className="flex items-start gap-3 text-xs leading-5 text-slate-600 sm:col-span-2"><input type="checkbox" name="consent" required className="mt-1 h-4 w-4 accent-forest" /><span>I agree to the account data being used to provide AgricNorthX services. I understand I can request access, correction or deletion subject to lawful retention.</span></label>
           <Button type="submit" className="sm:col-span-2">Create account</Button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-600">Already registered? <Link href="/login" className="font-bold text-leaf">Sign in</Link></p>

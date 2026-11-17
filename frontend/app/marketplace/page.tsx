@@ -49,7 +49,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
     <main className="min-h-screen bg-[#f7faf7]">
       <header className="border-b border-emerald-900/10 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={22} /> AgriConnect</Link>
+          <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={22} /> AgricNorthX</Link>
           <nav className="flex items-center gap-3 text-sm font-semibold">
             <Link href="/marketplace" className="text-leaf">Marketplace</Link>
             <Link href="/market-insights" className="text-forest hover:text-leaf">Market insights</Link>
@@ -118,7 +118,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
             );
           })}
         </div>
-        <p className="mt-8 rounded-xl bg-amber-50 p-4 text-xs leading-5 text-amber-900">Prices, quantities and quality notes are supplied by farmers and are not independently verified. Confirm quality, collection arrangements and final price with the seller before payment. AgriConnect does not hold payments.</p>
+        <p className="mt-8 rounded-xl bg-amber-50 p-4 text-xs leading-5 text-amber-900">Prices, quantities and quality notes are supplied by farmers and are not independently verified. Confirm quality, collection arrangements and final price with the seller before payment. AgricNorthX does not hold payments.</p>
       </section>
     </main>
   );

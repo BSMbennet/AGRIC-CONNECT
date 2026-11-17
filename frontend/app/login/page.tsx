@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   }
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
-      <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgriConnect</Link>
+      <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgricNorthX</Link>
       <div className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-soft">
         <h1 className="text-2xl font-bold text-forest">Welcome back</h1>
         <p className="mt-2 text-sm text-slate-600">Sign in to manage your harvest or find local produce.</p>
@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <label className="block text-sm font-semibold text-slate-700">Password<Input name="password" type="password" autoComplete="current-password" required minLength={8} className="mt-2" /></label>
           <Button type="submit" className="w-full">Sign in</Button>
         </form>
-        <p className="mt-6 text-center text-sm text-slate-600">New to AgriConnect? <Link href="/register" className="font-bold text-leaf">Create an account</Link></p>
+        <p className="mt-6 text-center text-sm text-slate-600">New to AgricNorthX? <Link href="/register" className="font-bold text-leaf">Create an account</Link></p>
       </div>
     </main>
   );

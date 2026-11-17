@@ -30,7 +30,7 @@ export default async function OrderPage({
 
   return (
     <main className="min-h-screen bg-[#f7faf7]">
-      <header className="border-b border-emerald-900/10 bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4"><Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={21}/> AgriConnect</Link><nav className="flex gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link></nav></div></header>
+      <header className="border-b border-emerald-900/10 bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4"><Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={21}/> AgricNorthX</Link><nav className="flex gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link></nav></div></header>
       <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <Link href="/dashboard" className="text-sm font-bold text-leaf">← Back to dashboard</Link>
         <div className="mt-5 rounded-3xl border border-emerald-900/10 bg-white p-6 shadow-sm sm:p-8">
@@ -41,7 +41,7 @@ export default async function OrderPage({
           <p className="mt-1 text-xs text-slate-400">Created {new Date(order.created_at).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}</p>
           {order.collection_point && <div className="mt-5 rounded-xl bg-[#f7faf7] p-4 text-sm"><p className="font-semibold text-forest">Collection point</p><p className="mt-1 text-slate-600">{order.collection_point}</p>{order.collection_method && <p className="mt-1 text-xs text-slate-500">{order.collection_method}</p>}</div>}
           {queryParams.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not update this order. Refresh and try again.</p>}
-          <p className="mt-5 rounded-xl bg-amber-50 p-4 text-xs leading-5 text-amber-900">AgriConnect does not collect or hold payments. Buyer and farmer should agree payment and collection details directly, and only exchange payment after verifying the produce.</p>
+          <p className="mt-5 rounded-xl bg-amber-50 p-4 text-xs leading-5 text-amber-900">AgricNorthX does not collect or hold payments. Buyer and farmer should agree payment and collection details directly, and only exchange payment after verifying the produce.</p>
         </div>
 
         <section className="mt-5 rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm">

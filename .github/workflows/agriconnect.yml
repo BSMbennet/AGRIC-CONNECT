@@ -1,4 +1,4 @@
-name: AgriConnect CI
+name: AgricNorthX CI
 
 on:
   pull_request:
