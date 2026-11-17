@@ -14,8 +14,9 @@ export async function POST(request:NextRequest){
  const secret=process.env.STRIPE_WEBHOOK_SECRET;
  const url=process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL;
  const serviceKey=process.env.SUPABASE_SECRET_KEY;
+ const stripeApiKey=process.env.STRIPE_SECRET_KEY;
  const payload=await request.text(),signature=request.headers.get("stripe-signature")||"";
- if(!secret||!url||!serviceKey) return NextResponse.json({error:"Webhook configuration missing"},{status:503});
+ if(!secret||!url||!serviceKey||!stripeApiKey) return NextResponse.json({error:"Webhook configuration missing"},{status:503});
  if(!verify(payload,signature,secret)) return NextResponse.json({error:"Invalid signature"},{status:400});
  let event:any; try{event=JSON.parse(payload);}catch{return NextResponse.json({error:"Invalid JSON"},{status:400});}
  const db=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -24,7 +25,7 @@ export async function POST(request:NextRequest){
  if(event.type==="checkout.session.completed"&&obj.mode==="subscription"){
   const farmerId=obj.metadata?.farmer_id||obj.client_reference_id,plan=obj.metadata?.plan,subId=obj.subscription;
   if(!farmerId||!subId||!["pro","premium"].includes(plan)) return NextResponse.json({error:"Subscription metadata missing"},{status:400});
-  const response=await fetch("https://api.stripe.com/v1/subscriptions/"+encodeURIComponent(subId),{headers:{Authorization:"Bearer "+(process.env.STRIPE_SECRET_KEY||"")},cache:"no-store"});
+  const response=await fetch("https://api.stripe.com/v1/subscriptions/"+encodeURIComponent(subId),{headers:{Authorization:"Bearer "+stripeApiKey},cache:"no-store"});
   const sub=await response.json();
   if(!response.ok) return NextResponse.json({error:"Unable to verify subscription"},{status:502});
   const {error}=await db.from("farmer_subscriptions").upsert({farmer_id:farmerId,plan,status:sub.status,stripe_customer_id:String(obj.customer||""),stripe_subscription_id:String(subId),current_period_end:new Date(sub.current_period_end*1000).toISOString(),updated_at:new Date().toISOString()},{onConflict:"stripe_subscription_id"});
