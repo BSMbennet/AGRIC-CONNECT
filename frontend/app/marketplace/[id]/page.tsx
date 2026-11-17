@@ -46,7 +46,7 @@ export default async function ListingDetailPage({
   if (user) {
     const { data } = await supabase.from("produce_listings")
       .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,farmer_id")
-      .eq("id", id).eq("status", "active").maybeSingle();
+      .eq("id", id).maybeSingle();
     listing = data;
   } else {
     const { data } = await supabase.from("produce_listings")
@@ -55,7 +55,7 @@ export default async function ListingDetailPage({
     listing = data;
   }
 
-  if (!listing || (listing.expires_at && new Date(listing.expires_at).getTime() <= Date.now())) notFound();
+  if (!listing || (listing.status !== "active" && listing.farmer_id !== user?.id) || (listing.expires_at && new Date(listing.expires_at).getTime() <= Date.now())) notFound();
 
   const available = Number(listing.quantity_available) - Number(listing.reserved_quantity) - Number(listing.quantity_sold);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg" }).format(new Date());
