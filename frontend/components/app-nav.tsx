@@ -9,6 +9,7 @@ export function AppNav({ active = "" }: { active?: string }) {
         <Link href="/" className="font-bold text-forest">AgriConnect</Link>
         <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-4 text-sm font-semibold">
           <Link href="/marketplace" className={link("marketplace")}>Marketplace</Link>
+          <Link href="/market-insights" className={link("insights")}>Market insights</Link>
           <Link href="/dashboard" className={link("dashboard")}>Dashboard</Link>
           <Link href="/profile" className={link("profile")}>Profile settings</Link>
           <form action={logout}><button className="text-slate-600 hover:text-forest">Sign out</button></form>
