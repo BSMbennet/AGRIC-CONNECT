@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { listingSchema } from "@/lib/validation/listing";
 
@@ -25,7 +26,7 @@ export async function createListing(formData: FormData) {
   });
   if (!parsed.success) redirect("/listings/new?error=invalid");
 
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("role, cooperative_id").eq("id", user.id).single();
@@ -80,7 +81,7 @@ export async function createListing(formData: FormData) {
 export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; error?: string }> {
   const parsed = listingSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "unauthenticated" };
   const { data: profile } = await supabase.from("profiles").select("role,cooperative_id").eq("id", user.id).single();
