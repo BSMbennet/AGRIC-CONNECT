@@ -30,7 +30,7 @@ alter table public.orders add column if not exists delivery_location text;
 alter table public.orders add column if not exists order_instructions text;
 alter table public.orders add column if not exists buyer_request_id uuid references public.buyer_requests(id);
 create unique index if not exists orders_buyer_request_unique on public.orders(buyer_request_id) where buyer_request_id is not null;
-update public.orders o set buyer_name=coalesce(o.buyer_name,p.display_name,'Buyer'),buyer_contact_number=coalesce(o.buyer_contact_number,p.phone_e164,'Not provided'),fulfilment_preference=coalesce(o.fulfilment_preference,o.collection_method,'collection'),delivery_location=coalesce(o.delivery_location,o.collection_point,'') from public.profiles p where p.id=o.buyer_id;
+update public.orders o set buyer_name=coalesce(o.buyer_name,p.display_name,'Buyer'),buyer_contact_number=coalesce(o.buyer_contact_number,p.phone_e164,'Not provided'),fulfilment_preference=coalesce(o.fulfilment_preference,case when lower(coalesce(o.collection_method,''))='delivery' then 'delivery' else 'collection' end),delivery_location=coalesce(o.delivery_location,o.collection_point,'') from public.profiles p where p.id=o.buyer_id;
 alter table public.orders alter column buyer_name set not null;
 alter table public.orders alter column buyer_contact_number set not null;
 alter table public.orders alter column fulfilment_preference set not null;
