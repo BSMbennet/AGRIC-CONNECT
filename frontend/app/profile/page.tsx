@@ -37,7 +37,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <label className="min-w-0 flex-1 text-sm font-semibold text-slate-700">Use AgriConnect as<select name="role" defaultValue={profile.role} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="buyer">Buyer</option><option value="farmer">Farmer / seller</option></select></label>
             <button className="h-11 rounded-xl border border-emerald-900/20 px-5 text-sm font-bold text-forest">Change account type</button>
           </form> : <p className="mt-3 text-sm text-slate-500">This account role is managed by the AgriConnect administrator.</p>}
-          <p className="mt-3 text-xs leading-5 text-slate-500">Switching changes which buyer or farmer tools you see. It does not delete your previous listings, requests or orders. Finish or manage any open transactions before switching.</p>
+          <p className="mt-3 text-xs leading-5 text-slate-500">Switching changes which buyer or farmer tools you see. It does not delete your previous listings, requests or orders. Active listings are paused when you switch from farmer to buyer; switch back to farmer to manage them. Finish or manage open transactions before switching.</p>
         </section>
         <Link href="/dashboard" className="mt-6 inline-flex text-sm font-bold text-leaf">← Back to dashboard</Link>
       </section>
