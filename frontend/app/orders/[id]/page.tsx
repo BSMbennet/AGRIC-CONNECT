@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { fulfillAllocation } from "@/actions/orders";
+import { fulfillAllocation, addOrderComment } from "@/actions/orders";
 import { PackageCheck, Sprout } from "lucide-react";
 
 export default async function OrderPage({
@@ -18,14 +18,15 @@ export default async function OrderPage({
   if (!user) redirect("/login");
 
   const [{ data: order }, { data: profile }] = await Promise.all([
-    supabase.from("orders").select("id,buyer_id,quantity_agreed,unit,unit_price,currency,status,created_at,listing_id,collection_method,collection_point,collection_window_start,collection_window_end").eq("id", id).maybeSingle(),
+    supabase.from("orders").select("id,buyer_id,quantity_agreed,unit,unit_price,currency,status,created_at,listing_id,collection_method,collection_point,collection_window_start,collection_window_end,buyer_name,buyer_contact_number,fulfilment_preference,delivery_location,order_instructions").eq("id", id).maybeSingle(),
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
   ]);
   if (!order) notFound();
 
-  const [{ data: allocations }, { data: events }] = await Promise.all([
+  const [{ data: allocations }, { data: events }, { data: comments }] = await Promise.all([
     supabase.from("order_allocations").select("id,listing_id,farmer_id,quantity_allocated,agreed_unit_price,status").eq("order_id", id),
     supabase.from("order_events").select("event_type,from_status,to_status,note,created_at").eq("order_id", id).order("created_at"),
+    supabase.from("order_comments").select("id,author_id,body,created_at,profiles!order_comments_author_id_fkey(display_name,role)").eq("order_id",id).order("created_at"),
   ]);
 
   return (
@@ -39,7 +40,7 @@ export default async function OrderPage({
           <p className="mt-5 text-3xl font-bold text-forest">{Number(order.quantity_agreed).toLocaleString()} {order.unit}</p>
           <p className="mt-1 text-sm text-slate-600">Agreed unit price: R{Number(order.unit_price).toFixed(2)} / {order.unit}</p>
           <p className="mt-1 text-xs text-slate-400">Created {new Date(order.created_at).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })}</p>
-          {order.collection_point && <div className="mt-5 rounded-xl bg-[#f7faf7] p-4 text-sm"><p className="font-semibold text-forest">Collection point</p><p className="mt-1 text-slate-600">{order.collection_point}</p>{order.collection_method && <p className="mt-1 text-xs text-slate-500">{order.collection_method}</p>}</div>}
+          <div className="mt-5 rounded-xl bg-[#f7faf7] p-4 text-sm"><h2 className="font-bold text-forest">Buyer and fulfilment details</h2><p className="mt-2"><strong>Buyer:</strong> {order.buyer_name}</p><p className="mt-1"><strong>Contact:</strong> {order.buyer_contact_number}</p><p className="mt-1"><strong>Preference:</strong> {order.fulfilment_preference}</p>{order.fulfilment_preference==="delivery"&&<p className="mt-1"><strong>Delivery location:</strong> {order.delivery_location}</p>}{order.order_instructions&&<p className="mt-2"><strong>Instructions:</strong> {order.order_instructions}</p>}</div>
           {queryParams.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not update this order. Refresh and try again.</p>}
           <p className="mt-5 rounded-xl bg-amber-50 p-4 text-xs leading-5 text-amber-900">AgricNorthX does not collect or hold payments. Buyer and farmer should agree payment and collection details directly, and only exchange payment after verifying the produce.</p>
         </div>
