@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 const locationSchema = z.string().trim().min(2).max(80);
@@ -18,6 +19,9 @@ type WeatherPayload = {
 const fail=(message:string,status:number)=>NextResponse.json({error:message},{status});
 
 export async function GET(request:NextRequest) {
+  const supabase=await createClient();
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user) return fail("Sign in to use the farm weather planner.",401);
   const params=request.nextUrl.searchParams;
   const search=params.get("location");
   if(search!==null) {

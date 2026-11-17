@@ -4,6 +4,7 @@ import { listingSchema } from "../../lib/validation/listing";
 const validListing = {
   client_submission_id: "550e8400-e29b-41d4-a716-446655440000",
   category: "Vegetables",
+  is_organic: false,
   produce_name: "Tomatoes",
   quantity_available: 25,
   unit: "kg",
