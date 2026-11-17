@@ -19,6 +19,7 @@ const categories = ["Vegetables", "Fruit", "Grains", "Legumes", "Herbs", "Other"
 export default async function MarketplacePage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   let query = supabase
     .from("produce_listings")
     .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,is_organic,unit,asking_price,price_unit,locality,municipality,available_from,harvest_date,quality_notes,created_at,expires_at,image_urls")
@@ -52,7 +53,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
           <nav className="flex items-center gap-3 text-sm font-semibold">
             <Link href="/marketplace" className="text-leaf">Marketplace</Link>
             <Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link>
-            <Link href="/login" className="rounded-full bg-forest px-4 py-2 text-white hover:bg-leaf">Sign in</Link>
+            {user ? <Link href="/profile" className="text-forest hover:text-leaf">Profile</Link> : <Link href="/login" className="rounded-full bg-forest px-4 py-2 text-white hover:bg-leaf">Sign in</Link>}
           </nav>
         </div>
       </header>
