@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { acceptRequest, rejectRequest, fulfillAllocation } from "@/actions/orders";
 import { updateListingStatus } from "@/actions/listings";
+import { markNotificationRead } from "@/actions/notifications";
 import { Sprout, ShoppingBasket, PlusCircle, Layers3, ShieldCheck, PackageCheck, ClipboardList } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
 
@@ -12,6 +13,11 @@ type BuyerRequest = {
   quantity_requested: number;
   proposed_price: number | null;
   message: string | null;
+  buyer_name?: string;
+  contact_number?: string;
+  fulfilment_preference?: string;
+  delivery_location?: string | null;
+  order_instructions?: string | null;
   created_at: string;
   status: string;
 };
@@ -53,9 +59,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!profile) redirect("/register?error=profile");
 
   const isFarmer = profile.role === "farmer";
-  const { count: listingCount } = await supabase.from("produce_listings").select("*", { count: "exact", head: true }).eq("farmer_id", user.id);
+  const { data: notifications } = await supabase.from("notifications").select("id,order_id,title,body,notification_type,read_at,created_at").eq("recipient_id",user.id).order("created_at",{ascending:false}).limit(10);
+  const { count: listingCount } = await supabase.from("produce_listings").select("*", { count: "exact", head: true }).eq("farmer_id", user.id).eq("status","active");
+  const { data: farmerPlan } = isFarmer ? await supabase.from("farmer_subscriptions").select("plan,status,current_period_end").eq("farmer_id",user.id).in("status",["active","trialing"]).gt("current_period_end",new Date().toISOString()).order("current_period_end",{ascending:false}).limit(1).maybeSingle() : {data:null};
+  const listingLimit = farmerPlan?.plan === "premium" ? 200 : farmerPlan?.plan === "pro" ? 50 : 10;
   const { data: listings } = isFarmer ? await supabase.from("produce_listings")
-    .select("id,produce_name,buyer_requests!inner(id,buyer_id,quantity_requested,proposed_price,message,created_at,status)")
+    .select("id,produce_name,buyer_requests!inner(id,buyer_id,quantity_requested,proposed_price,message,buyer_name,contact_number,fulfilment_preference,delivery_location,order_instructions,created_at,status)")
     .eq("farmer_id", user.id).eq("buyer_requests.status", "pending").order("created_at", { ascending: false, foreignTable: "buyer_requests" }) : { data: [] };
   const pendingRequests = (listings ?? []).flatMap((listing: ListingWithRequests) => (listing.buyer_requests ?? []).map((request: BuyerRequest) => ({ ...request, produce_name: listing.produce_name })));
   const { count: buyerRequestCount } = isFarmer ? { count: pendingRequests.length } : await supabase.from("buyer_requests").select("id", { count: "exact", head: true }).eq("buyer_id", user.id);
@@ -91,8 +100,61 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         {params.requested && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your buyer request has been sent.</p>}
         {params.rejected && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">The buyer request was rejected.</p>}
         {params.listing_updated && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your listing visibility has been updated.</p>}
+        <section className="mt-8 rounded-2xl border border-emerald-900/10 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-forest">Notifications</h2>
+            <span className="text-xs text-slate-500">
+              {(notifications ?? []).filter((notification) => !notification.read_at).length} unread
+            </span>
+          </div>
+          {notifications?.length ? (
+            <ul className="mt-3 divide-y divide-slate-100">
+              {notifications.map((notification) => (
+                <li key={notification.id} className="py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-forest">{notification.title}</p>
+                      <p className="mt-1 text-sm text-slate-600">{notification.body}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {new Date(notification.created_at).toLocaleString("en-ZA", {
+                          timeZone: "Africa/Johannesburg",
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      {notification.order_id && (
+                        <Link
+                          href={"/orders/" + notification.order_id}
+                          className="text-xs font-bold text-leaf"
+                        >
+                          Open order →
+                        </Link>
+                      )}
+                      {!notification.read_at && (
+                        <form action={markNotificationRead}>
+                          <input
+                            type="hidden"
+                            name="notification_id"
+                            value={notification.id}
+                          />
+                          <button className="text-xs text-slate-500 underline">
+                            Mark read
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">
+              New order requests and comments will appear here.
+            </p>
+          )}
+        </section>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {isFarmer ? <div className="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm"><Sprout className="text-leaf" /><p className="mt-4 text-3xl font-bold text-forest">{listingCount ?? 0}</p><p className="text-sm text-slate-600">Your produce listings</p><Link href="/listings/new" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-leaf"><PlusCircle size={17}/> Add produce</Link></div> : <div className="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm"><ShoppingBasket className="text-leaf"/><p className="mt-4 text-3xl font-bold text-forest">Marketplace</p><p className="text-sm text-slate-600">Discover produce available nearby.</p><Link href="/marketplace" className="mt-5 inline-block text-sm font-bold text-leaf">Browse listings →</Link></div>}
+          {isFarmer ? <div className="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm"><Sprout className="text-leaf" /><p className="mt-4 text-3xl font-bold text-forest">{listingCount ?? 0}</p><p className="text-sm text-slate-600">Active produce listings · {listingCount ?? 0} / {listingLimit}</p><p className="mt-1 text-xs capitalize text-slate-500">{farmerPlan?.plan ?? "Free"} plan</p>{(listingCount ?? 0) >= listingLimit && <Link href="/subscriptions" className="mt-3 inline-block text-xs font-bold text-leaf">Upgrade to list more →</Link>}<Link href="/listings/new" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-leaf"><PlusCircle size={17}/> Add produce</Link></div> : <div className="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm"><ShoppingBasket className="text-leaf"/><p className="mt-4 text-3xl font-bold text-forest">Marketplace</p><p className="text-sm text-slate-600">Discover produce available nearby.</p><Link href="/marketplace" className="mt-5 inline-block text-sm font-bold text-leaf">Browse listings →</Link></div>}
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-sm"><p className="text-3xl font-bold text-forest">{buyerRequestCount ?? 0}</p><p className="text-sm text-slate-600">{isFarmer ? "Pending buyer requests" : "Your buyer requests"}</p></div>
         </div>
 
@@ -100,7 +162,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
         {profile.role === "agent" && <section className="mt-10"><h2 className="text-xl font-bold text-forest">Farmers you assist</h2>{assignedFarmers?.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2">{assignedFarmers.map((farmer) => <article key={farmer.id} className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="font-bold text-forest">{farmer.display_name}</p><p className="mt-1 text-xs text-slate-500">{farmer.locality || "Vhembe"}</p><Link href={`/agent/farmers/${farmer.id}/listing`} className="mt-4 inline-flex rounded-lg bg-forest px-3 py-2 text-xs font-bold text-white">Add farmer produce</Link></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">You have not registered any farmers yet. <Link href="/agent/register-farmer" className="font-bold text-leaf">Register a farmer</Link>.</p>}</section>}
 
-        {isFarmer && <section className="mt-10"><h2 className="text-xl font-bold text-forest">Buyer requests</h2>{pendingRequests.length ? <div className="mt-4 space-y-3">{pendingRequests.map((request: BuyerRequest & { produce_name: string }) => <article key={request.id} className="rounded-2xl border border-emerald-900/10 bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-bold text-forest">{request.produce_name}</h3><p className="mt-1 text-sm text-slate-600">{request.quantity_requested} requested{request.proposed_price !== null ? ` · proposed R${Number(request.proposed_price).toFixed(2)}` : ""}</p>{request.message && <p className="mt-2 text-sm text-slate-500">{request.message}</p>}</div><span className="text-xs font-semibold text-amber-700">Pending</span></div><div className="mt-4 flex gap-2"><form action={acceptRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl bg-forest px-4 py-2 text-xs font-bold text-white">Accept & reserve stock</button></form><form action={rejectRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600">Reject</button></form></div></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">No pending requests yet. Your listings will appear in the marketplace for buyers to discover.</p>}</section>}
+        {isFarmer && <section id="buyer-requests" className="mt-10"><h2 className="text-xl font-bold text-forest">Buyer requests</h2>{pendingRequests.length ? <div className="mt-4 space-y-3">{pendingRequests.map((request: BuyerRequest & { produce_name: string }) => <article key={request.id} className="rounded-2xl border border-emerald-900/10 bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-bold text-forest">{request.produce_name}</h3><p className="mt-1 text-sm text-slate-600">{request.quantity_requested} requested{request.proposed_price !== null ? ` · proposed R${Number(request.proposed_price).toFixed(2)}` : ""}</p><div className="mt-3 grid gap-1 rounded-xl bg-[#f7faf7] p-3 text-xs text-slate-700"><p><strong>Buyer:</strong> {request.buyer_name} · {request.contact_number}</p><p><strong>Fulfilment:</strong> {request.fulfilment_preference}{request.delivery_location ? " · "+request.delivery_location : ""}</p>{request.order_instructions&&<p><strong>Instructions:</strong> {request.order_instructions}</p>}{request.message&&<p><strong>Message:</strong> {request.message}</p>}</div></div><span className="text-xs font-semibold text-amber-700">Pending</span></div><div className="mt-4 flex gap-2"><form action={acceptRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl bg-forest px-4 py-2 text-xs font-bold text-white">Accept & reserve stock</button></form><form action={rejectRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600">Reject</button></form></div></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">No pending requests yet. Your listings will appear in the marketplace for buyers to discover.</p>}</section>}
 
         {profile.role === "buyer" && <section className="mt-10"><div className="flex items-center justify-between gap-3"><h2 className="text-xl font-bold text-forest">Your buyer requests</h2><Link href="/marketplace" className="text-sm font-bold text-leaf">Find more produce</Link></div>{buyerRequests.length ? <div className="mt-4 space-y-3">{buyerRequests.map((request) => <article key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-900/10 bg-white p-5"><div><h3 className="font-bold text-forest">{request.produce_listings?.produce_name ?? "Produce listing"}</h3><p className="mt-1 text-xs text-slate-500">{request.produce_listings?.locality ?? "Vhembe"} · {request.quantity_requested} requested{request.proposed_price !== null ? ` · offered R${Number(request.proposed_price).toFixed(2)}` : ""}</p><p className="mt-1 text-xs text-slate-400">{new Date(request.created_at).toLocaleDateString("en-ZA")}</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold capitalize text-slate-700">{request.status}</span></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">You have not requested any produce yet. Browse the marketplace to contact local farmers.</p>}</section>}
 

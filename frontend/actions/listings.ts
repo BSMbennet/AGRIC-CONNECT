@@ -18,7 +18,9 @@ export async function createListing(formData: FormData) {
     asking_price: formData.get("asking_price"),
     price_unit: formData.get("price_unit"),
     available_from: formData.get("available_from"),
-    harvest_date: formData.get("harvest_date") || "",
+    harvest_date: formData.get("harvest_date"),
+    contact_phone: formData.get("contact_phone"),
+    fulfilment_details: formData.get("fulfilment_details"),
     expires_at: formData.get("expires_at") || "",
     quality_notes: formData.get("quality_notes") || "",
     locality: formData.get("locality"),
@@ -56,7 +58,7 @@ export async function createListing(formData: FormData) {
     asking_price: parsed.data.asking_price,
     price_unit: parsed.data.price_unit,
     available_from: parsed.data.available_from,
-    harvest_date: parsed.data.harvest_date || null,
+    harvest_date: parsed.data.harvest_date,
     expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at).toISOString() : null,
     quality_notes: parsed.data.quality_notes || null,
     locality: parsed.data.locality,
@@ -67,7 +69,7 @@ export async function createListing(formData: FormData) {
     client_submission_id: parsed.data.client_submission_id,
   }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true }).select("id").maybeSingle();
 
-  if (error) redirect("/listings/new?error=save");
+  if (error) redirect(error.message.includes("farmer_listing_limit_reached") ? "/listings/new?error=limit" : "/listings/new?error=save");
   let listingId = inserted?.id;
   if (!listingId) {
     const { data: existing, error: lookupError } = await supabase.from("produce_listings")
@@ -76,6 +78,14 @@ export async function createListing(formData: FormData) {
     listingId = existing.id;
   }
 
+  const { error: privateDetailsError } = await supabase.from("listing_private_details").upsert({
+    listing_id: listingId,
+    farmer_id: farmerId,
+    contact_phone: parsed.data.contact_phone,
+    fulfilment_details: parsed.data.fulfilment_details,
+    updated_at: new Date().toISOString(),
+  });
+  if (privateDetailsError) redirect("/listings/new?error=save");
   revalidatePath("/marketplace");
   revalidatePath("/dashboard");
   redirect("/listings/" + listingId + "/photos?created=1");
@@ -103,7 +113,7 @@ export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; e
     return { ok: false, error: "role" };
   }
 
-  const { error } = await supabase.from("produce_listings").upsert({
+  const { data: syncedListing, error } = await supabase.from("produce_listings").upsert({
     farmer_id: farmerId,
     cooperative_id: cooperativeId,
     category: parsed.data.category,
@@ -114,7 +124,7 @@ export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; e
     asking_price: parsed.data.asking_price,
     price_unit: parsed.data.price_unit,
     available_from: parsed.data.available_from,
-    harvest_date: parsed.data.harvest_date || null,
+    harvest_date: parsed.data.harvest_date,
     expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at).toISOString() : null,
     quality_notes: parsed.data.quality_notes || null,
     locality: parsed.data.locality,
@@ -123,8 +133,16 @@ export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; e
     status: "active",
     source_channel: profile.role === "agent" ? "agent" : "app",
     client_submission_id: parsed.data.client_submission_id,
-  }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true });
-  if (error) return { ok: false, error: "save" };
+  }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true }).select("id").maybeSingle();
+  if (error) return { ok: false, error: error.message.includes("farmer_listing_limit_reached") ? "limit" : "save" };
+  let listingId = syncedListing?.id;
+  if (!listingId) {
+    const { data: existing } = await supabase.from("produce_listings").select("id").eq("farmer_id",farmerId).eq("client_submission_id",parsed.data.client_submission_id).single();
+    listingId = existing?.id;
+  }
+  if (!listingId) return { ok: false, error: "save" };
+  const { error: privateError } = await supabase.from("listing_private_details").upsert({listing_id:listingId,farmer_id:farmerId,contact_phone:parsed.data.contact_phone,fulfilment_details:parsed.data.fulfilment_details,updated_at:new Date().toISOString()});
+  if (privateError) return { ok: false, error: "save" };
   revalidatePath("/marketplace");
   revalidatePath("/dashboard");
   return { ok: true };

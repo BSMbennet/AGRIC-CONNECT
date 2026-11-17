@@ -63,7 +63,7 @@ export default async function ListingDetailPage({
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg" }).format(new Date());
   const isAvailableNow = listing.available_from <= today && available > 0;
   const { data: profile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+    ? await supabase.from("profiles").select("role,display_name,phone_e164").eq("id", user.id).maybeSingle()
     : { data: null };
   const canRequest = !!user && profile?.role === "buyer" && listing.farmer_id !== user.id && isAvailableNow;
 
@@ -98,6 +98,11 @@ export default async function ListingDetailPage({
             <input type="hidden" name="listing_id" value={listing.id} />
             <label className="mt-4 block text-sm font-semibold text-slate-700">Quantity ({listing.unit})<Input name="quantity_requested" type="number" min="0.01" max={available} step="0.01" required className="mt-2" /></label>
             <label className="mt-4 block text-sm font-semibold text-slate-700">Proposed price per {listing.price_unit} (optional)<Input name="proposed_price" type="number" min="0" step="0.01" className="mt-2" placeholder={Number(listing.asking_price).toFixed(2)} /></label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Buyer name or business<Input name="buyer_name" required minLength={2} maxLength={120} defaultValue={profile?.display_name ?? ""} className="mt-2"/></label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Contact number<Input name="contact_number" type="tel" required minLength={7} maxLength={30} defaultValue={profile?.phone_e164 ?? ""} placeholder="+27…" className="mt-2"/></label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Delivery or collection<select name="fulfilment_preference" required defaultValue="collection" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="collection">Collection</option><option value="delivery">Delivery</option></select></label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Delivery location (required for delivery)<Input name="delivery_location" maxLength={300} className="mt-2" placeholder="Address, village or agreed drop-off point"/></label>
+            <label className="mt-4 block text-sm font-semibold text-slate-700">Order instructions (optional)<textarea name="order_instructions" maxLength={1000} rows={3} className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm" placeholder="Packaging, delivery time, grading or other requirements…"/></label>
             <label className="mt-4 block text-sm font-semibold text-slate-700">Message to farmer (optional)<textarea name="message" maxLength={500} rows={3} className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm" placeholder="Ask about collection times or produce quality…" /></label>
             <Button type="submit" className="mt-5 w-full">Send buyer request</Button>
           </form>

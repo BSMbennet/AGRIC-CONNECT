@@ -18,6 +18,7 @@ AgricNorthX is a farmer-to-buyer and smart farming decision-support platform for
 - **Market Insights** (`/market-insights`): active listed supply and farmer-provided asking-price ranges; not verified sale prices or buyer demand.
 - **Farm Weather Planner** (`/weather`): locality-selected seven-day forecast with temperature, rainfall, precipitation probability and reference ET₀. It is forecast context, not field soil-moisture measurement or an irrigation prescription.
 - **Pricing guide** (`/pricing`): cost-based price planning and comparisons with active AgricNorthX asking prices.
+- **Farmer product subscriptions** (`/farm-products`, `/subscriptions`): free product listings with Pro/Premium-gated product guidance, Stripe Checkout and webhook-confirmed access.
 - **Indigenous knowledge library** (`/knowledge`): consented, attributed public community contributions.
 
 See [the smart farming integration and monetisation roadmap](docs/SMART_FARMING_ROADMAP.md).
@@ -40,7 +41,7 @@ pnpm install
 pnpm dev
 ```
 
-Configure a dedicated Supabase project and apply migrations in `supabase/migrations/` in numerical order. See `DEMO.md`, `LIMITATIONS.md` and `docs/ARCHITECTURE.md`.
+Configure a dedicated Supabase project and apply migrations in `supabase/migrations/` in numerical order. For farmer subscriptions, configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_FARMER_PRO_PRICE_ID` and `STRIPE_FARMER_PREMIUM_PRICE_ID` in the frontend environment, and register `/api/billing/webhook` as a Stripe webhook endpoint for `checkout.session.completed`, `customer.subscription.updated` and `customer.subscription.deleted`. Set `SUPABASE_SECRET_KEY` only as a server-side secret for webhook persistence. Add product catalogue metadata to `farmer_products` and its detailed guidance to `farmer_product_content` using a trusted admin workflow; client roles cannot write these tables. Access is granted only after Stripe webhook confirmation. See `DEMO.md`, `LIMITATIONS.md` and `docs/ARCHITECTURE.md`.
 
 ## Quality checks
 
