@@ -52,6 +52,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
           <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={22} /> AgriConnect</Link>
           <nav className="flex items-center gap-3 text-sm font-semibold">
             <Link href="/marketplace" className="text-leaf">Marketplace</Link>
+            <Link href="/market-insights" className="text-forest hover:text-leaf">Market insights</Link>
             <Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link>
             {user ? <Link href="/profile" className="text-forest hover:text-leaf">Profile</Link> : <Link href="/login" className="rounded-full bg-forest px-4 py-2 text-white hover:bg-leaf">Sign in</Link>}
           </nav>
