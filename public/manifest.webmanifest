@@ -1,0 +1,13 @@
+{
+  "name": "AgriConnect",
+  "short_name": "AgriConnect",
+  "description": "A local produce marketplace for smallholder farmers.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F8F2",
+  "theme_color": "#174B35",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
