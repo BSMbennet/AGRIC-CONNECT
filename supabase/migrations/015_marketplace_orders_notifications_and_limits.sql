@@ -105,6 +105,7 @@ returns trigger language plpgsql security definer set search_path = '' as $$
 declare v_limit integer:=10; v_plan text;
 begin
  if new.status <> 'active' then return new; end if;
+ if tg_op='INSERT' and new.client_submission_id is not null and exists(select 1 from public.produce_listings l where l.farmer_id=new.farmer_id and l.client_submission_id=new.client_submission_id) then return new; end if;
  perform pg_advisory_xact_lock(hashtextextended(new.farmer_id::text,0));
  select s.plan into v_plan from public.farmer_subscriptions s
  where s.farmer_id=new.farmer_id and s.status in ('active','trialing') and s.current_period_end>now()
