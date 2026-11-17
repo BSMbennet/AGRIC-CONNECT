@@ -16,11 +16,11 @@ export default async function AgentRegisterFarmerPage({ searchParams }: { search
     <main className="mx-auto max-w-2xl px-5 py-10">
       <Link href="/dashboard" className="text-sm font-bold text-forest">← Dashboard</Link>
       <h1 className="mt-6 text-3xl font-bold text-forest">Register a farmer</h1>
-      <p className="mt-2 text-sm text-slate-600">Use this assisted flow only after explaining the service and receiving the farmer's informed consent.</p>
+      <p className="mt-2 text-sm text-slate-600">Use this assisted flow only after explaining the service and receiving the farmer&apos;s informed consent.</p>
       {params.created && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Farmer profile created and linked to your agent account.</p>}
       {params.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">The farmer could not be registered. Check the information and retry.</p>}
       <form action={registerFarmerForMember} className="mt-6 grid gap-4 rounded-2xl border border-emerald-900/10 bg-white p-6 sm:grid-cols-2">
-        <label className="text-sm font-semibold text-slate-700 sm:col-span-2">Farmer's full name<Input name="display_name" required minLength={2} maxLength={80} className="mt-2"/></label>
+        <label className="text-sm font-semibold text-slate-700 sm:col-span-2">Farmer&apos;s full name<Input name="display_name" required minLength={2} maxLength={80} className="mt-2"/></label>
         <label className="text-sm font-semibold text-slate-700">Phone (optional)<Input name="phone_e164" type="tel" placeholder="+27..." className="mt-2"/></label>
         <label className="text-sm font-semibold text-slate-700">Preferred language<select name="preferred_language" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="en">English</option><option value="ve">Tshivenda (translation in progress)</option></select></label>
         <label className="text-sm font-semibold text-slate-700">District<Input name="district" defaultValue="Vhembe" required className="mt-2"/></label>
