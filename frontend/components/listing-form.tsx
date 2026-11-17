@@ -18,6 +18,7 @@ export function ListingForm({ submissionId, locality = "", district = "Vhembe", 
         client_submission_id: String(form.get("client_submission_id")),
         farmer_id: String(form.get("farmer_id") || "") || undefined,
         category: String(form.get("category")),
+        is_organic: form.get("is_organic") === "true",
         produce_name: String(form.get("produce_name")),
         quantity_available: Number(form.get("quantity_available")),
         unit: String(form.get("unit")) as "kg" | "bunch" | "crate" | "bag",
@@ -44,6 +45,7 @@ export function ListingForm({ submissionId, locality = "", district = "Vhembe", 
       {farmerId && <input type="hidden" name="farmer_id" value={farmerId} />}
       <label className="text-sm font-semibold text-slate-700">Produce name<Input name="produce_name" required minLength={2} placeholder="Tomatoes" className="mt-2" /></label>
       <label className="text-sm font-semibold text-slate-700">Category<select name="category" required className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="Vegetables">Vegetables</option><option value="Fruit">Fruit</option><option value="Grains">Grains</option><option value="Legumes">Legumes</option><option value="Herbs">Herbs</option><option value="Other">Other</option></select></label>
+      <label className="text-sm font-semibold text-slate-700">Organic status<select name="is_organic" required defaultValue="" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="" disabled>Choose yes or no</option><option value="true">Yes - grown organically</option><option value="false">No - not organic</option></select></label>
       <label className="text-sm font-semibold text-slate-700">Quantity available<Input name="quantity_available" type="number" min="0.01" step="0.01" required className="mt-2" /></label>
       <label className="text-sm font-semibold text-slate-700">Unit<select name="unit" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="kg">Kilograms (kg)</option><option value="bunch">Bunches</option><option value="crate">Crates</option><option value="bag">Bags</option></select></label>
       <label className="text-sm font-semibold text-slate-700">Asking price (ZAR)<Input name="asking_price" type="number" min="0" step="0.01" required className="mt-2" /></label>
@@ -55,7 +57,7 @@ export function ListingForm({ submissionId, locality = "", district = "Vhembe", 
       <label className="text-sm font-semibold text-slate-700">Municipality (optional)<Input name="municipality" className="mt-2" /></label>
       <label className="text-sm font-semibold text-slate-700">District<Input name="district" required defaultValue={district} className="mt-2" /></label>
       <label className="text-sm font-semibold text-slate-700 sm:col-span-2">Quality notes (optional)<textarea name="quality_notes" maxLength={500} rows={3} className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-leaf" placeholder="Freshly harvested, sorted and ready for collection..." /></label>
-      <p className="text-xs leading-5 text-slate-500 sm:col-span-2">Your price and quantity are farmer-provided and are not independently verified. Your approximate locality is visible to signed-in buyers; your phone number and exact farm location are not published.</p>
+      <p className="text-xs leading-5 text-slate-500 sm:col-span-2">Organic status is a farmer declaration and is not independently verified or a certification claim. Your price and quantity are farmer-provided and are not independently verified. Your approximate locality is visible to signed-in buyers; your phone number and exact farm location are not published.</p>
       {offlineState && <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2">{offlineState}</p>}
       <Button type="submit" className="sm:col-span-2">Publish produce listing</Button>
     </form>
