@@ -7,6 +7,21 @@ import { Sprout, ShoppingBasket, PlusCircle, Layers3, ShieldCheck } from "lucide
 import { SyncBadge } from "@/components/sync-badge";
 import { LanguageSelector } from "@/components/language-selector";
 
+type BuyerRequest = {
+  id: string;
+  buyer_id: string;
+  quantity_requested: number;
+  proposed_price: number | null;
+  message: string | null;
+  created_at: string;
+  status: string;
+};
+
+type ListingWithRequests = {
+  produce_name: string;
+  buyer_requests: BuyerRequest[] | null;
+};
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ error?: string; requested?: string; rejected?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -20,7 +35,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { data: listings } = isFarmer ? await supabase.from("produce_listings")
     .select("id,produce_name,buyer_requests!inner(id,buyer_id,quantity_requested,proposed_price,message,created_at,status)")
     .eq("farmer_id", user.id).eq("buyer_requests.status", "pending").order("created_at", { ascending: false, foreignTable: "buyer_requests" }) : { data: [] };
-  const pendingRequests = (listings ?? []).flatMap((listing: any) => (listing.buyer_requests ?? []).map((request: any) => ({ ...request, produce_name: listing.produce_name })));
+  const pendingRequests = (listings ?? []).flatMap((listing: ListingWithRequests) => (listing.buyer_requests ?? []).map((request: BuyerRequest) => ({ ...request, produce_name: listing.produce_name })));
   const { count: buyerRequestCount } = isFarmer ? { count: pendingRequests.length } : await supabase.from("buyer_requests").select("id", { count: "exact", head: true }).eq("buyer_id", user.id);
   const { data: assignedFarmers } = profile.role === "agent" ? await supabase.from("profiles").select("id,display_name,locality").eq("created_by_agent_id", user.id).order("created_at", { ascending: false }) : { data: [] };
 
@@ -39,7 +54,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-6 shadow-soft"><p className="text-3xl font-bold text-forest">{buyerRequestCount ?? 0}</p><p className="text-sm text-slate-600">{isFarmer ? "Pending buyer requests" : "Your buyer requests"}</p></div>
         </div>
         {profile.role === "agent" && <section className="mt-10"><h2 className="text-xl font-bold text-forest">Farmers you assist</h2>{assignedFarmers?.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2">{assignedFarmers.map((farmer) => <article key={farmer.id} className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="font-bold text-forest">{farmer.display_name}</p><p className="mt-1 text-xs text-slate-500">{farmer.locality || "Vhembe"}</p><Link href={`/agent/farmers/${farmer.id}/listing`} className="mt-4 inline-flex rounded-lg bg-forest px-3 py-2 text-xs font-bold text-white">Add farmer produce</Link></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">You have not registered any farmers yet. <Link href="/agent/register-farmer" className="font-bold text-leaf">Register a farmer</Link>.</p>}</section>}
-        {isFarmer && <section className="mt-10"><h2 className="text-xl font-bold text-forest">Buyer requests</h2>{pendingRequests.length ? <div className="mt-4 space-y-3">{pendingRequests.map((request: any) => <article key={request.id} className="rounded-2xl border border-emerald-900/10 bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-bold text-forest">{request.produce_name}</h3><p className="mt-1 text-sm text-slate-600">{request.quantity_requested} requested{request.proposed_price !== null ? ` · proposed R${Number(request.proposed_price).toFixed(2)}` : ""}</p>{request.message && <p className="mt-2 text-sm text-slate-500">{request.message}</p>}</div><span className="text-xs font-semibold text-amber-700">Pending</span></div><div className="mt-4 flex gap-2"><form action={acceptRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl bg-forest px-4 py-2 text-xs font-bold text-white">Accept & reserve stock</button></form><form action={rejectRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600">Reject</button></form></div></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">No pending requests yet. Your listings will appear in the marketplace for buyers to discover.</p>}</section>}
+        {isFarmer && <section className="mt-10"><h2 className="text-xl font-bold text-forest">Buyer requests</h2>{pendingRequests.length ? <div className="mt-4 space-y-3">{pendingRequests.map((request: BuyerRequest & { produce_name: string }) => <article key={request.id} className="rounded-2xl border border-emerald-900/10 bg-white p-5"><div className="flex flex-wrap justify-between gap-2"><div><h3 className="font-bold text-forest">{request.produce_name}</h3><p className="mt-1 text-sm text-slate-600">{request.quantity_requested} requested{request.proposed_price !== null ? ` · proposed R${Number(request.proposed_price).toFixed(2)}` : ""}</p>{request.message && <p className="mt-2 text-sm text-slate-500">{request.message}</p>}</div><span className="text-xs font-semibold text-amber-700">Pending</span></div><div className="mt-4 flex gap-2"><form action={acceptRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl bg-forest px-4 py-2 text-xs font-bold text-white">Accept & reserve stock</button></form><form action={rejectRequest}><input type="hidden" name="request_id" value={request.id}/><button className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600">Reject</button></form></div></article>)}</div> : <p className="mt-4 rounded-2xl bg-white p-6 text-sm text-slate-600">No pending requests yet. Your listings will appear in the marketplace for buyers to discover.</p>}</section>}
         {(profile.role === "buyer" || profile.role === "cooperative_manager") && <Link href="/coop/aggregate" className="mt-6 inline-flex items-center gap-2 rounded-xl border border-emerald-900/10 bg-white px-5 py-3 text-sm font-bold text-forest"><Layers3 size={17}/> Combine supply from farmers</Link>}
         {profile.role === "admin" && <Link href="/admin" className="mt-6 inline-flex items-center gap-2 rounded-xl border border-emerald-900/10 bg-white px-5 py-3 text-sm font-bold text-forest"><ShieldCheck size={17}/> Open admin console</Link>}
         <div className="mt-10 border-t border-emerald-900/10 pt-5"><Link href="/privacy" className="text-xs text-slate-500 underline">Privacy notice</Link></div>
