@@ -26,9 +26,9 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select p.cooperative_id from public.profiles p where p.id = (select auth.uid());
-$;
+$$;
 revoke all on function public.current_cooperative_id() from public, anon;
 grant execute on function public.current_cooperative_id() to authenticated;
 
@@ -38,9 +38,9 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select p.created_by_agent_id from public.profiles p where (select auth.uid()) is not null and p.id = (select auth.uid());
-$;
+$$;
 revoke all on function public.current_created_by_agent_id() from public, anon;
 grant execute on function public.current_created_by_agent_id() to authenticated;
 
