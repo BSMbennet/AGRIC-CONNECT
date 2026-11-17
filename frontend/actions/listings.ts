@@ -69,7 +69,7 @@ export async function createListing(formData: FormData) {
     client_submission_id: parsed.data.client_submission_id,
   }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true }).select("id").maybeSingle();
 
-  if (error) redirect("/listings/new?error=save");
+  if (error) redirect(error.message.includes("farmer_listing_limit_reached") ? "/listings/new?error=limit" : "/listings/new?error=save");
   let listingId = inserted?.id;
   if (!listingId) {
     const { data: existing, error: lookupError } = await supabase.from("produce_listings")
@@ -136,7 +136,7 @@ export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; e
     source_channel: profile.role === "agent" ? "agent" : "app",
     client_submission_id: parsed.data.client_submission_id,
   }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true }).select("id").maybeSingle();
-  if (error) return { ok: false, error: "save" };
+  if (error) return { ok: false, error: error.message.includes("farmer_listing_limit_reached") ? "limit" : "save" };
   let listingId = syncedListing?.id;
   if (!listingId) {
     const { data: existing } = await supabase.from("produce_listings").select("id").eq("farmer_id",farmerId).eq("client_submission_id",parsed.data.client_submission_id).single();
