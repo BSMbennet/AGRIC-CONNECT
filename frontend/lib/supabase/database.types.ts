@@ -163,6 +163,65 @@ export type Database = {
         }
         Relationships: []
       }
+      indigenous_knowledge_posts: {
+        Row: {
+          attribution: string | null
+          category: string
+          consent_to_share: boolean
+          content: string
+          created_at: string
+          crop_or_subject: string | null
+          farmer_id: string
+          id: string
+          language: string
+          locality: string | null
+          sharing_scope: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attribution?: string | null
+          category: string
+          consent_to_share?: boolean
+          content: string
+          created_at?: string
+          crop_or_subject?: string | null
+          farmer_id: string
+          id?: string
+          language?: string
+          locality?: string | null
+          sharing_scope: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attribution?: string | null
+          category?: string
+          consent_to_share?: boolean
+          content?: string
+          created_at?: string
+          crop_or_subject?: string | null
+          farmer_id?: string
+          id?: string
+          language?: string
+          locality?: string | null
+          sharing_scope?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indigenous_knowledge_posts_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_allocations: {
         Row: {
           agreed_unit_price: number
