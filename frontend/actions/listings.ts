@@ -124,3 +124,31 @@ export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; e
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+
+export async function updateListingStatus(formData: FormData) {
+  const listingId = String(formData.get("listing_id") || "");
+  const status = String(formData.get("status") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(listingId) || !["active", "paused"].includes(status)) {
+    redirect("/dashboard?error=listing");
+  }
+
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role !== "farmer") redirect("/dashboard?error=role");
+
+  const { data, error } = await supabase.from("produce_listings")
+    .update({ status: status as "active" | "paused", updated_at: new Date().toISOString() })
+    .eq("id", listingId)
+    .eq("farmer_id", user.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) redirect("/dashboard?error=listing");
+  revalidatePath("/dashboard");
+  revalidatePath("/marketplace");
+  revalidatePath(`/marketplace/${listingId}`);
+  redirect("/dashboard?listing_updated=1");
+}
