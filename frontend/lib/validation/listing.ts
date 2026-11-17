@@ -4,6 +4,7 @@ export const listingSchema = z.object({
   client_submission_id: z.string().uuid(),
   farmer_id: z.string().uuid().optional(),
   category: z.string().trim().min(2).max(60),
+  is_organic: z.preprocess((value) => value === true ? "true" : value === false ? "false" : value, z.enum(["true", "false"])).transform((value) => value === "true"),
   produce_name: z.string().trim().min(2).max(100),
   quantity_available: z.coerce.number().positive().max(1_000_000),
   unit: z.enum(["kg", "bunch", "crate", "bag"]),
