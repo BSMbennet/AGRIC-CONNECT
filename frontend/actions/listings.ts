@@ -66,15 +66,17 @@ export async function createListing(formData: FormData) {
   }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true }).select("id").maybeSingle();
 
   if (error) redirect("/listings/new?error=save");
-  if (!inserted) {
+  let listingId = inserted?.id;
+  if (!listingId) {
     const { data: existing, error: lookupError } = await supabase.from("produce_listings")
       .select("id").eq("farmer_id", farmerId).eq("client_submission_id", parsed.data.client_submission_id).single();
     if (lookupError || !existing) redirect("/listings/new?error=save");
+    listingId = existing.id;
   }
 
   revalidatePath("/marketplace");
   revalidatePath("/dashboard");
-  redirect("/marketplace?created=1");
+  redirect("/listings/" + listingId + "/photos?created=1");
 }
 
 
