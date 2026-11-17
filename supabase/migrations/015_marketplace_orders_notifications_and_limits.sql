@@ -34,6 +34,17 @@ grant select,insert,update,delete on public.listing_private_details to authentic
 alter table public.produce_listings drop column if exists contact_phone;
 alter table public.produce_listings drop column if exists fulfilment_details;
 
+create or replace function public.enforce_listing_private_owner()
+returns trigger language plpgsql security definer set search_path = '' as $
+begin
+ if not exists(select 1 from public.produce_listings l where l.id=new.listing_id and l.farmer_id=new.farmer_id) then
+  raise exception 'listing_private_details_owner_mismatch';
+ end if;
+ return new;
+end; $;
+create trigger enforce_listing_private_owner_before_write before insert or update on public.listing_private_details for each row execute function public.enforce_listing_private_owner();
+
+
 alter table public.buyer_requests add column if not exists buyer_name text;
 alter table public.buyer_requests add column if not exists contact_number text;
 alter table public.buyer_requests add column if not exists fulfilment_preference text;
