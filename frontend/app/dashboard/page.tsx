@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { logout } from "@/actions/auth";
 import { acceptRequest, rejectRequest, fulfillAllocation } from "@/actions/orders";
 import { updateListingStatus } from "@/actions/listings";
 import { Sprout, ShoppingBasket, PlusCircle, Layers3, ShieldCheck, PackageCheck, ClipboardList } from "lucide-react";
-import { SyncBadge } from "@/components/sync-badge";
-import { LanguageSelector } from "@/components/language-selector";
 import { AppNav } from "@/components/app-nav";
 
 type BuyerRequest = {
