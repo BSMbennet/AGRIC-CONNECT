@@ -47,7 +47,7 @@ export default async function ListingDetailPage({
   let listing: PublicListing | null = null;
   if (user) {
     const { data } = await supabase.from("produce_listings")
-      .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,farmer_id,image_urls")
+      .select("id,produce_name,category,is_organic,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,farmer_id,image_urls")
       .eq("id", id).maybeSingle();
     listing = data;
   } else {
