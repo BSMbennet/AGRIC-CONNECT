@@ -107,6 +107,7 @@ export async function syncListingDraft(input: unknown): Promise<{ ok: boolean; e
     farmer_id: farmerId,
     cooperative_id: cooperativeId,
     category: parsed.data.category,
+    is_organic: parsed.data.is_organic,
     produce_name: parsed.data.produce_name,
     quantity_available: parsed.data.quantity_available,
     unit: parsed.data.unit,
