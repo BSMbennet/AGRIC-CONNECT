@@ -21,7 +21,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   const supabase = await createClient();
   let query = supabase
     .from("produce_listings")
-    .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,price_unit,locality,municipality,available_from,harvest_date,quality_notes,created_at,expires_at")
+    .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,price_unit,locality,municipality,available_from,harvest_date,quality_notes,created_at,expires_at,image_urls")
     .eq("status", "active")
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
@@ -105,6 +105,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
             return (
               <article key={item.id} className="flex flex-col rounded-2xl border border-emerald-900/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <div className="flex items-center justify-between gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-leaf">{item.category}</span><span className="text-xs font-semibold text-emerald-700">{available.toLocaleString()} {item.unit} available</span></div>
+                {item.image_urls?.[0] ? <img src={item.image_urls[0]} alt={item.produce_name} className="mt-4 aspect-[16/9] w-full rounded-xl object-cover"/> : <div className="mt-4 flex aspect-[16/9] items-center justify-center rounded-xl bg-emerald-50 text-sm text-emerald-800">Product photo coming soon</div>}
                 <h3 className="mt-4 text-xl font-bold text-forest"><Link href={`/marketplace/${item.id}`} className="hover:text-leaf">{item.produce_name}</Link></h3>
                 <p className="mt-1 flex items-center gap-1 text-sm text-slate-500"><MapPin size={14} /> {item.locality}{item.municipality ? `, ${item.municipality}` : ""}</p>
                 <p className="mt-5 text-2xl font-bold text-forest">R{Number(item.asking_price).toFixed(2)} <span className="text-xs font-medium text-slate-500">/ {item.price_unit}</span></p>
