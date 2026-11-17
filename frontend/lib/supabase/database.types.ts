@@ -404,7 +404,7 @@ export type Database = {
           id: string
           image_path: string | null
           image_urls: string[]
-          is_organic: boolean
+          is_organic: boolean | null
           locality: string
           moderation_log: Json
           municipality: string | null
@@ -434,7 +434,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           image_urls?: string[]
-          is_organic?: boolean
+          is_organic?: boolean | null
           locality: string
           moderation_log?: Json
           municipality?: string | null
@@ -464,7 +464,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           image_urls?: string[]
-          is_organic?: boolean
+          is_organic?: boolean | null
           locality?: string
           moderation_log?: Json
           municipality?: string | null
