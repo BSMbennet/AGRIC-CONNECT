@@ -26,9 +26,10 @@ type PublicListing = {
   district: string | null;
   status: string;
   farmer_id?: string;
+  image_urls?: string[];
 };
 
-const publicColumns = "id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status";
+const publicColumns = "id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,image_urls";
 
 export default async function ListingDetailPage({
   params,
@@ -45,7 +46,7 @@ export default async function ListingDetailPage({
   let listing: PublicListing | null = null;
   if (user) {
     const { data } = await supabase.from("produce_listings")
-      .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,farmer_id")
+      .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,farmer_id,image_urls")
       .eq("id", id).maybeSingle();
     listing = data;
   } else {
@@ -77,6 +78,7 @@ export default async function ListingDetailPage({
         <Link href="/marketplace" className="text-sm font-bold text-leaf">← Back to marketplace</Link>
         <article className="mt-5 rounded-3xl border border-emerald-900/10 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-leaf">{listing.category}</span><span className="text-xs font-semibold text-slate-500">Farmer-listed produce</span></div>
+          {listing.image_urls?.length ? <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">{listing.image_urls.map((url,index)=><img key={url} src={url} alt={listing.produce_name+" photo "+(index+1)} className="aspect-square w-full rounded-xl object-cover"/>)}</div> : <div className="mt-5 rounded-xl bg-[#f7faf7] p-6 text-center text-sm text-slate-500">No product photos added yet.</div>}
           <h1 className="mt-4 text-3xl font-bold text-forest">{listing.produce_name}</h1>
           <p className="mt-2 flex items-center gap-1 text-sm text-slate-500"><MapPin size={15} /> {listing.locality}{listing.municipality ? `, ${listing.municipality}` : ""}{listing.district ? ` · ${listing.district}` : ""}</p>
           <p className="mt-7 text-3xl font-bold text-forest">R{Number(listing.asking_price).toFixed(2)} <span className="text-sm font-medium text-slate-500">per {listing.price_unit}</span></p>
