@@ -4,7 +4,7 @@ create table public.farmer_subscriptions (
  id uuid primary key default gen_random_uuid(),
  farmer_id uuid not null references public.profiles(id) on delete cascade,
  plan text not null check (plan in ('pro','premium')),
- status text not null check (status in ('incomplete','trialing','active','past_due','canceled','unpaid','paused')),
+ status text not null check (status in ('incomplete','incomplete_expired','trialing','active','past_due','canceled','unpaid','paused')),
  stripe_customer_id text,
  stripe_subscription_id text unique,
  current_period_end timestamptz,
