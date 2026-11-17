@@ -14,6 +14,7 @@ create table public.farmer_subscriptions (
 create index farmer_subscriptions_farmer_idx on public.farmer_subscriptions(farmer_id,status,current_period_end desc);
 alter table public.farmer_subscriptions enable row level security;
 create policy "farmers read own subscriptions" on public.farmer_subscriptions for select to authenticated using (farmer_id=(select auth.uid()));
+grant select on public.farmer_subscriptions to authenticated;
 revoke insert,update,delete on public.farmer_subscriptions from anon,authenticated;
 
 create table public.farmer_products (
