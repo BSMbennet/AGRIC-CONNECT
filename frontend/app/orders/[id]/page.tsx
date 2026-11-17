@@ -26,7 +26,7 @@ export default async function OrderPage({
   const [{ data: allocations }, { data: events }, { data: comments }] = await Promise.all([
     supabase.from("order_allocations").select("id,listing_id,farmer_id,quantity_allocated,agreed_unit_price,status").eq("order_id", id),
     supabase.from("order_events").select("event_type,from_status,to_status,note,created_at").eq("order_id", id).order("created_at"),
-    supabase.from("order_comments").select("id,author_id,body,created_at,profiles!order_comments_author_id_fkey(display_name,role)").eq("order_id",id).order("created_at"),
+    supabase.from("order_comments").select("id,author_id,author_display_name,author_role,body,created_at").eq("order_id",id).order("created_at"),
   ]);
 
   return (
@@ -61,7 +61,7 @@ export default async function OrderPage({
           <h2 className="font-bold text-forest">Order conversation</h2>
           <p className="mt-1 text-xs text-slate-500">Only this order's buyer and allocated farmer(s) can read or post messages.</p>
           {queryParams.error==="comment"&&<p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">Your comment could not be sent. Please try again.</p>}
-          {comments?.length ? <ol className="mt-4 space-y-3">{comments.map((comment:any)=><li key={comment.id} className="rounded-xl bg-[#f7faf7] p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold text-forest">{comment.profiles?.display_name||"Order participant"} <span className="font-normal capitalize text-slate-500">· {String(comment.profiles?.role||"").replaceAll("_"," ")}</span></p><time className="text-xs text-slate-400">{new Date(comment.created_at).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"})}</time></div><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{comment.body}</p></li>)}</ol> : <p className="mt-4 text-sm text-slate-500">No messages yet. Confirm timing, packaging and fulfilment here.</p>}
+          {comments?.length ? <ol className="mt-4 space-y-3">{comments.map((comment:any)=><li key={comment.id} className="rounded-xl bg-[#f7faf7] p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold text-forest">{comment.author_display_name} <span className="font-normal capitalize text-slate-500">· {String(comment.author_role||"").replaceAll("_"," ")}</span></p><time className="text-xs text-slate-400">{new Date(comment.created_at).toLocaleString("en-ZA",{timeZone:"Africa/Johannesburg"})}</time></div><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{comment.body}</p></li>)}</ol> : <p className="mt-4 text-sm text-slate-500">No messages yet. Confirm timing, packaging and fulfilment here.</p>}
           <form action={addOrderComment} className="mt-5"><input type="hidden" name="order_id" value={id}/><label className="block text-sm font-semibold text-slate-700">Add a comment<textarea name="body" required maxLength={2000} rows={3} className="mt-2 w-full rounded-xl border border-slate-200 p-3 text-sm" placeholder="Write a message about this order…"/></label><button className="mt-3 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white">Send comment</button></form>
         </section>
 
