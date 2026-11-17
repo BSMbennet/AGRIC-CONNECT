@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { login } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; registered?: string }> }) {
   const params = await searchParams;
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (claimsData?.claims) {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", claimsData.claims.sub).maybeSingle();
+    if (profile?.role) redirect("/dashboard");
+  }
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
       <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgriConnect</Link>
