@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +12,7 @@ export async function updatePreferredLanguage(value: string) {
   if (!parsed.success) return { ok: false };
   const cookieStore = await cookies();
   cookieStore.set("NEXT_LOCALE", parsed.data, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
     const { error } = await supabase.from("profiles").update({ preferred_language: parsed.data }).eq("id", user.id);
