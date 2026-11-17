@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -48,34 +47,25 @@ export async function register(formData: FormData) {
   if (!parsed.success) redirect("/register?error=invalid");
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
+    options: {
+      data: {
+        display_name: parsed.data.displayName,
+        role: parsed.data.role,
+        phone_e164: parsed.data.phone || null,
+        locality: parsed.data.locality,
+        district: parsed.data.district,
+        preferred_language: "en",
+        account_consent: true,
+      },
+    },
   });
-  if (error || !data.user) redirect("/register?error=signup");
+  if (error) redirect("/register?error=signup");
 
-  // Trusted profile fields are written server-side; public user metadata never determines roles.
-  const admin = createAdminClient();
-  const { error: profileError } = await admin.from("profiles").insert({
-    id: data.user.id,
-    role: parsed.data.role,
-    display_name: parsed.data.displayName,
-    phone_e164: parsed.data.phone || null,
-    district: parsed.data.district,
-    locality: parsed.data.locality,
-    preferred_language: "en",
-  });
-  if (profileError) redirect("/register?error=profile");
-
-  const { error: consentError } = await admin.from("consents").insert({
-    profile_id: data.user.id,
-    consent_type: "account",
-    consent_version: "v1",
-    granted: true,
-    method: "web_form",
-  });
-  if (consentError) redirect("/register?error=consent");
-
+  // The database trigger creates the profile and consent record transactionally.
+  // Public signup metadata is constrained by the trigger to farmer/buyer roles only.
   redirect("/login?registered=1");
 }
 
