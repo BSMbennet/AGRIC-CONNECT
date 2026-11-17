@@ -4,15 +4,15 @@
 
 Keep the existing Next.js, Supabase and Vercel platform. AgricNorthX is the product brand; the GitHub repository slug remains `AGRIC-CONNECT` to avoid breaking repository integrations. The core product remains the farmer-to-buyer and cooperative fulfilment workflow.
 
-The source concept proposes GIS crop suitability, irrigation planning, yield estimates, indigenous knowledge, local input suppliers, language inclusion and subscriptions. These should be introduced only when data, governance and customer demand support them.
+The Venda Smart Farming concept is being added as a layer of trustworthy, locally grounded decision support, not as a replacement product.
 
 ## Implemented product layers
 
 ### Marketplace and cooperative workflow
 
-- Farmer/agent onboarding, produce listings, buyer requests and order/stock workflows are the product's core.
-- Offline-first capture supports low-connectivity access; unsynced drafts are not buyer-visible.
-- Cooperative aggregation must respect member opt-in and explicit farmer allocations.
+- Farmer/agent onboarding, produce listings, buyer requests and stock/order workflows.
+- Offline-first capture supports low-connectivity settings; unsynced drafts are not buyer-visible.
+- Cooperative aggregation respects member opt-in and explicit farmer allocations.
 
 ### Market Insights — `/market-insights`
 
@@ -26,6 +26,14 @@ The source concept proposes GIS crop suitability, irrigation planning, yield est
 - Seven-day outlook includes min/max air temperature, forecast precipitation, precipitation probability and FAO reference evapotranspiration (ET₀).
 - Weather values are area/grid forecasts, not field sensor readings.
 - The UI provides a field-check reminder, not crop-specific irrigation instructions.
+
+### Field Truth — `/fields`
+
+- Farmers can record multiple private field profiles using a name and locality.
+- Soil texture and drainage are recorded as farmer observations; soil pH records distinguish laboratory tests, farmer estimates and no test.
+- Exact GPS coordinates are not collected. Field profiles are private to their owner under row-level security.
+- These records are evidence inputs for future recommendations, not proof of soil conditions.
+- Crop scores and yield estimates are intentionally not generated until crop requirements and local datasets have been validated.
 
 ### Pricing guide — `/pricing`
 
@@ -42,11 +50,11 @@ The source concept proposes GIS crop suitability, irrigation planning, yield est
 
 | Capability | Next decision gate |
 |---|---|
-| Crop suitability / GIS | Obtain authoritative soil, elevation and land-cover datasets; document resolution/licence/date; validate crop requirements with local agronomists. |
+| GIS crop suitability | Obtain authoritative soil, elevation and land-cover datasets; document resolution/licence/date; validate crop requirements with local agronomists. |
 | Irrigation recommendations | Add plot-level soil moisture, soil type, crop, growth stage and locally validated crop coefficients. Weather alone is insufficient. |
 | Yield prediction | Collect locally calibrated crop, planting, cultivar and management data; report uncertainty and avoid guaranteed yield claims. |
 | Fertilizer suppliers | Verify suppliers, stock freshness, product details and pricing; disclose referral fees and never pay-rank agronomic advice. |
-| Tshivenda, Xitsonga, Sepedi | Complete a fluent-speaker-reviewed end-to-end journey; keep unreviewed translations clearly marked. |
+| Tshivenda, Xitsonga, Sepedi, Afrikaans | Complete a fluent-speaker-reviewed end-to-end journey; keep unreviewed translations clearly marked. |
 | Buyer/cooperative subscriptions | Validate repeat usage and willingness to pay before launching paid tiers. |
 | Indigenous knowledge monetisation | Require community-approved permissions, benefit sharing and legal review; no public commercialisation by default. |
 
@@ -62,18 +70,17 @@ Keep farmer registration, listing and buyer discovery free during the pilot. Tes
 
 Do not launch all streams at once. Prove repeat buying, successful fulfilment and measurable savings first. No revenue or farmer outcome is claimed until measured.
 
-Illustration only: R100,000 completed monthly sales × 5% disclosed fee = R5,000 gross before operating costs. This is a scenario, not a forecast.
-
 ## Judge demonstration
 
 1. Agent registers a farmer with consent.
-2. Farmer listing is created and, where possible, captured offline then synced.
-3. Buyer requests a quantity.
-4. Farmer accepts and stock is reserved.
-5. Cooperative combines two farmers' opted-in supply.
-6. Market Insights shows real demo listings and clearly labels asking prices.
-7. Farm Planner shows a selected Vhembe locality's seven-day forecast.
-8. Close with free farmer access and buyer/cooperative-side monetisation.
+2. Farmer creates a private Field Truth profile, distinguishing observed soil conditions from lab-tested pH.
+3. AgricNorthX shows the selected Vhembe locality's seven-day forecast.
+4. The demo explicitly explains that crop suitability awaits locally validated crop rules and soil layers; no fabricated yield estimate is shown.
+5. An elder contributes a traditional water-management practice under community-controlled permissions.
+6. Farmer lists produce and a buyer requests supply.
+7. Cooperative aggregates member supply.
+8. Market Insights shows real demo listings and clearly labels asking prices.
+9. Close with free farmer access and buyer/cooperative-side monetisation.
 
 Use synthetic accounts/data in public demos. Never invent farmer numbers, testimonials, buyer commitments, revenue or impact.
 
@@ -88,9 +95,9 @@ The free API is for non-commercial use. Before AgricNorthX uses weather data in 
 
 ## Known limitations
 
+- Field Truth records farmer-entered observations; it is not a soil survey or laboratory service.
 - Weather data is a locality/grid forecast; no field soil-moisture sensor, infiltration measurement, soil map or crop-water model is connected.
 - Market insights reflects AgricNorthX listings only, not all local markets.
 - Asking prices are not completed sale prices.
-- No subscriptions, payment collection, supplier marketplace or transaction fee is implemented by this change.
 - GIS suitability and yield prediction are not implemented.
 - Community knowledge must not be collected or commercialised without informed consent and community governance.

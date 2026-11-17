@@ -6,7 +6,7 @@ AgricNorthX is a farmer-to-buyer and smart farming decision-support platform for
 
 - `frontend/` — standalone Next.js application. Configure Vercel **Root Directory** as `frontend`.
 - `supabase/` — database migrations, seed data and SQL tests.
-- `render_service/` — optional FastAPI integration adapter deployed separately on Render.
+- `render_service/` — optional FastAPI integration adapter deployed separately.
 - `render.yaml` — Render Blueprint for the integration adapter.
 - `.github/workflows/` — repository CI; frontend checks run from `frontend/`.
 
@@ -14,6 +14,7 @@ AgricNorthX is a farmer-to-buyer and smart farming decision-support platform for
 
 - **Farmer-to-buyer marketplace:** assisted onboarding, produce listings, buyer requests, stock reservation and cooperative aggregation.
 - **Offline capture:** agent-assisted farmer onboarding and listing drafts for low-connectivity settings.
+- **Field Truth** (`/fields`): private farmer-owned field profiles, with clear distinction between farmer observations and lab-tested soil pH. Exact farm GPS coordinates are not collected.
 - **Market Insights** (`/market-insights`): active listed supply and farmer-provided asking-price ranges; not verified sale prices or buyer demand.
 - **Farm Weather Planner** (`/weather`): locality-selected seven-day forecast with temperature, rainfall, precipitation probability and reference ET₀. It is forecast context, not field soil-moisture measurement or an irrigation prescription.
 - **Pricing guide** (`/pricing`): cost-based price planning and comparisons with active AgricNorthX asking prices.

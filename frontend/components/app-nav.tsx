@@ -9,6 +9,7 @@ export function AppNav({active=""}:{active?:string}){
       <Link href="/marketplace" className={link("marketplace")}>Marketplace</Link>
       <Link href="/market-insights" className={link("insights")}>Market insights</Link>
       <Link href="/weather" className={link("weather")}>Farm planner</Link>
+      <Link href="/fields" className={link("fields")}>My fields</Link>
       <Link href="/pricing" className={link("pricing")}>Price guide</Link>
       <Link href="/knowledge" className={link("knowledge")}>Knowledge</Link>
       <Link href="/dashboard" className={link("dashboard")}>Dashboard</Link>
