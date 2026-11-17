@@ -11,12 +11,14 @@ export type ListingDraft = {
   asking_price: number;
   price_unit: "kg" | "bunch" | "crate" | "bag";
   available_from: string;
-  harvest_date?: string;
+  harvest_date: string;
   expires_at?: string;
   quality_notes?: string;
   locality: string;
   municipality?: string;
   district: string;
+  contact_phone: string;
+  fulfilment_details: string;
   saved_at: string;
 };
 
