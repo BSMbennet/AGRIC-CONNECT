@@ -30,3 +30,17 @@ export async function rejectRequest(formData: FormData) {
   revalidatePath("/dashboard");
   redirect("/dashboard?rejected=1");
 }
+
+export async function fulfillAllocation(formData: FormData) {
+  const allocationId = String(formData.get("allocation_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(allocationId)) redirect("/dashboard?error=allocation");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data, error } = await supabase.rpc("fulfill_order_allocation", { p_allocation_id: allocationId });
+  if (error || !data?.id) redirect("/dashboard?error=fulfill");
+  revalidatePath("/dashboard");
+  revalidatePath("/marketplace");
+  revalidatePath(`/orders/${data.id}`);
+  redirect(`/orders/${data.id}`);
+}
