@@ -6,6 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapPin, Sprout } from "lucide-react";
 
+type PublicListing = {
+  id: string;
+  produce_name: string;
+  category: string;
+  quantity_available: number;
+  reserved_quantity: number;
+  quantity_sold: number;
+  unit: string;
+  asking_price: number;
+  currency: string;
+  price_unit: string;
+  available_from: string;
+  harvest_date: string | null;
+  expires_at: string | null;
+  quality_notes: string | null;
+  locality: string;
+  municipality: string | null;
+  district: string | null;
+  status: string;
+  farmer_id?: string;
+};
+
+const publicColumns = "id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status";
+
 export default async function ListingDetailPage({
   params,
   searchParams,
@@ -18,13 +42,18 @@ export default async function ListingDetailPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const publicColumns = "id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status";
-  const columns = user ? `${publicColumns},farmer_id` : publicColumns;
-  const { data: listing } = await supabase.from("produce_listings")
-    .select(columns)
-    .eq("id", id)
-    .eq("status", "active")
-    .single();
+  let listing: PublicListing | null = null;
+  if (user) {
+    const { data } = await supabase.from("produce_listings")
+      .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,farmer_id")
+      .eq("id", id).eq("status", "active").maybeSingle();
+    listing = data;
+  } else {
+    const { data } = await supabase.from("produce_listings")
+      .select(publicColumns)
+      .eq("id", id).eq("status", "active").maybeSingle();
+    listing = data;
+  }
 
   if (!listing || (listing.expires_at && new Date(listing.expires_at).getTime() <= Date.now())) notFound();
 
@@ -34,8 +63,7 @@ export default async function ListingDetailPage({
   const { data: profile } = user
     ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
     : { data: null };
-  const farmerId = user && "farmer_id" in listing ? listing.farmer_id : null;
-  const canRequest = !!user && profile?.role === "buyer" && farmerId !== user.id && isAvailableNow;
+  const canRequest = !!user && profile?.role === "buyer" && listing.farmer_id !== user.id && isAvailableNow;
 
   return (
     <main className="min-h-screen bg-[#f7faf7]">
@@ -45,7 +73,7 @@ export default async function ListingDetailPage({
           <nav className="flex items-center gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href={user ? "/dashboard" : "/login"} className="text-forest hover:text-leaf">{user ? "Dashboard" : "Sign in"}</Link></nav>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
+      <section className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <Link href="/marketplace" className="text-sm font-bold text-leaf">← Back to marketplace</Link>
         <article className="mt-5 rounded-3xl border border-emerald-900/10 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-leaf">{listing.category}</span><span className="text-xs font-semibold text-slate-500">Farmer-listed produce</span></div>
@@ -73,11 +101,11 @@ export default async function ListingDetailPage({
           <div className="mt-5 rounded-2xl border border-emerald-900/10 bg-white p-6">
             {!user ? <><h2 className="font-bold text-forest">Interested in this harvest?</h2><p className="mt-2 text-sm text-slate-600">Create a buyer account or sign in to send a request to the farmer.</p><div className="mt-4 flex flex-wrap gap-3"><Link href="/register" className="rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white">Register as buyer</Link><Link href="/login" className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-forest">Sign in</Link></div></> :
               profile?.role !== "buyer" ? <p className="text-sm text-slate-600">Buyer accounts can request produce. Your current account is not registered as a buyer.</p> :
-              farmerId === user.id ? <p className="text-sm text-slate-600">You cannot request your own listing.</p> :
+              listing.farmer_id === user.id ? <p className="text-sm text-slate-600">You cannot request your own listing.</p> :
               <p className="text-sm text-slate-600">This produce is not currently available for requests.</p>}
           </div>
         )}
-      </main>
+      </section>
     </main>
   );
 }
