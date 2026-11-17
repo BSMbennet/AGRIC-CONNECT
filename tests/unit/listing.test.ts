@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listingSchema } from "@/lib/validation/listing";
+import { listingSchema } from "../../lib/validation/listing";
 
 const validListing = {
   client_submission_id: "550e8400-e29b-41d4-a716-446655440000",
