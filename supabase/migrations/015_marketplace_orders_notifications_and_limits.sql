@@ -163,3 +163,46 @@ begin
 end; $$;
 drop trigger if exists notify_order_status on public.orders;
 create trigger notify_order_status after update of status on public.orders for each row execute function public.notify_order_status_change();
+
+
+-- Buyers may revise fulfilment/contact instructions before fulfilment; notify all allocated farmers.
+create or replace function public.update_buyer_order_details(
+ p_order_id uuid,p_buyer_name text,p_contact_number text,p_fulfilment_preference text,p_delivery_location text,p_order_instructions text
+) returns public.orders language plpgsql security definer set search_path = '' as $$
+declare v_order public.orders;
+begin
+ if auth.uid() is null then raise exception 'unauthorized'; end if;
+ if char_length(trim(p_buyer_name)) not between 2 and 120 then raise exception 'invalid_buyer_name'; end if;
+ if char_length(trim(p_contact_number)) not between 7 and 30 then raise exception 'invalid_contact_number'; end if;
+ if p_fulfilment_preference not in ('delivery','collection') then raise exception 'invalid_fulfilment_preference'; end if;
+ if p_fulfilment_preference='delivery' and char_length(trim(coalesce(p_delivery_location,'')))<5 then raise exception 'delivery_location_required'; end if;
+ if char_length(coalesce(p_order_instructions,''))>1000 then raise exception 'instructions_too_long'; end if;
+ select * into v_order from public.orders where id=p_order_id for update;
+ if not found or v_order.buyer_id<>auth.uid() then raise exception 'unauthorized'; end if;
+ if v_order.status not in ('pending','accepted') then raise exception 'order_not_editable'; end if;
+ update public.orders set buyer_name=trim(p_buyer_name),buyer_contact_number=trim(p_contact_number),
+  fulfilment_preference=p_fulfilment_preference,delivery_location=case when p_fulfilment_preference='delivery' then trim(p_delivery_location) else null end,
+  order_instructions=nullif(trim(coalesce(p_order_instructions,'')), ''),
+  collection_method=p_fulfilment_preference,
+  collection_point=case when p_fulfilment_preference='delivery' then trim(p_delivery_location) else collection_point end,
+  updated_at=now()
+ where id=p_order_id returning * into v_order;
+ return v_order;
+end; $$;
+revoke all on function public.update_buyer_order_details(uuid,text,text,text,text,text) from public,anon;
+grant execute on function public.update_buyer_order_details(uuid,text,text,text,text,text) to authenticated;
+
+create or replace function public.notify_buyer_order_details_change()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+ if (new.buyer_name,new.buyer_contact_number,new.fulfilment_preference,new.delivery_location,new.order_instructions)
+    is distinct from
+    (old.buyer_name,old.buyer_contact_number,old.fulfilment_preference,old.delivery_location,old.order_instructions) then
+  insert into public.notifications(recipient_id,order_id,title,body,notification_type)
+  select distinct a.farmer_id,new.id,'Buyer updated order details',new.buyer_name||' updated contact or fulfilment details for order '||left(new.id::text,8)||'. Review the order.','order_update'
+  from public.order_allocations a where a.order_id=new.id and a.farmer_id<>new.buyer_id;
+ end if;
+ return new;
+end; $$;
+drop trigger if exists notify_buyer_order_details on public.orders;
+create trigger notify_buyer_order_details after update of buyer_name,buyer_contact_number,fulfilment_preference,delivery_location,order_instructions on public.orders for each row execute function public.notify_buyer_order_details_change();
