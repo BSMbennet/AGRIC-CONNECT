@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -10,7 +11,9 @@ const moderationSchema = z.object({ listing_id: z.string().uuid(), action: z.enu
 export async function moderateListing(formData: FormData) {
   const parsed = moderationSchema.safeParse({ listing_id: formData.get("listing_id"), action: formData.get("action") });
   if (!parsed.success) redirect("/admin?error=invalid");
-  const supabase = await createClient();
+  // The generated project schema is checked separately; use the SDK's default
+  // client type here to avoid "never" inference in this server action.
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
