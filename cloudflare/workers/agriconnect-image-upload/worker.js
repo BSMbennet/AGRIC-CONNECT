@@ -1,4 +1,4 @@
-const ALLOWED = ["https://agric-connect-flax.vercel.app", "http://localhost:3000"];
+const ALLOWED = ["https://agric-connect-flax.vercel.app", "https://agric-connect-maluhalobennet-3566s-projects.vercel.app", "http://localhost:3000"];
 function cors(origin) {
   const ok = ALLOWED.includes(origin) || /^https:\/\/agric-connect-[a-z0-9-]+-maluhalobennet-3566s-projects\.vercel\.app$/.test(origin);
   return ok ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Methods": "PUT, OPTIONS", "Access-Control-Allow-Headers": "Authorization, Content-Type", "Vary": "Origin" } : {};
