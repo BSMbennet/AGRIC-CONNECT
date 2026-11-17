@@ -1,13 +1,28 @@
 -- Required marketplace details, order conversations, in-app notifications and server-side plan limits.
-alter table public.produce_listings add column if not exists contact_phone text;
-alter table public.produce_listings add column if not exists fulfilment_details text;
-update public.produce_listings l set harvest_date=coalesce(l.harvest_date,l.available_from,current_date);
-update public.produce_listings l set contact_phone=coalesce(nullif(l.contact_phone,''),p.phone_e164,'Contact via AgricNorthX'), fulfilment_details=coalesce(nullif(l.fulfilment_details,''),'Agree collection or delivery details directly with the farmer.') from public.profiles p where p.id=l.farmer_id and (l.contact_phone is null or l.fulfilment_details is null);
+update public.produce_listings set harvest_date=coalesce(harvest_date,available_from,current_date);
 alter table public.produce_listings alter column harvest_date set not null;
-alter table public.produce_listings alter column contact_phone set not null;
-alter table public.produce_listings alter column fulfilment_details set not null;
-alter table public.produce_listings add constraint listing_contact_phone_length check(char_length(trim(contact_phone)) between 7 and 30);
-alter table public.produce_listings add constraint listing_fulfilment_length check(char_length(trim(fulfilment_details)) between 5 and 500);
+
+-- Keep farmer contact and exact fulfilment instructions private until an order is accepted.
+create table if not exists public.listing_private_details(
+ listing_id uuid primary key references public.produce_listings(id) on delete cascade,
+ farmer_id uuid not null references public.profiles(id) on delete cascade,
+ contact_phone text not null check(char_length(trim(contact_phone)) between 7 and 30),
+ fulfilment_details text not null check(char_length(trim(fulfilment_details)) between 5 and 500),
+ updated_at timestamptz not null default now()
+);
+insert into public.listing_private_details(listing_id,farmer_id,contact_phone,fulfilment_details)
+select l.id,l.farmer_id,coalesce(p.phone_e164,'Contact via AgricNorthX'),'Agree collection or delivery details directly with the farmer.'
+from public.produce_listings l join public.profiles p on p.id=l.farmer_id
+on conflict(listing_id) do nothing;
+alter table public.listing_private_details enable row level security;
+create policy "farmers and assigned agents manage listing private details" on public.listing_private_details for all to authenticated
+ using(farmer_id=(select auth.uid()) or exists(select 1 from public.profiles p where p.id=farmer_id and p.created_by_agent_id=(select auth.uid())) or public.current_role_name()='admin')
+ with check(farmer_id=(select auth.uid()) or exists(select 1 from public.profiles p where p.id=farmer_id and p.created_by_agent_id=(select auth.uid())) or public.current_role_name()='admin');
+create policy "buyers see seller details on accepted orders" on public.listing_private_details for select to authenticated
+ using(exists(select 1 from public.order_allocations a join public.orders o on o.id=a.order_id where a.listing_id=listing_private_details.listing_id and o.buyer_id=(select auth.uid()) and o.status in ('accepted','fulfilled')));
+grant select,insert,update,delete on public.listing_private_details to authenticated;
+alter table public.produce_listings drop column if exists contact_phone;
+alter table public.produce_listings drop column if exists fulfilment_details;
 
 alter table public.buyer_requests add column if not exists buyer_name text;
 alter table public.buyer_requests add column if not exists contact_number text;
@@ -115,8 +130,9 @@ create index if not exists notifications_recipient_created_idx on public.notific
 alter table public.notifications enable row level security;
 create policy "users read own notifications" on public.notifications for select to authenticated using(recipient_id=(select auth.uid()));
 create policy "users mark own notifications read" on public.notifications for update to authenticated using(recipient_id=(select auth.uid())) with check(recipient_id=(select auth.uid()));
-grant select,update on public.notifications to authenticated;
-revoke insert,delete on public.notifications from anon,authenticated;
+grant select on public.notifications to authenticated;
+revoke insert,update,delete on public.notifications from anon,authenticated;
+grant update(read_at) on public.notifications to authenticated;
 
 create or replace function public.notify_farmer_of_buyer_request()
 returns trigger language plpgsql security definer set search_path = '' as $$
