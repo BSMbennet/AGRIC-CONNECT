@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -27,7 +28,8 @@ export async function registerFarmerForMember(formData: FormData) {
   });
   if (!parsed.success) redirect("/agent/register-farmer?error=invalid");
 
-  const supabase = await createClient();
+  // Use the SDK's default client type here to avoid "never" inference in this server action.
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: agent } = await supabase.from("profiles").select("role").eq("id", user.id).single();
