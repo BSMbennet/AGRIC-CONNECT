@@ -464,6 +464,7 @@ export type Database = {
           id?: string
           image_path?: string | null
           image_urls?: string[]
+          is_organic?: boolean
           locality?: string
           moderation_log?: Json
           municipality?: string | null
