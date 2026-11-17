@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
-export async function createClient() {
+export async function createClient(): Promise<SupabaseClient> {
   const cookieStore = await cookies();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -11,7 +12,7 @@ export async function createClient() {
     throw new Error("Supabase environment is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
   }
 
-  return createServerClient<Database>(url, key, {
+  const client = createServerClient<Database>(url, key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -25,4 +26,9 @@ export async function createClient() {
       },
     },
   });
+
+  // Keep the server-side client on Supabase's default generic while the generated
+  // Database declarations and pinned SDK disagree on query/RPC generic inference.
+  // Runtime schema enforcement remains in Postgres; browser client remains typed.
+  return client as unknown as SupabaseClient;
 }
