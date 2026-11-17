@@ -15,11 +15,21 @@ select l.id,l.farmer_id,coalesce(nullif(p.phone_e164,''),'Contact via AgricNorth
 from public.produce_listings l join public.profiles p on p.id=l.farmer_id
 on conflict(listing_id) do nothing;
 alter table public.listing_private_details enable row level security;
+create or replace function public.can_view_listing_private_details(p_listing_id uuid) returns boolean language sql stable security definer set search_path = '' as $
+ select exists(select 1 from public.produce_listings l where l.id=p_listing_id and (
+  l.farmer_id=(select auth.uid())
+  or exists(select 1 from public.profiles f where f.id=l.farmer_id and f.created_by_agent_id=(select auth.uid()))
+  or exists(select 1 from public.profiles me where me.id=(select auth.uid()) and me.role='admin')
+  or exists(select 1 from public.order_allocations a join public.orders o on o.id=a.order_id where a.listing_id=l.id and o.buyer_id=(select auth.uid()) and o.status in ('accepted','fulfilled'))
+ ));
+$;
+revoke all on function public.can_view_listing_private_details(uuid) from public,anon;
+grant execute on function public.can_view_listing_private_details(uuid) to authenticated;
 create policy "farmers and assigned agents manage listing private details" on public.listing_private_details for all to authenticated
  using(farmer_id=(select auth.uid()) or exists(select 1 from public.profiles p where p.id=farmer_id and p.created_by_agent_id=(select auth.uid())) or public.current_role_name()='admin')
  with check(farmer_id=(select auth.uid()) or exists(select 1 from public.profiles p where p.id=farmer_id and p.created_by_agent_id=(select auth.uid())) or public.current_role_name()='admin');
 create policy "buyers see seller details on accepted orders" on public.listing_private_details for select to authenticated
- using(exists(select 1 from public.order_allocations a join public.orders o on o.id=a.order_id where a.listing_id=listing_private_details.listing_id and o.buyer_id=(select auth.uid()) and o.status in ('accepted','fulfilled')));
+ using(public.can_view_listing_private_details(listing_id));
 grant select,insert,update,delete on public.listing_private_details to authenticated;
 alter table public.produce_listings drop column if exists contact_phone;
 alter table public.produce_listings drop column if exists fulfilment_details;
@@ -63,7 +73,7 @@ begin
  if v_req.status <> 'pending' then raise exception 'request_not_pending'; end if;
  select * into v_listing from public.produce_listings where id=v_req.listing_id for update;
  if not found then raise exception 'listing_not_found'; end if;
- if not (v_listing.farmer_id=auth.uid() or (v_actor_role='cooperative_manager' and exists(select 1 from public.profiles p where p.id=v_listing.farmer_id and p.cooperative_id=v_listing.cooperative_id and p.cooperative_id=(select manager.cooperative_id from public.profiles manager where manager.id=auth.uid()))) then raise exception 'unauthorized'; end if;
+ if not (v_listing.farmer_id=auth.uid() or (v_actor_role='cooperative_manager' and exists(select 1 from public.profiles p where p.id=v_listing.farmer_id and p.cooperative_id=v_listing.cooperative_id and p.cooperative_id=(select manager.cooperative_id from public.profiles manager where manager.id=auth.uid())))) then raise exception 'unauthorized'; end if;
  if v_listing.status<>'active' then raise exception 'listing_not_active'; end if;
  if (v_listing.quantity_available-v_listing.reserved_quantity-v_listing.quantity_sold)<v_req.quantity_requested then raise exception 'insufficient_stock'; end if;
  update public.produce_listings set reserved_quantity=reserved_quantity+v_req.quantity_requested,updated_at=now() where id=v_listing.id;
@@ -103,16 +113,29 @@ create table if not exists public.order_comments(
  order_id uuid not null references public.orders(id) on delete cascade,
  author_id uuid not null references public.profiles(id),
  body text not null check(char_length(trim(body)) between 1 and 2000),
+ author_display_name text not null,
+ author_role text not null,
  created_at timestamptz not null default now()
 );
 create index if not exists order_comments_order_created_idx on public.order_comments(order_id,created_at);
 alter table public.order_comments enable row level security;
-create policy "order participants read comments" on public.order_comments for select to authenticated using(
- exists(select 1 from public.orders o where o.id=order_id and (o.buyer_id=(select auth.uid()) or exists(select 1 from public.order_allocations a where a.order_id=o.id and a.farmer_id=(select auth.uid()))))
-);
-create policy "order participants write comments" on public.order_comments for insert to authenticated with check(
- author_id=(select auth.uid()) and exists(select 1 from public.orders o where o.id=order_id and (o.buyer_id=(select auth.uid()) or exists(select 1 from public.order_allocations a where a.order_id=o.id and a.farmer_id=(select auth.uid()))))
-);
+create or replace function public.is_order_participant(p_order_id uuid) returns boolean language sql stable security definer set search_path = '' as $
+ select exists(select 1 from public.orders o where o.id=p_order_id and (
+  o.buyer_id=(select auth.uid()) or exists(select 1 from public.order_allocations a where a.order_id=o.id and a.farmer_id=(select auth.uid()))
+ ));
+$;
+revoke all on function public.is_order_participant(uuid) from public,anon;
+grant execute on function public.is_order_participant(uuid) to authenticated;
+create policy "order participants read comments" on public.order_comments for select to authenticated using(public.is_order_participant(order_id));
+create policy "order participants write comments" on public.order_comments for insert to authenticated with check(author_id=(select auth.uid()) and public.is_order_participant(order_id));
+create or replace function public.set_order_comment_author()
+returns trigger language plpgsql security definer set search_path = '' as $
+begin
+ select p.display_name,p.role::text into new.author_display_name,new.author_role from public.profiles p where p.id=new.author_id;
+ if new.author_display_name is null then raise exception 'comment_author_profile_missing'; end if;
+ return new;
+end; $;
+create trigger set_order_comment_author_before_insert before insert on public.order_comments for each row execute function public.set_order_comment_author();
 grant select,insert on public.order_comments to authenticated;
 revoke update,delete on public.order_comments from anon,authenticated;
 
