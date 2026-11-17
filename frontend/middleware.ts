@@ -13,15 +13,13 @@ export async function middleware(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet, headers) {
+      setAll(cookiesToSet) {
         // Keep refreshed cookies on both the forwarded request and browser response.
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        // Prevent a CDN from caching a response containing refreshed auth cookies.
-        if (headers) {
-          Object.entries(headers).forEach(([name, value]) => response.headers.set(name, value));
-        }
+        // Authenticated responses with refreshed cookies must not be cached by shared proxies.
+        response.headers.set("Cache-Control", "private, no-store");
       },
     },
   });
