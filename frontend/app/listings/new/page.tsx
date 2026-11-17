@@ -15,7 +15,7 @@ export default async function NewListingPage({ searchParams }: { searchParams: P
       <Link href="/dashboard" className="text-sm font-bold text-forest">← Dashboard</Link>
       <h1 className="mt-6 text-3xl font-bold text-forest">List your harvest</h1>
       <p className="mt-2 text-sm text-slate-600">Tell nearby buyers what you have available.</p>
-      {params.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not publish this listing. Check the information and try again.</p>}
+      {params.error === "limit" ? <p role="alert" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">You have reached your active listing allowance for this plan. <Link href="/subscriptions" className="font-bold underline">View upgrade options</Link> or pause an existing listing.</p> : params.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not publish this listing. Check the information and try again.</p>}
       <div className="mt-6"><ListingForm submissionId={crypto.randomUUID()} locality={profile.locality ?? ""} district={profile.district ?? "Vhembe"} contactPhone={profile.phone_e164 ?? ""} /></div>
     </main>
   );
