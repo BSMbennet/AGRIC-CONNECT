@@ -72,7 +72,7 @@ export default async function ListingDetailPage({
       <header className="border-b border-emerald-900/10 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={21} /> AgriConnect</Link>
-          <nav className="flex items-center gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href={user ? "/dashboard" : "/login"} className="text-forest hover:text-leaf">{user ? "Dashboard" : "Sign in"}</Link></nav>
+          <nav className="flex items-center gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href={user ? "/dashboard" : "/login"} className="text-forest hover:text-leaf">{user ? "Dashboard" : "Sign in"}</Link>{user && <Link href="/profile" className="text-forest hover:text-leaf">Profile</Link>}</nav>
         </div>
       </header>
       <section className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
