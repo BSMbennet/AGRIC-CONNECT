@@ -1,0 +1,11 @@
+{
+  "_reviewed": false,
+  "app": {
+    "name": "AgriConnect",
+    "tagline": "Translation in progress.",
+    "dashboard": "Dashboard",
+    "marketplace": "Marketplace",
+    "signOut": "Sign out",
+    "language": "Language"
+  }
+}
