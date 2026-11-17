@@ -7,6 +7,7 @@ import { updateListingStatus } from "@/actions/listings";
 import { Sprout, ShoppingBasket, PlusCircle, Layers3, ShieldCheck, PackageCheck, ClipboardList } from "lucide-react";
 import { SyncBadge } from "@/components/sync-badge";
 import { LanguageSelector } from "@/components/language-selector";
+import { AppNav } from "@/components/app-nav";
 
 type BuyerRequest = {
   id: string;
@@ -84,7 +85,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <main className="min-h-screen bg-[#f7faf7]">
-      <header className="border-b border-emerald-900/10 bg-white"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4"><Link href="/" className="font-bold text-forest">AgriConnect</Link><nav className="flex flex-wrap items-center gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href="/knowledge" className="text-forest hover:text-leaf">Indigenous knowledge</Link><Link href="/pricing" className="text-forest hover:text-leaf">Pricing guide</Link><Link href="/dashboard" className="text-leaf">Dashboard</Link><SyncBadge/><LanguageSelector/><form action={logout}><button className="text-sm font-semibold text-slate-600 hover:text-forest">Sign out</button></form></nav></div></header>
+      <AppNav active="dashboard" />
       <section className="mx-auto max-w-6xl px-5 py-10">
         <p className="text-sm font-semibold capitalize text-leaf">Your workspace · {profile.role.replaceAll("_", " ")}</p>
         <h1 className="mt-2 text-3xl font-bold text-forest">Hello, {profile.display_name}</h1>
