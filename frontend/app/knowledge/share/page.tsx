@@ -1,0 +1,20 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { createKnowledgePost } from "@/actions/knowledge";
+export default async function ShareKnowledgePage({searchParams}:{searchParams:Promise<{error?:string}>}) {
+ const p=await searchParams,supabase=await createClient(),{data:{user}}=await supabase.auth.getUser(); if(!user) redirect("/login");
+ const {data:profile}=await supabase.from("profiles").select("role,locality").eq("id",user.id).single(); if(profile?.role!=="farmer") redirect("/dashboard");
+ return <main className="mx-auto max-w-3xl px-5 py-10"><Link href="/knowledge" className="text-sm font-bold text-leaf">← Knowledge library</Link><h1 className="mt-6 text-3xl font-bold text-forest">Share indigenous farming knowledge</h1><p className="mt-2 text-sm leading-6 text-slate-600">Record a practice in your own words and language. Share only what you have the right and permission to share.</p>
+ {p.error&&<p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">Please check the fields and confirm your sharing permission.</p>}
+ <form action={createKnowledgePost} className="mt-6 grid gap-4 rounded-2xl border border-emerald-900/10 bg-white p-6">
+ <label className="text-sm font-semibold text-slate-700">Title<input name="title" required minLength={4} maxLength={160} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3" placeholder="Saving local cowpea seed for the next season"/></label>
+ <label className="text-sm font-semibold text-slate-700">Topic<select name="category" required className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3"><option>Seeds and indigenous crops</option><option>Seasonal planting</option><option>Soil and water</option><option>Pest and disease management</option><option>Food preservation</option><option>Traditional foods and uses</option><option>Weather and local indicators</option><option>Other</option></select></label>
+ <label className="text-sm font-semibold text-slate-700">Crop or subject<input name="crop_or_subject" maxLength={120} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3"/></label>
+ <label className="text-sm font-semibold text-slate-700">Knowledge / practice<textarea name="content" required minLength={30} maxLength={12000} rows={8} className="mt-2 w-full rounded-xl border border-slate-200 p-3" placeholder="Describe the practice, when it is used, the steps, and any cautions…"/></label>
+ <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Language<input name="language" defaultValue="Tshivenda" maxLength={40} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3"/></label><label className="text-sm font-semibold text-slate-700">Locality<input name="locality" defaultValue={profile.locality??""} maxLength={100} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3"/></label></div>
+ <label className="text-sm font-semibold text-slate-700">Attribution / community<input name="attribution" maxLength={160} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3" placeholder="How should the contributor or community be credited?"/></label>
+ <label className="text-sm font-semibold text-slate-700">Who may see this?<select name="sharing_scope" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3"><option value="public">Public — visible to everyone</option><option value="community">Private — only visible to you for now</option></select></label>
+ <label className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm leading-5 text-amber-950"><input type="checkbox" name="consent_to_share" required className="mt-1"/>I confirm I have permission to share this knowledge in the selected way, and understand public contributions can be read and copied. I will not share sacred, restricted or confidential community knowledge.</label>
+ <button className="rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white">Save knowledge contribution</button></form></main>;
+}
