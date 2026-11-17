@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -20,7 +21,8 @@ export async function createAggregateOrder(formData: FormData) {
   const parsed = allocationSchema.safeParse(raw);
   if (!parsed.success) redirect("/coop/aggregate?error=invalid");
 
-  const supabase = await createClient();
+  // Avoid generated-schema "never" inference in this server action.
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
