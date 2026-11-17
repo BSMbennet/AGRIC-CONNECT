@@ -10,6 +10,7 @@ type PublicListing = {
   id: string;
   produce_name: string;
   category: string;
+  is_organic: boolean;
   quantity_available: number;
   reserved_quantity: number;
   quantity_sold: number;
@@ -29,7 +30,7 @@ type PublicListing = {
   image_urls?: string[];
 };
 
-const publicColumns = "id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,image_urls";
+const publicColumns = "id,produce_name,category,is_organic,quantity_available,reserved_quantity,quantity_sold,unit,asking_price,currency,price_unit,available_from,harvest_date,expires_at,quality_notes,locality,municipality,district,status,image_urls";
 
 export default async function ListingDetailPage({
   params,
@@ -80,6 +81,7 @@ export default async function ListingDetailPage({
           <div className="flex flex-wrap items-center justify-between gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-leaf">{listing.category}</span><span className="text-xs font-semibold text-slate-500">Farmer-listed produce</span></div>
           {listing.image_urls?.length ? <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">{listing.image_urls.map((url,index)=><img key={url} src={url} alt={listing.produce_name+" photo "+(index+1)} className="aspect-square w-full rounded-xl object-cover"/>)}</div> : <div className="mt-5 rounded-xl bg-[#f7faf7] p-6 text-center text-sm text-slate-500">No product photos added yet.</div>}
           <h1 className="mt-4 text-3xl font-bold text-forest">{listing.produce_name}</h1>
+          <p className="mt-2 inline-flex rounded-full bg-lime-50 px-3 py-1 text-xs font-semibold text-lime-800">{listing.is_organic ? "Farmer-declared organic (not independently certified)" : "Farmer declares this produce is not organic"}</p>
           <p className="mt-2 flex items-center gap-1 text-sm text-slate-500"><MapPin size={15} /> {listing.locality}{listing.municipality ? `, ${listing.municipality}` : ""}{listing.district ? ` · ${listing.district}` : ""}</p>
           <p className="mt-7 text-3xl font-bold text-forest">R{Number(listing.asking_price).toFixed(2)} <span className="text-sm font-medium text-slate-500">per {listing.price_unit}</span></p>
           <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">{available.toLocaleString()} {listing.unit} available</span>{!isAvailableNow && available > 0 && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800">Available from {listing.available_from}</span>}</div>
