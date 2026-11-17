@@ -13,16 +13,21 @@ export async function middleware(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
+        // Keep refreshed cookies on both the forwarded request and browser response.
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        // Prevent a CDN from caching a response containing refreshed auth cookies.
+        if (headers) {
+          Object.entries(headers).forEach(([name, value]) => response.headers.set(name, value));
+        }
       },
     },
   });
 
-  // getUser validates the JWT with Supabase Auth; do not authorize using getSession alone.
-  await supabase.auth.getUser();
+  // getClaims verifies the JWT and refreshes an expired access token when possible.
+  await supabase.auth.getClaims();
   return response;
 }
 
