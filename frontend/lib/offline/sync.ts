@@ -8,7 +8,9 @@ export async function syncDrafts() {
   let synced = 0;
   let failed = 0;
   for (const draft of drafts) {
-    const { saved_at: _savedAt, ...payload } = draft;
+    const { saved_at, ...payload } = draft;
+    // saved_at is local-only metadata and is intentionally excluded from the server payload.
+    void saved_at;
     const result = await syncListingDraft(payload);
     if (result.ok) {
       await deleteDraft(draft.client_submission_id);
