@@ -1,0 +1,10 @@
+{
+  "app": {
+    "name": "AgriConnect",
+    "tagline": "Local harvest. Better markets.",
+    "dashboard": "Dashboard",
+    "marketplace": "Marketplace",
+    "signOut": "Sign out",
+    "language": "Language"
+  }
+}
