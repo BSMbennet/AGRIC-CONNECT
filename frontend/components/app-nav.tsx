@@ -4,19 +4,20 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
 import { NavMenu, type NavItem } from "@/components/nav-menu";
 import { LanguageSelector } from "@/components/language-selector";
-import { Store, ClipboardList, LayoutDashboard, Wallet, CloudSun, Sprout, BarChart3, BookOpen, Tractor, Users, User, ShieldCheck, Layers3, Tag } from "lucide-react";
+import { Store, ClipboardList, LayoutDashboard, Wallet, CloudSun, Sprout, BarChart3, BookOpen, Tractor, Users, User, ShieldCheck, Layers3, Tag, Bell } from "lucide-react";
 
 type Role = "farmer" | "buyer" | "agent" | "cooperative_manager" | "admin";
 type NavModel = { primary: NavItem[]; secondary: NavItem[] };
 
 function navigationFor(role: Role | null, t: (key: string) => string): NavModel {
   const primary: NavItem[] = [{ href: "/marketplace", label: t("marketplace"), icon: Store }];
-  const secondary: NavItem[] = [{ href: "/knowledge", label: "Community knowledge", icon: BookOpen }];
+  const secondary: NavItem[] = role ? [{ href: "/dashboard#notifications", label: "Notifications", icon: Bell }, { href: "/knowledge", label: "Community knowledge", icon: BookOpen }] : [{ href: "/knowledge", label: "Community knowledge", icon: BookOpen }];
   if (!role) {
     secondary.push({ href: "/weather", label: "Farm weather", icon: CloudSun });
     return { primary, secondary };
   }
-  if (role === "farmer" || role === "buyer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: ClipboardList });
+  if (role === "farmer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: ClipboardList });
+  else if (role === "buyer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: ClipboardList });
   primary.push({ href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard });
   if (role === "farmer") primary.push({ href: "/wallet", label: "Wallet", icon: Wallet });
   if (role === "farmer") secondary.push(
@@ -54,6 +55,7 @@ export async function AppNav(_props: { active?: string } = {}) {
     role = (data?.role as Role | undefined) ?? null;
   }
   const extra = <div className="flex flex-wrap items-center gap-3">
+    {user && <Link href="/dashboard#notifications" aria-label="Notifications" title="Notifications" className="grid h-9 w-9 place-items-center rounded-full text-forest transition hover:bg-emerald-50"><Bell size={17} /></Link>}
     <LanguageSelector value={locale} label={t("language")} />
     {user ? <form action={logout}><button className="rounded-full px-3 py-2 text-xs font-semibold text-slate-500 transition hover:bg-emerald-50 hover:text-forest">{t("signOut")}</button></form> : <span className="flex items-center gap-3">
       <Link href="/login" className="text-sm font-semibold text-forest hover:text-leaf">{t("signIn")}</Link>
