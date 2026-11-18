@@ -91,7 +91,7 @@ export function AssistantChat() {
       <aside className="space-y-4">
         <div className="rounded-2xl border border-emerald-900/10 bg-white p-5">
           <div className="flex items-center gap-2 text-forest"><ShieldCheck size={18}/><h3 className="font-bold">Your data stays scoped</h3></div>
-          <p className="mt-2 text-xs leading-5 text-slate-600">Marketplace figures are calculated from your authenticated account records inside the app. Private totals and messages are not sent to an external AI model. Agricultural answers are retrieved from approved source notes; generative replies are not enabled yet.</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">This screen only sends your question to the secure assistant API. Your account records are fetched and checked on the server; this browser component has no database credentials or AI-provider keys. Private account data is not sent to an external AI provider. Agricultural answers come from approved source notes.</p>
         </div>
         <div className="rounded-2xl border border-emerald-900/10 bg-white p-5">
           <div className="flex items-center gap-2 text-forest"><BookOpen size={18}/><h3 className="font-bold">Agricultural sources</h3></div>
@@ -99,7 +99,7 @@ export function AssistantChat() {
         </div>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <div className="flex items-center gap-2 text-amber-900"><MicOff size={18}/><h3 className="font-bold">Typed input only</h3></div>
-          <p className="mt-2 text-xs leading-5 text-amber-900">Voice recognition and spoken replies are not enabled. Tshivenda, Xitsonga and Sepedi replies are experimental and still need native-speaker review.</p>
+          <p className="mt-2 text-xs leading-5 text-amber-900">Voice recognition and spoken replies are not enabled. Tshivenda, Xitsonga and Sepedi responses are not yet available; the assistant will show an English fallback.</p>
         </div>
       </aside>
     </div>
