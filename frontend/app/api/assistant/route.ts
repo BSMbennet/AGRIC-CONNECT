@@ -63,9 +63,9 @@ async function generateWithGemini(message:string,language:(typeof codes)[number]
  if(!key)return null;
  const model=process.env.GEMINI_MODEL||"gemini-2.5-flash-lite";
  const knowledgeText=knowledgeItems.length
-  ? knowledgeItems.map(item=>`- ${item.title}: ${item.summary} Source: ${item.sourceUrl}`).join("\\n")
+  ? knowledgeItems.map(item=>`- ${item.title}: ${item.summary} Source: ${item.sourceUrl}`).join("\n")
   : "No verified agricultural knowledge excerpts were retrieved.";
- const systemInstruction=`You are Agric Assistant for smallholder farmers in South Africa. Reply in ${names[language]} for the entire answer. Use clear, mobile-friendly language and practical steps. Be cautious with agricultural, animal-health and chemical advice. Never invent pesticide names, doses, withholding periods, current market prices or weather. Ask for crop, growth stage, locality and symptoms when essential. Use only the supplied agricultural excerpts for source-specific claims and cite them as [title](URL). If excerpts are not relevant, say your guidance is general. Do not ask for or expose private account information. Retrieved agricultural information:\\n${knowledgeText}`;
+ const systemInstruction=`You are Agric Assistant for smallholder farmers in South Africa. Reply in ${names[language]} for the entire answer. Use clear, mobile-friendly language and practical steps. Be cautious with agricultural, animal-health and chemical advice. Never invent pesticide names, doses, withholding periods, current market prices or weather. Ask for crop, growth stage, locality and symptoms when essential. Use only the supplied agricultural excerpts for source-specific claims and cite them as [title](URL). If excerpts are not relevant, say your guidance is general. Do not ask for or expose private account information. Retrieved agricultural information:\n${knowledgeText}`;
  try{
   const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
    method:"POST",
