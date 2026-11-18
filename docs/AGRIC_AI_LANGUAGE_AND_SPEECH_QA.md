@@ -81,7 +81,7 @@ The API now combines:
 2. Approved Supabase `agri_knowledge_sources` and `agri_knowledge_chunks` using the existing generated full-text search vector and authenticated RLS.
 3. Optional pgvector retrieval when a compatible 1024-dimensional embedding provider and the staged database migration are available.
 
-The live Supabase project currently has approved knowledge sources and six chunks. The pgvector extension is available on the platform but was not installed in the inspected project. The migration adding the optional embedding column and similarity function is committed to this feature branch but has **not** been applied to the live database.
+The live Supabase project currently has approved knowledge sources and six chunks. A second additive migration stages six additional LDARD, ARC and WRC crop, poultry, livestock and irrigation source records as **pending** review; they are not returned by RAG until an authorized reviewer approves them. The pgvector extension is available on the platform but was not installed in the inspected project. The memory/vector and source-candidate migrations are committed to this feature branch but have **not** been applied to the live database.
 
 Optional embedding variables:
 - `AI_EMBEDDING_API_KEY`
@@ -100,8 +100,9 @@ The market-intelligence endpoint links to the National Agricultural Marketing Co
 
 Conversation history is stored only after the user explicitly turns memory on. Turning it off deletes the stored conversation. Clear conversation deletes saved messages while leaving the user's opt-in preference unchanged.
 
-The additive SQL migration is:
-`supabase/migrations/202611180001_agri_ai_memory_and_vector_rag.sql`
+The additive SQL migrations are:
+- `supabase/migrations/202611180001_agri_ai_memory_and_vector_rag.sql`
+- `supabase/migrations/202611180002_seed_agricultural_knowledge_candidates.sql` (adds six pending source/chunk records)
 
 It creates owner-scoped tables with RLS, limits history to 80 messages and adds optional vector search. It is committed but not applied to the live Supabase project. The current Vercel preview shares the existing Supabase environment, so applying it there would alter the live database. Do not do that without a dedicated approved staging database or explicit approval for a production migration.
 
