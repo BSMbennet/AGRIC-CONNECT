@@ -316,7 +316,7 @@ export const agriculturalKnowledge: AgriculturalKnowledgeDocument[] = [
     publicationDate: "2011-04",
     lastVerifiedAt: "2026-11-18",
     verificationStatus: "verified",
-    summary: "SANBI PlantZAfrica identifies Brackenridgea zanguebarica (Mutavhatsindi) as critically endangered in South Africa, with a small population at Mafukani in Vhembe. The profile reports severe decline associated with bark and root removal and says propagation attempts have not succeeded; further research is needed. This is a conservation warning, not a home-propagation recipe. Do not collect wild bark, roots, seed or seedlings; any recovery work must be authorised and community-led.",
+    summary: "SANBI PlantZAfrica identifies Brackenridgea zanguebarica (Mutavhatsindi) as critically endangered in South Africa, with a small population at Mafukani in Vhembe. The updated SANBI profile (October 2025) reports that propagation remains challenging, but a 2021 pilot achieved over 90% success with on-site air layering; stem cuttings had at least 30% rooting in trials, while seed germination remained very poor (1.5% in one trial). These are specialist conservation trials, not instructions for home propagation. The species remains critically endangered and wild harvesting has caused severe decline. Do not collect wild bark, roots, seed or seedlings; any propagation or recovery work must be authorised and community-led.",
     keywords: ["Mutavhatsindi", "Brackenridgea zanguebarica", "Mafukani", "Mutale", "Vhembe", "rare herb", "critically endangered", "medicinal plant", "conservation", "propagation"]
   },
   {
