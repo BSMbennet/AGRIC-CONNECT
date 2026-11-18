@@ -6,13 +6,13 @@ const markers: LanguageMarker[] = [
   { language:"ve", phrases:["ndi khou","vhulimi","zwibveledzwa","ndi toda","nḓi khou","tshifhinga tsha","ḓivha","vhudzani","doda yanga"] },
   { language:"ts", phrases:["ndzi lava","sweswi","vurimi","swibyariwa","tioda ta","xana","ndzi kombela","swi endla","mavonelo ya"] },
   { language:"nso", phrases:["ke nyaka","bjang","temo","ditšweletšwa","diotara tša","mpotše","ga ke","kgopela","tša gago"] },
-  { language:"zu", phrases:["ngifuna","ngicela","ngithenge","ngithengisile","ukuthi","ngiyabonga","ezolimo","ama-oda","umkhiqizo wami"] },
-  { language:"xh", phrases:["ndifuna","ndicela","ndithengisile","ndiyabulela","ezolimo","ii-odolo","imveliso yam","ndingathanda"] },
+  { language:"zu", phrases:["ngifuna","ngicela","ngithenge","ngithengisile","ukuthi","ngiyabonga","ezolimo","ama-oda","ngama-oda ami","umkhiqizo wami"] },
+  { language:"xh", phrases:["ndifuna","ndifuna ukwazi","ndicela","ndithengisile","ndiyabulela","ezolimo","ii-odolo","imveliso yam","ndingathanda"] },
   { language:"af", phrases:["asseblief","ek wil","hoeveel","wanneer moet","my bestelling","boerdery","ek het","jy kan","die oes"] },
   { language:"tn", phrases:["ke batla","temothuo","ditlhagiswa","diotara tsa","mpolelele","jang","ke kopa","go rekisa"] },
   { language:"st", phrases:["ke batla","temo","lihlahisoa","liodara tsa","mpolelle","joang","ke kopa","ke rekisitse"] },
   { language:"ss", phrases:["ngifuna","ngicela","kulima","ema-oda","imikhicito","ngiyabonga","ngitjele","kutsi"] },
-  { language:"nr", phrases:["ngifuna","ngicela","ukulima","ama-oda","imikhiqizo","ngiyathokoza","ngitjela","ngifuna ukwazi"] },
+  { language:"nr", phrases:["ngifuna","ngicela","ukulima","ama-oda","imikhiqizo","ngiyathokoza","ngitjela","ngitjela ngama-oda wami"] },
   { language:"en", phrases:["how much","when should","where is my","my order","i would like","please help","can you","i have","what is","how do"] }
 ];
 
