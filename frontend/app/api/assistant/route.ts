@@ -22,7 +22,7 @@ async function detectLanguageWithModel(message:string):Promise<(typeof codes)[nu
  const key=process.env.AI_ASSISTANT_API_KEY||process.env.NVIDIA_NIM_API_KEY;
  const model=process.env.AI_ASSISTANT_MODEL||process.env.NVIDIA_NIM_MODEL;
  if(!enabled||!key||!model)return null;
- const base=(process.env.AI_ASSISTANT_BASE_URL||process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\\/$/,"");
+ const base=(process.env.AI_ASSISTANT_BASE_URL||process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
  try{
   const response=await fetch(base+"/chat/completions",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[
    {role:"system",content:"Identify the primary language of the user's message. Return only one language code from this exact list: en, ve, ts, nso, zu, xh, af, tn, st, ss, nr. ve=Tshivenda, ts=Xitsonga, nso=Sepedi/Northern Sotho, st=Sesotho. Distinguish Tshivenda from Sepedi and Sepedi from Sesotho. If the message is too short or genuinely ambiguous, return unknown."},
