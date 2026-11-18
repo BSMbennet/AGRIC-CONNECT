@@ -103,9 +103,11 @@ export async function POST(req:Request){
  subscription:subscription?{plan:subscription.plan,status:subscription.status,currentPeriodEnd:subscription.current_period_end}:null,
  listingLimits:{free:10,pro:50,premium:200,activeListings:activeListingCount},
  agriculturalKnowledge:knowledge.map(x=>({title:x.title,topic:x.topic,cropCategory:x.cropCategory,geographicRelevance:x.geographicRelevance,source:x.source,sourceUrl:x.sourceUrl,publicationDate:x.publicationDate,lastVerifiedAt:x.lastVerifiedAt,summary:x.summary,caution:x.caution??null}))};
- const enabled=process.env.AI_ASSISTANT_ENABLED==="true",key=process.env.NVIDIA_NIM_API_KEY,model=process.env.NVIDIA_NIM_MODEL;
+ const enabled=process.env.AI_ASSISTANT_ENABLED==="true";
+ const key=process.env.AI_ASSISTANT_API_KEY||process.env.NVIDIA_NIM_API_KEY;
+ const model=process.env.AI_ASSISTANT_MODEL||process.env.NVIDIA_NIM_MODEL;
  if(!enabled||!key||!model)return NextResponse.json({reply:fallbackReply,mode:"account-context",sources});
- const base=(process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
+ const base=(process.env.AI_ASSISTANT_BASE_URL||process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
  try{
   const history=(input.data.history??[]).slice(-8).map(m=>({role:m.role,content:m.content}));
   const response=await fetch(base+"/chat/completions",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[
