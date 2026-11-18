@@ -196,31 +196,52 @@ begin
   from public.order_allocations a where a.order_id = v_payment.order_id;
   if v_total <= 0 then raise exception 'order_total_invalid'; end if;
 
+  with allocation_values as (
+    select
+      a.id,
+      a.order_id,
+      a.farmer_id,
+      (a.quantity_allocated * a.agreed_unit_price)::numeric as allocation_total,
+      sum(a.quantity_allocated * a.agreed_unit_price) over ()::numeric as all_allocations_total,
+      row_number() over (order by (a.quantity_allocated * a.agreed_unit_price) desc, a.id) as allocation_number
+    from public.order_allocations a
+    where a.order_id = v_payment.order_id
+  ),
+  rounded_shares as (
+    select *,
+      round(v_payment.amount_minor::numeric * allocation_total / nullif(all_allocations_total, 0), 0)::bigint as share_minor
+    from allocation_values
+  ),
+  balanced_shares as (
+    select *,
+      share_minor + case
+        when allocation_number = 1 then v_payment.amount_minor - sum(share_minor) over ()
+        else 0
+      end as gross_minor
+    from rounded_shares
+  ),
+  commissioned as (
+    select *,
+      round(gross_minor * v_payment.commission_bps::numeric / 10000, 0)::bigint as commission_minor
+    from balanced_shares
+  )
   insert into public.farmer_wallet_ledger (
     farmer_id, order_id, allocation_id, payment_id, currency,
     gross_amount, commission_bps, commission_amount, net_amount, status
   )
   select
-    a.farmer_id,
-    a.order_id,
-    a.id,
+    farmer_id,
+    order_id,
+    id,
     v_payment.id,
     'ZAR',
-    round((v_payment.amount_minor::numeric / 100) *
-      ((a.quantity_allocated * a.agreed_unit_price) / v_total), 2),
+    gross_minor::numeric / 100,
     v_payment.commission_bps,
-    round(((v_payment.amount_minor::numeric / 100) *
-      ((a.quantity_allocated * a.agreed_unit_price) / v_total)) *
-      (v_payment.commission_bps::numeric / 10000), 2),
-    round((v_payment.amount_minor::numeric / 100) *
-      ((a.quantity_allocated * a.agreed_unit_price) / v_total), 2) -
-    round(((v_payment.amount_minor::numeric / 100) *
-      ((a.quantity_allocated * a.agreed_unit_price) / v_total)) *
-      (v_payment.commission_bps::numeric / 10000), 2),
+    commission_minor::numeric / 100,
+    (gross_minor - commission_minor)::numeric / 100,
     case when v_order.delivery_confirmed_at is null
       then 'pending_delivery' else 'delivery_confirmed_unpaid' end
-  from public.order_allocations a
-  where a.order_id = v_payment.order_id
+  from commissioned
   on conflict(payment_id,allocation_id) do nothing;
 end;
 $function$;
