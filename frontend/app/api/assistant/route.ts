@@ -34,18 +34,18 @@ function isRateLimited(userId:string){
  if(requestWindows.size>5000){for(const [key,value] of requestWindows){if(now-value.start>=60_000)requestWindows.delete(key);}}
  return window.count>20;
 }
-function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[],ledger:LedgerEntry[],subscription:Subscription|null){
+function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[],ledger:LedgerEntry[],subscription:Subscription|null,activeListingCount:number){
  const t=fallback[lang],q=message.toLowerCase();
  if(/order|orders|status|oda|doda|tioda|diotara|ama-oda|ii-odolo|bestelling|bestellings/.test(q)){
   const rows=orders.slice(0,6).map(o=>{
-   const schedule=o.scheduled_start?new Date(o.scheduled_start).toLocaleString("en-ZA",{dateStyle:"medium",timeStyle:"short",timeZone:"Africa/Johannesburg"}):"not scheduled";
+   const schedule=(o.scheduled_start??o.collection_window_start)?new Date((o.scheduled_start??o.collection_window_start) as string).toLocaleString("en-ZA",{dateStyle:"medium",timeStyle:"short",timeZone:"Africa/Johannesburg"}):"not scheduled";
    const fulfilment=o.fulfilment_state?o.fulfilment_state.replaceAll("_"," "):"not recorded";
    return `• ${o.listing?.produce_name??"Produce"}: ${o.status}; ${o.quantity_agreed} ${o.unit}; ${money(o.quantity_agreed*o.unit_price,o.currency)}; fulfilment: ${fulfilment}; scheduled: ${schedule} (\#${o.id.slice(0,8)})`;
   });
   return `${t.orders}:\n${rows.length?rows.join("\n"):t.none}\nA date is shown only when the order has a saved schedule.`;
  }
  if(/sale|sales|sold|revenue|income|profit|sell|thengiso|xavisa|thekišo|thekiso|ukuthengisa|intengiso|verkoop/.test(q)){
-  const now=new Date(),monthStart=new Date(now.getFullYear(),now.getMonth(),1).toLocaleDateString("en-CA",{timeZone:"Africa/Johannesburg"});
+  const now=new Date(),monthParts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Johannesburg",year:"numeric",month:"2-digit"}).format(now),monthStart=monthParts+"-01";
   const monthOnly=/this month|monthly|month|month-to-date|ngweti|kgwedi|maand|inyanga/.test(q);
   const inScope=(e:LedgerEntry)=>!monthOnly||e.entry_date>=monthStart;
   const income=ledger.filter(e=>e.entry_type==="income"&&inScope(e));
@@ -60,7 +60,7 @@ function localReply(lang:(typeof codes)[number],message:string,orders:Order[],al
   const rows=active.slice(0,6).map(l=>`• ${l.produce_name}: ${Math.max(0,l.quantity_available-l.quantity_sold-l.reserved_quantity)} ${l.unit} available at ${money(l.asking_price,l.currency)} per ${l.unit}`);
   const limit=subscription?.plan==="premium"?200:subscription?.plan==="pro"?50:10;
   const plan=subscription&&(subscription.status==="active"||subscription.status==="trialing")?subscription.plan:"free";
-  return `${t.listings}: ${active.length} active of ${limit} allowed on the ${plan} plan\n${rows.length?rows.join("\n"):t.none}`;
+  return `${t.listings}: ${activeListingCount} active of ${limit} allowed on the ${plan} plan\n${rows.length?rows.join("\n"):t.none}`;
  }
  if(/crop|plant|pest|disease|irrigat|soil|maize|tomato|mango|avocado|fertili|worm|fungus|leaf|wilting|zwimela|vurimi|swimilani|dibjalo|izitshalo|izityalo|gewas|dijalo/.test(q))return t.farming;
  return t.general+"\n"+t.none;
@@ -77,18 +77,19 @@ export async function POST(req:Request){
   supabase.from("order_allocations").select("quantity_allocated,agreed_unit_price,status,order:orders(id,status,currency,fulfilment_state,fulfilment_method,scheduled_start,scheduled_end,fulfilment_location),listing:produce_listings(produce_name)").eq("farmer_id",user.id).order("order_id",{ascending:false}).limit(50),
   supabase.from("produce_listings").select("produce_name,status,quantity_available,quantity_sold,reserved_quantity,unit,asking_price,currency,locality").eq("farmer_id",user.id).order("updated_at",{ascending:false}).limit(50),
   supabase.from("farm_bookkeeping_entries").select("entry_type,amount,entry_date,payment_status,entry_source,related_order_id,related_allocation_id").eq("owner_id",user.id).order("entry_date",{ascending:false}).limit(250),
-  supabase.from("farmer_subscriptions").select("plan,status,current_period_end").eq("farmer_id",user.id).in("status",["active","trialing"]).order("current_period_end",{ascending:false}).limit(1).maybeSingle()
+  supabase.from("farmer_subscriptions").select("plan,status,current_period_end").eq("farmer_id",user.id).in("status",["active","trialing"]).gt("current_period_end",new Date().toISOString()).order("current_period_end",{ascending:false}).limit(1).maybeSingle(),
+  supabase.from("produce_listings").select("id",{count:"exact",head:true}).eq("farmer_id",user.id).eq("status","active")
  ]);
- const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[],ledger=(b.data??[]) as unknown as LedgerEntry[],subscription=(s.data??null) as Subscription|null;
- if(o.error||a.error||l.error||b.error||s.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
- const lang=input.data.language, reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription);
+ const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[],ledger=(b.data??[]) as unknown as LedgerEntry[],subscription=(s.data??null) as Subscription|null,activeListingCount=n.count??0;
+ if(o.error||a.error||l.error||b.error||s.error||n.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
+ const lang=input.data.language, reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription,activeListingCount);
  const context={profile:profile?{name:profile.display_name,role:profile.role,preferredLanguage:profile.preferred_language,locality:[profile.locality,profile.municipality,profile.district].filter(Boolean).join(", ")}:null,
  buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency,fulfilmentState:x.fulfilment_state,fulfilmentMethod:x.fulfilment_method,scheduledStart:x.scheduled_start,scheduledEnd:x.scheduled_end,collectionWindowStart:x.collection_window_start,collectionWindowEnd:x.collection_window_end})),
  sellerAllocations:allocations.map(x=>({status:x.status,orderStatus:x.order?.status,fulfilmentState:x.order?.fulfilment_state,scheduledStart:x.order?.scheduled_start,crop:x.listing?.produce_name,quantity:x.quantity_allocated,unitPrice:x.agreed_unit_price,currency:x.order?.currency??"ZAR"})),
  listings:listings.map(x=>({crop:x.produce_name,status:x.status,available:Math.max(0,x.quantity_available-x.quantity_sold-x.reserved_quantity),sold:x.quantity_sold,unit:x.unit,askingPrice:x.asking_price,currency:x.currency})),
  bookkeeping:ledger.map(x=>({type:x.entry_type,amount:x.amount,date:x.entry_date,paymentStatus:x.payment_status,source:x.entry_source})),
  subscription:subscription?{plan:subscription.plan,status:subscription.status,currentPeriodEnd:subscription.current_period_end}:null,
- listingLimits:{free:10,pro:50,premium:200,activeListings:listings.filter(x=>x.status==="active").length}};
+ listingLimits:{free:10,pro:50,premium:200,activeListings:activeListingCount}};
  const enabled=process.env.AI_ASSISTANT_ENABLED==="true",key=process.env.NVIDIA_NIM_API_KEY,model=process.env.NVIDIA_NIM_MODEL;
  if(!enabled||!key||!model)return NextResponse.json({reply,mode:"account-context"});
  const base=(process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
