@@ -14,7 +14,7 @@ export function CartPageClient({listings,defaultName="",defaultPhone=""}:{listin
  function update(id:string,patch:Partial<CartItem>){save(cart.map(x=>x.listing_id===id?{...x,...patch}:x));}
  if(!ready)return <p className="text-sm text-slate-500">Loading your cart…</p>;
  return <form action={createCartRequests} className="space-y-5">
-  <input type="hidden" name="items" value={JSON.stringify(lines.map(x=>x.item))}/>
+  <input type="hidden" name="items" readOnly value={JSON.stringify(lines.map(x=>x.item))}/>
   {lines.length===0?<div className="rounded-2xl border border-dashed border-emerald-900/20 bg-white p-8 text-center"><p className="font-bold text-forest">Your cart is empty</p><p className="mt-2 text-sm text-slate-500">Add produce from the marketplace to prepare a buyer request.</p></div>:<>
    {lines.map(({item,listing})=><article key={item.listing_id} className="rounded-2xl border border-emerald-900/10 bg-white p-5">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-bold text-forest">{listing!.produce_name}</h2><p className="text-sm text-slate-500">{listing!.locality} · R{Number(listing!.asking_price).toFixed(2)} / {listing!.price_unit}</p><p className="mt-1 text-xs text-slate-500">{listing!.available.toLocaleString()} {listing!.unit} currently available</p></div><button type="button" onClick={()=>save(cart.filter(x=>x.listing_id!==item.listing_id))} className="text-sm font-semibold text-red-700">Remove</button></div>
