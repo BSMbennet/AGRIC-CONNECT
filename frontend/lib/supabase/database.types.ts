@@ -704,6 +704,14 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: undefined
       }
+      confirm_preorder_request: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
+      update_buyer_order_details: {
+        Args: { p_order_id: string; p_buyer_name: string; p_contact_number: string; p_fulfilment_preference: string; p_delivery_location: string; p_order_instructions: string }
+        Returns: undefined
+      }
     }
     Enums: {
       listing_status:
