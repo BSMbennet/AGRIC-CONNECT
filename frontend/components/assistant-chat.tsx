@@ -9,7 +9,7 @@ type Source = { id: number; title: string; publisher: string; url: string; headi
 const languages = [
   { value: "en", label: "English" },
   { value: "ve", label: "Tshivenda · experimental" },
-  { value: "ts", label: "itsonga · experimental" },
+  { value: "ts", label: "Xitsonga · experimental" },
   { value: "nso", label: "Sepedi · experimental" },
 ] as const;
 
