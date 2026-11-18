@@ -26,8 +26,8 @@ describe("listingSchema", () => {
     expect(listingSchema.safeParse(validListing).success).toBe(true);
   });
 
-  it("requires harvest date, contact and fulfilment details", () => {
-    expect(listingSchema.safeParse({ ...validListing, harvest_date: "" }).success).toBe(false);
+  it("requires contact and fulfilment details while allowing no harvest date", () => {
+    expect(listingSchema.safeParse({ ...validListing, harvest_date: "" }).success).toBe(true);
     expect(listingSchema.safeParse({ ...validListing, contact_phone: "" }).success).toBe(false);
     expect(listingSchema.safeParse({ ...validListing, fulfilment_details: "" }).success).toBe(false);
   });
@@ -35,6 +35,11 @@ describe("listingSchema", () => {
   it("rejects zero and negative quantities", () => {
     expect(listingSchema.safeParse({ ...validListing, quantity_available: 0 }).success).toBe(false);
     expect(listingSchema.safeParse({ ...validListing, quantity_available: -2 }).success).toBe(false);
+  });
+
+  it("accepts livestock and manure listings with their appropriate units", () => {
+    expect(listingSchema.safeParse({ ...validListing, category: "Livestock", produce_name: "Indigenous chickens", unit: "head", price_unit: "head", harvest_date: "" }).success).toBe(true);
+    expect(listingSchema.safeParse({ ...validListing, category: "Manure", produce_name: "Composted cattle manure", unit: "ton", price_unit: "ton", harvest_date: "" }).success).toBe(true);
   });
 
   it("rejects negative prices and unsupported units", () => {
