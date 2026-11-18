@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 
 type PublicListing = {
   id: string;
@@ -83,7 +84,7 @@ export default async function ListingDetailPage({
           <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">{available.toLocaleString()} {listing.unit} available</span>{!isAvailableNow && available > 0 && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800">Available from {listing.available_from}</span>}</div>
           <dl className="mt-6 grid grid-cols-2 gap-4 rounded-2xl bg-[#f7faf7] p-4 text-sm"><div><dt className="text-slate-500">Available from</dt><dd className="mt-1 font-semibold text-forest">{listing.available_from}</dd></div><div><dt className="text-slate-500">Harvest date</dt><dd className="mt-1 font-semibold text-forest">{listing.harvest_date || "Not specified"}</dd></div><div><dt className="text-slate-500">Listing expiry</dt><dd className="mt-1 font-semibold text-forest">{listing.expires_at ? new Intl.DateTimeFormat("en-ZA",{dateStyle:"medium",timeStyle:"short"}).format(new Date(listing.expires_at)) : "No expiry set"}</dd></div></dl>
           {listing.quality_notes && <div className="mt-6"><h2 className="font-bold text-forest">Quality and harvest notes</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{listing.quality_notes}</p></div>}
-          <p className="mt-6 text-xs leading-5 text-slate-500">The seller&apos;s exact farm location and private contact details are not displayed publicly. Prices and produce descriptions are farmer-provided and should be confirmed before purchase.</p>
+          <p className="mt-6 text-xs leading-5 text-slate-500">The seller&apos;s exact farm location and private contact details are not displayed publicly. Prices and produce descriptions are farmer-provided and should be confirmed before purchase.</p>\n          <Link href={`/reviews/${listing.id}`} className="mt-4 inline-block text-sm font-semibold text-leaf">Read verified buyer reviews</Link>\n          {canRequest && <AddToCartButton listingId={listing.id} />}
         </article>
 
         {queryParams.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not submit your request. Please check the quantity and try again.</p>}
