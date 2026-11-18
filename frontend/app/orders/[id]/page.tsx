@@ -53,7 +53,7 @@ export default async function OrderPage({
     .reduce((sum, payment) => sum + Number(payment.amount_minor), 0);
   const depositMinor = Math.max(1, Math.round(totalMinor * 0.25));
   const remainingMinor = Math.max(0, totalMinor - paidMinor);
-  const buyerCanPay = profile?.role === "buyer" && order.status === "accepted" || profile?.role === "buyer" && order.status === "fulfilled";
+  const buyerCanPay = profile?.role === "buyer" && (order.status === "accepted" || order.status === "fulfilled");
   const buyerCanConfirmDelivery = profile?.role === "buyer" && order.status === "fulfilled" &&
     !!allocations?.length && allocations.every((allocation) => allocation.status === "fulfilled") &&
     paidMinor >= totalMinor && !order.delivery_confirmed_at;
