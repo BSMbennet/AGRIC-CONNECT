@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Illustrated rural agricultural landscape">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#e9f4e8"/><stop offset="1" stop-color="#f7faf2"/></linearGradient><linearGradient id="field" x2="0" y2="1"><stop stop-color="#8fb77a"/><stop offset="1" stop-color="#3f7950"/></linearGradient></defs>
+<rect width="1600" height="900" fill="url(#sky)"/><circle cx="1270" cy="170" r="86" fill="#f4d88b" opacity=".8"/>
+<path d="M0 450 250 270 450 430 690 235 930 450 1150 285 1390 430 1600 300V900H0Z" fill="#b8d2a7" opacity=".7"/>
+<path d="M0 540Q280 390 560 530T1120 510T1600 500V900H0Z" fill="#7ea96f"/>
+<path d="M0 640Q260 500 560 630T1120 600T1600 630V900H0Z" fill="url(#field)"/>
+<g fill="none" stroke="#d6e5b8" stroke-width="10" opacity=".75"><path d="M-80 900Q300 620 760 610T1680 780"/><path d="M-60 950Q300 690 760 680T1680 850"/><path d="M-40 1000Q300 760 760 750T1680 920"/></g>
+<g fill="#315f43" opacity=".8"><path d="M190 560v-150h18v150z"/><path d="M160 430q40-95 80 0z"/><path d="M1420 570v-180h18v180z"/><path d="M1385 430q45-110 90 0z"/><path d="M1320 600v-120h14v120z"/><path d="M1290 500q37-80 74 0z"/></g>
+<g fill="#f7f4e6" opacity=".75"><path d="M760 540q40-65 80 0z"/><path d="M830 540q40-65 80 0z"/><path d="M900 540q40-65 80 0z"/></g>
+</svg>
