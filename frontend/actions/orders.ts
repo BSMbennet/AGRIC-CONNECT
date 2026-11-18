@@ -14,8 +14,8 @@ export async function acceptRequest(formData: FormData) {
   const instructions = String(formData.get("seller_instructions") || "").trim();
   const fee = Number(formData.get("delivery_fee") || 0);
   if (!/^[0-9a-f-]{36}$/i.test(requestId) || !["delivery", "collection"].includes(method) ||
-      !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(startValue) ||
-      (endValue && !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(endValue)) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startValue) ||
+      (endValue && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endValue)) ||
       location.length < 3 || location.length > 300 || instructions.length > 1000 ||
       !Number.isFinite(fee) || fee < 0 || (method === "collection" && fee !== 0)) redirect("/dashboard?error=schedule");
   const start = new Date(startValue + ":00+02:00");
@@ -110,8 +110,8 @@ export async function updateOrderFulfilmentSchedule(formData: FormData) {
   const instructions = String(formData.get("seller_instructions") || "").trim();
   const fee = Number(formData.get("delivery_fee") || 0);
   if (!/^[0-9a-f-]{36}$/i.test(orderId) || !["delivery", "collection"].includes(method) ||
-      !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(startValue) ||
-      (endValue && !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(endValue)) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startValue) ||
+      (endValue && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endValue)) ||
       location.length < 3 || location.length > 300 || instructions.length > 1000 ||
       !Number.isFinite(fee) || fee < 0 || (method === "collection" && fee !== 0)) redirect("/orders/" + orderId + "?error=schedule");
   const start = new Date(startValue + ":00+02:00");
