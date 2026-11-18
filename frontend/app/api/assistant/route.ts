@@ -18,6 +18,15 @@ type LedgerEntry={entry_type:string;amount:number;entry_date:string;payment_stat
 type Subscription={plan:string;status:string;current_period_end:string|null};
 type BookkeepingStats={total_income:number;total_expenses:number;net_profit:number;unpaid_income:number;cash_position:number;paid_income:number;months:{key:string;label:string;income:number;expenses:number}[]};
 async function detectLanguageWithModel(message:string):Promise<(typeof codes)[number]|null>{
+ // Gemini free-tier requests are limited to general farming/language assistance.
+ // Account-specific requests continue through the existing provider and its authenticated account context.
+ if(process.env.GEMINI_API_KEY&&!isAccountSpecificQuestion(input.data.message)){
+  const geminiReply=await generateWithGemini(input.data.message,lang,knowledge.map(item=>({title:item.title,summary:item.summary,sourceUrl:item.sourceUrl})));
+  if(geminiReply){
+   await persistConversation(supabase as unknown as SupabaseClient,user.id,lang,input.data.message,geminiReply);
+   return NextResponse.json({reply:geminiReply,mode:"gemini-general",detectedLanguage,sources});
+  }
+ }
  const enabled=process.env.AI_ASSISTANT_ENABLED==="true";
  const key=process.env.AI_ASSISTANT_API_KEY||process.env.NVIDIA_NIM_API_KEY;
  const model=process.env.AI_ASSISTANT_MODEL||process.env.NVIDIA_NIM_MODEL;
@@ -49,6 +58,36 @@ ss:{orders:"Ema-oda akho akamuva",sales:"Umsebenti wakho wekutsengisa",listings:
 nr:{orders:"Ama-oda wakho wakamuva",sales:"Umsebenzi wakho wokuthengisa",listings:"Imikhiqizo yakho",farming:"Ngitjela isivuno, isigaba sokukhula, amatshwayo, indawo nokuthi umraro uthome nini. Angizukucagela umuthi namkha isilinganiso.",general:"Ngingakusiza ngama-oda, ukuthengisa nemikhiqizo yezokulima.",none:"Awukho umsebenzi obonakala ku-akhawunti yakho."}
 };
 const money=(n:number,c="ZAR")=>new Intl.NumberFormat("en-ZA",{style:"currency",currency:c,maximumFractionDigits:2}).format(n);
+async function generateWithGemini(message:string,language:(typeof codes)[number],knowledgeItems:Array<{title:string;summary:string;sourceUrl:string}>):Promise<string|null>{
+ const key=process.env.GEMINI_API_KEY;
+ if(!key)return null;
+ const model=process.env.GEMINI_MODEL||"gemini-2.5-flash-lite";
+ const knowledgeText=knowledgeItems.length
+  ? knowledgeItems.map(item=>`- ${item.title}: ${item.summary} Source: ${item.sourceUrl}`).join("\\n")
+  : "No verified agricultural knowledge excerpts were retrieved.";
+ const systemInstruction=`You are Agric Assistant for smallholder farmers in South Africa. Reply in ${names[language]} for the entire answer. Use clear, mobile-friendly language and practical steps. Be cautious with agricultural, animal-health and chemical advice. Never invent pesticide names, doses, withholding periods, current market prices or weather. Ask for crop, growth stage, locality and symptoms when essential. Use only the supplied agricultural excerpts for source-specific claims and cite them as [title](URL). If excerpts are not relevant, say your guidance is general. Do not ask for or expose private account information. Retrieved agricultural information:\\n${knowledgeText}`;
+ try{
+  const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
+   method:"POST",
+   headers:{"Content-Type":"application/json","x-goog-api-key":key},
+   body:JSON.stringify({
+    systemInstruction:{parts:[{text:systemInstruction}]},
+    contents:[{role:"user",parts:[{text:message}]}],
+    generationConfig:{temperature:0.25,maxOutputTokens:700}
+   }),
+   signal:AbortSignal.timeout(18000),
+   cache:"no-store"
+  });
+  if(!response.ok)return null;
+  const payload=await response.json() as {candidates?:Array<{content?:{parts?:Array<{text?:string}>};finishReason?:string}>};
+  const answer=payload.candidates?.[0]?.content?.parts?.map(part=>part.text??"").join("").trim();
+  return answer||null;
+ }catch{return null;}
+}
+function isAccountSpecificQuestion(message:string){
+ return /\\b(order|orders|listing|listings|sale|sales|bookkeeping|ledger|subscription|payment|payments|invoice|balance|revenue|profit|cash|account|profile|my records|my activity|my stock|my delivery|my collection)\\b/i.test(message);
+}
+
 const requestWindows=new Map<string,{start:number;count:number}>();
 function isRateLimited(userId:string){
  const now=Date.now(),window=requestWindows.get(userId);
