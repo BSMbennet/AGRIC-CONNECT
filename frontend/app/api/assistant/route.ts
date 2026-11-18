@@ -35,8 +35,11 @@ export async function POST(request: NextRequest) {
   if (limitError) return fail("The assistant is temporarily unavailable. Please try again shortly.", 503);
   if (!allowed) return fail("You have reached the assistant limit of 12 messages per minute. Please wait a moment.", 429);
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return fail("The AI service is not configured yet. Add OPENAI_API_KEY to the server environment to enable assistant replies.", 503);
+  if (process.env.AI_ASSISTANT_ENABLED !== "true") return fail("The assistant is temporarily disabled by the application administrator.", 503);
+  const apiKey = process.env.NVIDIA_NIM_API_KEY;
+  if (!apiKey) return fail("The AI service is not configured for this deployment. Ask the administrator to configure the server-side NVIDIA NIM credentials.", 503);
+  const baseUrl = (process.env.NVIDIA_NIM_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\\/+$/, "");
+  const model = process.env.NVIDIA_NIM_MODEL || "nvidia/nemotron-3.5-bolt-e4b";
 
   const [{ data: snapshot, error: snapshotError }, { data: profile }] = await Promise.all([
     supabase.rpc("get_assistant_marketplace_snapshot"),
@@ -89,11 +92,11 @@ export async function POST(request: NextRequest) {
     (knowledgeContext || "No matching approved agricultural documents were found for this question.");
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(baseUrl + "/chat/completions", {
       method: "POST",
       headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: process.env.OPENAI_ASSISTANT_MODEL || "gpt-4.1-mini",
+        model,
         temperature: 0.2,
         max_tokens: 900,
         messages: [
