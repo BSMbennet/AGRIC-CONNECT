@@ -14,15 +14,41 @@ type VectorMatch = {
   similarity:number;
 };
 
+async function searchApprovedFullText(client:any,query:string,limit:number):Promise<AgriculturalKnowledgeDocument[]>{
+  const {data,error}=await client.from("agri_knowledge_chunks")
+    .select("id,heading,content,locality_tags,crop_tags,source:agri_knowledge_sources!inner(title,publisher,source_url,published_on,language,status)")
+    .textSearch("search_document",query,{config:"simple",type:"websearch"})
+    .limit(Math.max(1,Math.min(limit,8)));
+  if(error||!data?.length)return [];
+  return data.map((row:any)=>({
+    id:"fts-"+row.id,
+    title:row.source.title,
+    topic:row.heading??"Agricultural production guidance",
+    cropCategory:row.crop_tags?.join(", ")||"general agriculture",
+    geographicRelevance:row.locality_tags??[],
+    language:"en",
+    source:row.source.publisher,
+    sourceUrl:row.source.source_url,
+    publicationDate:row.source.published_on??"Not stated",
+    lastVerifiedAt:"Approved in the AGRIC-CONNECT knowledge base",
+    verificationStatus:"verified",
+    summary:row.content,
+    keywords:row.crop_tags??[],
+    relevanceScore:0
+  }));
+}
+
 export async function searchVectorAgriculturalKnowledge(
   supabase: unknown,
   query: string,
   locality = "",
   limit = 4
 ): Promise<AgriculturalKnowledgeDocument[]> {
+  const client=supabase as any;
+  if(!query.trim())return [];
   const apiKey=process.env.AI_EMBEDDING_API_KEY;
   const model=process.env.AI_EMBEDDING_MODEL;
-  if(!apiKey||!model||!query.trim())return [];
+  if(!apiKey||!model)return searchApprovedFullText(client,query,limit);
   const base=(process.env.AI_EMBEDDING_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
   const response=await fetch(base+"/embeddings",{
     method:"POST",
@@ -35,13 +61,12 @@ export async function searchVectorAgriculturalKnowledge(
   const payload=await response.json() as {data?:Array<{embedding?:number[]}>};
   const embedding=payload.data?.[0]?.embedding;
   if(!embedding||embedding.length!==1024||embedding.some(value=>!Number.isFinite(value)))return [];
-  const client=supabase as {rpc:(name:string,args:Record<string,unknown>)=>Promise<{data:VectorMatch[]|null;error?:unknown}>};
   const localityTag=locality.split(",")[0]?.trim()||null;
   const {data,error}=await client.rpc("match_agri_knowledge_chunks",{
     query_embedding:embedding,match_count:Math.max(1,Math.min(limit,8)),
     locality_filter:localityTag,crop_filter:null
   });
-  if(error||!data?.length)return [];
+  if(error||!data?.length)return searchApprovedFullText(client,query,limit);
   return data.map((match,index)=>({
     id:"db-"+match.chunk_id,
     title:match.title,
