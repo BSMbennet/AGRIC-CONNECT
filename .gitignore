@@ -21,3 +21,10 @@ dist/
 # Runtime data
 uploads/
 *.log
+
+# Next.js / PWA build output
+.next/
+next-env.d.ts
+*.tsbuildinfo
+frontend/public/sw.js
+frontend/public/workbox-*.js

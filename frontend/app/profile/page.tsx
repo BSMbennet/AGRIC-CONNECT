@@ -11,7 +11,7 @@ export default async function ProfilePage({searchParams}:{searchParams:Promise<{
   const {data:profile}=await supabase.from("profiles").select("display_name,role,phone_e164,locality,district,preferred_language").eq("id",user.id).single();
   if(!profile)redirect("/register?error=profile");
   const switchable=profile.role==="farmer"||profile.role==="buyer";
-  return <main className="min-h-screen agri-page"><AppNav active="profile"/><section className="mx-auto max-w-3xl px-5 py-10">
+  return <main className="min-h-screen agri-page scene-community"><AppNav active="profile"/><section className="mx-auto max-w-3xl px-5 py-10">
     <p className="text-sm font-semibold text-leaf">Account</p><h1 className="mt-2 text-3xl font-bold text-forest">Profile settings</h1>
     <p className="mt-2 text-sm text-slate-600">Update your details and choose whether you are using AgricNorthX as a buyer or a farmer/seller.</p>
     {params.saved&&<p role="status" className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your profile has been saved.</p>}

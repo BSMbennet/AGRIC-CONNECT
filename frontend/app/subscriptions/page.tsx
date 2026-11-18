@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AppNav } from "@/components/app-nav";
 import {redirect} from "next/navigation";
 import {createClient} from "@/lib/supabase/server";
 export const metadata={title:"Farmer subscriptions | AgricNorthX"};
@@ -9,7 +9,7 @@ export default async function SubscriptionsPage({searchParams}:{searchParams:Pro
  if(profile?.role!=="farmer") redirect("/dashboard");
  const {data:sub}=await supabase.from("farmer_subscriptions").select("plan,status,current_period_end").eq("farmer_id",user.id).in("status",["active","trialing","past_due"]).order("current_period_end",{ascending:false}).limit(1).maybeSingle();
  const active=!!sub?.current_period_end&&new Date(sub.current_period_end)>new Date()&&["active","trialing"].includes(sub.status);
- return <main className="min-h-screen bg-[#f7faf7]"><header className="border-b border-emerald-900/10 bg-white"><div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4"><Link href="/" className="font-bold text-forest">AgricNorthX</Link><Link href="/farm-products" className="text-sm font-semibold text-forest">Product catalogue</Link></div></header><section className="mx-auto max-w-5xl px-5 py-10"><p className="text-xs font-bold uppercase tracking-widest text-leaf">Farmer access</p><h1 className="mt-2 text-3xl font-bold text-forest">Unlock selected agricultural products</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Registration, produce listings and buyer discovery stay free. Subscribe only when you need the detailed information and usage guidance attached to selected products.</p>
+ return <main className="agri-page scene-community"><AppNav/><section className="mx-auto max-w-5xl px-5 py-10"><p className="text-xs font-bold uppercase tracking-widest text-leaf">Farmer access</p><h1 className="mt-2 text-3xl font-bold text-forest">Unlock selected agricultural products</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Registration, produce listings and buyer discovery stay free. Subscribe only when you need the detailed information and usage guidance attached to selected products.</p>
  {p.status==="success"&&<p role="status" className="mt-5 rounded-xl bg-emerald-100 p-3 text-sm text-emerald-900">Checkout completed. Access is activated after Stripe confirms your subscription.</p>}
  {p.error&&<p role="alert" className="mt-5 rounded-xl bg-rose-50 p-3 text-sm text-rose-800">Checkout could not be started. Check the billing configuration or contact support.</p>}
  {active&&<p className="mt-5 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-950">Your {sub?.plan} subscription is active until {new Date(sub!.current_period_end!).toLocaleDateString()}.</p>}

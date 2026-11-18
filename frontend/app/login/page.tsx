@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     if (profile?.role) redirect("/dashboard");
   }
   return (
-    <main className="agri-page min-h-screen"><AppNav/><section className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-5 py-12">
+    <main className="agri-page scene-fields min-h-screen"><AppNav/><section className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-5 py-12">
       <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgricNorthX</Link>
       <div className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-soft">
         <h1 className="text-2xl font-bold text-forest">Welcome back</h1>

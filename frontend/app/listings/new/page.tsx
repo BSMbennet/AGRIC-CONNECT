@@ -12,7 +12,7 @@ export default async function NewListingPage({ searchParams }: { searchParams: P
   const { data: profile } = await supabase.from("profiles").select("role, locality, district, phone_e164").eq("id", user.id).single();
   if (profile?.role !== "farmer") redirect("/dashboard");
   return (
-    <main className="agri-page min-h-screen"><AppNav active="dashboard"/><section className="mx-auto max-w-3xl px-5 py-10">
+    <main className="agri-page scene-harvest min-h-screen"><AppNav active="dashboard"/><section className="mx-auto max-w-3xl px-5 py-10">
       <Link href="/dashboard" className="text-sm font-bold text-forest">← Dashboard</Link>
       <h1 className="mt-6 text-3xl font-bold text-forest">List your harvest</h1>
       <p className="mt-2 text-sm text-slate-600">Tell nearby buyers what you have available.</p>

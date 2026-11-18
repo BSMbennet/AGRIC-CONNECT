@@ -48,7 +48,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   });
 
   return (
-    <main className="min-h-screen agri-page">
+    <main className="min-h-screen agri-page scene-market">
       <AppNav active="marketplace" />
 
       <section className="bg-forest text-white">
