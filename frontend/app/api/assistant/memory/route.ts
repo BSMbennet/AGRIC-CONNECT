@@ -11,6 +11,7 @@ const fail = (message: string, status: number) => NextResponse.json({ error: mes
 async function authenticatedClient() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- The memory migration is additive and not yet represented in generated database types.
   return { supabase: supabase as any, user: error ? null : user };
 }
 
