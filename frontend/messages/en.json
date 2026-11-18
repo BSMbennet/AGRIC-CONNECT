@@ -1,10 +1,1 @@
-{
-  "app": {
-    "name": "AgricNorthX",
-    "tagline": "Local harvest. Smarter decisions. Better markets.",
-    "dashboard": "Dashboard",
-    "marketplace": "Marketplace",
-    "signOut": "Sign out",
-    "language": "Language"
-  }
-}
+{"app":{"name":"AgricNorthX","tagline":"Local harvest. Smarter decisions. Better markets.","dashboard":"Dashboard","marketplace":"Marketplace","cart":"Cart","profile":"Profile","signOut":"Sign out","language":"Language"}}
