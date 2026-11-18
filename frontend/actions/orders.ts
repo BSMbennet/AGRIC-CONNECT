@@ -141,3 +141,15 @@ export async function confirmOrderDeliveryFee(formData: FormData) {
   revalidatePath("/orders/" + orderId); revalidatePath("/dashboard");
   redirect("/orders/" + orderId + "?fee_confirmed=1");
 }
+
+export async function confirmPreorderRequest(formData: FormData) {
+  const requestId = String(formData.get("request_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(requestId)) redirect("/dashboard?error=preorder");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.rpc("confirm_preorder_request", { p_request_id: requestId });
+  if (error) redirect("/dashboard?error=preorder");
+  revalidatePath("/dashboard");
+  redirect("/dashboard?preorder_confirmed=1");
+}
