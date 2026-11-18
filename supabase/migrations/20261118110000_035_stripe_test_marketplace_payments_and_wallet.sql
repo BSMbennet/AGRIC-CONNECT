@@ -139,15 +139,15 @@ begin
     id, order_id, buyer_id, payment_kind, amount_minor, currency,
     commission_bps, status, idempotency_key
   ) values (
-    v_payment_id, p_order_id, auth.uid(), p_payment_kind, v_amount_minor,
+    v_payment_id, p_order_id, p_buyer_id, p_payment_kind, v_amount_minor,
     'ZAR', 500, 'pending', 'agricnorthx-order-payment-' || v_payment_id::text
   );
 
   return query select v_payment_id, v_amount_minor, 'ZAR'::text;
 end;
 $function$;
-revoke all on function public.create_order_payment_attempt(uuid,text) from public, anon;
-grant execute on function public.create_order_payment_attempt(uuid,text) to authenticated;
+revoke all on function public.create_order_payment_attempt(uuid,text,uuid) from public, anon, authenticated;
+grant execute on function public.create_order_payment_attempt(uuid,text,uuid) to service_role;
 
 create or replace function public.record_order_payment_success(
   p_payment_id uuid,
@@ -319,5 +319,5 @@ begin
   from public.order_allocations a where a.order_id = p_order_id;
 end;
 $function$;
-revoke all on function public.confirm_order_delivery(uuid) from public, anon;
-grant execute on function public.confirm_order_delivery(uuid) to authenticated;
+revoke all on function public.confirm_order_delivery(uuid,uuid) from public, anon, authenticated;
+grant execute on function public.confirm_order_delivery(uuid,uuid) to service_role;
