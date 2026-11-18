@@ -6,6 +6,7 @@ import { updateListingStatus } from "@/actions/listings";
 import { markNotificationRead } from "@/actions/notifications";
 import { Sprout, ShoppingBasket, PlusCircle, Layers3, ShieldCheck, PackageCheck, ClipboardList } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
+import { ClearCartOnSuccess } from "@/components/clear-cart-on-success";
 
 type BuyerRequest = {
   id: string;
@@ -52,7 +53,7 @@ type BuyerRequestWithListing = BuyerRequest & {
   produce_listings: { produce_name: string; locality: string } | null;
 };
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ error?: string; requested?: string; rejected?: string; listing_updated?: string; preorder_confirmed?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ error?: string; requested?: string; rejected?: string; listing_updated?: string; preorder_confirmed?: string; cart_requested?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -93,7 +94,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <main className="min-h-screen agri-page">
-      <AppNav active="dashboard" />
+      <AppNav active="dashboard" />\n      {params.cart_requested && <ClearCartOnSuccess />}
       <section className="mx-auto max-w-6xl px-5 py-10">
         <p className="text-sm font-semibold capitalize text-leaf">Your workspace · {profile.role.replaceAll("_", " ")}</p>
         <h1 className="mt-2 text-3xl font-bold text-forest">Hello, {profile.display_name}</h1>
