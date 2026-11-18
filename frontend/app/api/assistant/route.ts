@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   if (process.env.AI_ASSISTANT_ENABLED !== "true") return fail("The assistant is temporarily disabled by the application administrator.", 503);
   const apiKey = process.env.NVIDIA_NIM_API_KEY;
   if (!apiKey) return fail("The AI service is not configured for this deployment. Ask the administrator to configure the server-side NVIDIA NIM credentials.", 503);
-  const baseUrl = (process.env.NVIDIA_NIM_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\\/+$/, "");
+  const baseUrl = (process.env.NVIDIA_NIM_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, "");
   const model = process.env.NVIDIA_NIM_MODEL || "nvidia/nemotron-3.5-bolt-e4b";
 
   const { data: allowed, error: limitError } = await supabase.rpc("consume_assistant_rate_limit");
