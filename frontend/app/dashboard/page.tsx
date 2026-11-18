@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { FarmerEarnings } from "@/components/dashboard/farmer-earnings";
 import { AppNav } from "@/components/app-nav";
 import { ClearCartOnSuccess } from "@/components/clear-cart-on-success";
 import { acceptRequest, rejectRequest, fulfillAllocation, confirmPreorderRequest } from "@/actions/orders";
@@ -129,7 +130,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {isFarmer ? <>
             <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
               <p className="text-sm text-slate-500">Active listings</p>
-              <p className="mt-2 text-3xl font-bold text-forest">{listingCount ?? 0}<span className="ml-1 text-sm font-medium text-slate-400">/ {listingLimit}</span></p>
+              <p className="mt-2 text-3xl font-bold text-forest">{Number.isFinite(listingCount) ? listingCount : 0}<span className="ml-1 text-sm font-medium text-slate-400">/ {listingLimit}</span></p>
               <p className="mt-1 text-xs capitalize text-slate-500">{farmerPlan?.plan ?? "Free"} plan</p>
             </article>
             <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
@@ -154,6 +155,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Notifications</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">Unread updates</p></article>
           </>}
         </div>
+
+        {isFarmer && <FarmerEarnings />}
 
         <section className="mt-8">
           <h2 className="text-lg font-bold text-forest">Quick actions</h2>

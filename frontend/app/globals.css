@@ -19,7 +19,7 @@ button,input,select,textarea{font:inherit}::selection{background:#DCEBDD;color:v
 .dashboard-disclosure[open]>summary::after{content:"−"}.dashboard-disclosure[open]>summary{border-bottom:1px solid rgba(16,61,43,.08)}.dashboard-disclosure>:not(summary){margin-left:1rem;margin-right:1rem}
 .reveal-up{animation:reveal-up .65s cubic-bezier(.2,.7,.2,1) both}.reveal-delay-1{animation-delay:.08s}.reveal-delay-2{animation-delay:.16s}.reveal-delay-3{animation-delay:.24s}
 @keyframes reveal-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:1023px){body{padding-bottom:76px}}@media(max-width:640px){.agri-page{background-attachment:scroll,scroll}.hero-future{background-position:58% center}.dashboard-disclosure>:not(summary){margin-left:.75rem;margin-right:.75rem}}
+@media(max-width:1023px){body:not(:has(.app-shell)){padding-bottom:76px}}@media(max-width:640px){.agri-page{background-attachment:scroll,scroll}.hero-future{background-position:58% center}.dashboard-disclosure>:not(summary){margin-left:.75rem;margin-right:.75rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.card-lift:hover{transform:none}}
 
 @media(min-width:768px) and (prefers-reduced-motion:no-preference){

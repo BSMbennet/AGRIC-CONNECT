@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AssistantMount } from "@/components/assistant-mount";
+import { ShellGate } from "@/components/shell/shell-gate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default async function RootLayout({ children }: { readonly children: Reac
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <ShellGate>{children}</ShellGate>
           <AssistantMount />
         </NextIntlClientProvider>
       </body>

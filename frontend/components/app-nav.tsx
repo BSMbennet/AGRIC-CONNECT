@@ -49,11 +49,9 @@ function navigationFor(role: Role | null, t: (key: string) => string): NavModel 
 export async function AppNav(_props: { active?: string } = {}) {
   const [t, supabase, locale] = await Promise.all([getTranslations("app"), createClient(), getLocale()]);
   const { data: { user } } = await supabase.auth.getUser();
-  let role: Role | null = null;
-  if (user) {
-    const { data } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-    role = (data?.role as Role | undefined) ?? null;
-  }
+  // Signed-in users get the app shell (sidebar + top bar) from ShellGate, so no second header here.
+  if (user) return null;
+  const role: Role | null = null;
   const extra = <div className="flex flex-wrap items-center gap-3">
     {user && <Link href="/dashboard#notifications" aria-label="Notifications" title="Notifications" className="grid h-9 w-9 place-items-center rounded-full text-forest transition hover:bg-emerald-50"><Bell size={17} /></Link>}
     <LanguageSelector value={locale} label={t("language")} />

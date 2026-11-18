@@ -8,7 +8,7 @@ export function TrendChart({ data }: { data: { month: string; income: number; ex
   const reduce = useReducedMotion();
   const max = Math.max(1, ...data.flatMap((d) => [d.income, d.expense]));
   const hasData = data.some((d) => d.income || d.expense);
-  if (!hasData) return <p className="text-sm text-slate-500">No entries in the last 6 months yet.</p>;
+  if (!hasData) return <p className="text-sm text-slate-500">No entries in this period yet.</p>;
   return (
     <div role="img" aria-label={"Income and expenses by month: " + data.map((d) => `${d.month} income ${zar(d.income)}, expenses ${zar(d.expense)}`).join("; ")}>
       <div className="flex h-44 items-end gap-3">
