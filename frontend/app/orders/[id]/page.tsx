@@ -30,7 +30,11 @@ export default async function OrderPage({
   const { data: sellerDetails } = order.listing_id
     ? await supabase.from("listing_private_details").select("contact_phone,fulfilment_details").eq("listing_id",order.listing_id).maybeSingle()
     : { data: null };
-  const reviewResult = profile?.role === "buyer"\n    ? await supabase.from("product_reviews").select("id").eq("order_id",id).maybeSingle()\n    : { data: null };\n  const existingReview = reviewResult.data;\n  const [{ data: allocations }, { data: events }, { data: comments }] = await Promise.all([
+  const reviewResult = profile?.role === "buyer"
+    ? await supabase.from("product_reviews").select("id").eq("order_id",id).maybeSingle()
+    : { data: null };
+  const existingReview = reviewResult.data;
+  const [{ data: allocations }, { data: events }, { data: comments }] = await Promise.all([
     supabase.from("order_allocations").select("id,listing_id,farmer_id,quantity_allocated,agreed_unit_price,status").eq("order_id", id),
     supabase.from("order_events").select("event_type,from_status,to_status,note,created_at").eq("order_id", id).order("created_at"),
     supabase.from("order_comments").select("id,author_id,author_display_name,author_role,body,created_at").eq("order_id",id).order("created_at"),
