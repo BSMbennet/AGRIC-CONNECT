@@ -19,6 +19,66 @@ type KnowledgeHit = {
   chunk_id: string; title: string; publisher: string; source_url: string;
   heading: string | null; content: string; locality_tags: string[]; crop_tags: string[];
 };
+type Snapshot = {
+  as_of: string;
+  profile: { role: string; locality: string | null; municipality: string | null; district: string | null } | null;
+  subscription: { plan: string; status: string; current_period_end: string | null } | null;
+  listings: { total: number; active: number; limit: number };
+  seller: { allocation_count: number; fulfilled_allocations: number; fulfilled_sales_value: number; open_allocations: number; delivery_orders: number; scheduled_deliveries: number };
+  buyer: { order_count: number; fulfilled_orders: number; fulfilled_spend: number; open_orders: number; delivery_orders?: number; scheduled_deliveries?: number };
+  bookkeeping: { income: number; expenses: number; net_profit: number; unpaid_income: number; paid_income: number; paid_expenses: number; cash_position: number };
+};
+
+const zar = (value: number) => new Intl.NumberFormat("en-ZA", {
+  style: "currency", currency: "ZAR", maximumFractionDigits: 2,
+}).format(Number.isFinite(value) ? value : 0);
+
+function marketplaceAnswer(question: string, snapshot: Snapshot): string | null {
+  const q = question.toLowerCase();
+  const s = snapshot;
+  const listing = /listing|advert|product limit|how many products/.test(q);
+  const orders = /order|request|buyer|seller|allocation/.test(q);
+  const sales = /sales|sold|revenue|turnover/.test(q);
+  const delivery = /deliver|collection|pickup|schedule/.test(q);
+  const subscription = /subscription|plan|limit|premium|pro/.test(q);
+  const books = /bookkeep|income|expense|profit|cash|paid|unpaid|balance/.test(q);
+
+  if (listing) {
+    return "Your listings (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
+      "• Active: " + s.listings.active + "\n• Total: " + s.listings.total + "\n• Active-listing limit: " + s.listings.limit +
+      "\n• Remaining active slots: " + Math.max(0, s.listings.limit - s.listings.active) + ".";
+  }
+  if (subscription) {
+    return "Your current subscription record: " + (s.subscription ? s.subscription.plan + " (" + s.subscription.status + ")" : "Free plan / no active paid subscription") +
+      ". Your current active-listing limit is " + s.listings.limit + ". The snapshot was calculated at " +
+      new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + ".";
+  }
+  if (books) {
+    return "Your bookkeeping totals (ZAR; as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
+      "• Recorded income: " + zar(s.bookkeeping.income) + "\n• Recorded expenses: " + zar(s.bookkeeping.expenses) +
+      "\n• Net profit/loss: " + zar(s.bookkeeping.net_profit) + "\n• Unpaid income: " + zar(s.bookkeeping.unpaid_income) +
+      "\n• Paid cash position: " + zar(s.bookkeeping.cash_position) +
+      "\nNet profit uses all recorded income and expenses; cash position uses only entries marked paid.";
+  }
+  if (sales) {
+    return "Your seller sales (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
+      "• Fulfilled allocations: " + s.seller.fulfilled_allocations + "\n• Fulfilled sales value: " + zar(s.seller.fulfilled_sales_value) +
+      "\n• Open seller allocations: " + s.seller.open_allocations +
+      "\nFor comparison, your buyer side has " + s.buyer.fulfilled_orders + " fulfilled orders and recorded fulfilled spend of " + zar(s.buyer.fulfilled_spend) + ".";
+  }
+  if (delivery) {
+    return "Your delivery activity (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
+      "• Seller delivery orders: " + s.seller.delivery_orders + "\n• Seller deliveries currently scheduled/in progress: " + s.seller.scheduled_deliveries +
+      "\n• Buyer delivery orders: " + (s.buyer.delivery_orders ?? 0) + "\n• Buyer deliveries currently scheduled: " + (s.buyer.scheduled_deliveries ?? 0) + ".";
+  }
+  if (orders) {
+    return "Your marketplace orders (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
+      "Buyer side — " + s.buyer.order_count + " orders total, " + s.buyer.open_orders + " open, " + s.buyer.fulfilled_orders + " fulfilled.\n" +
+      "Seller side — " + s.seller.allocation_count + " allocations total, " + s.seller.open_allocations + " open, " + s.seller.fulfilled_allocations + " fulfilled.";
+  }
+  if (listing || orders || sales || delivery || subscription || books) return null;
+  return null;
+}
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -32,20 +92,29 @@ export async function POST(request: NextRequest) {
   if (!latest) return fail("Ask a question to continue.", 400);
 
   if (process.env.AI_ASSISTANT_ENABLED !== "true") return fail("The assistant is temporarily disabled by the application administrator.", 503);
-  const apiKey = process.env.NVIDIA_NIM_API_KEY;
-  if (!apiKey) return fail("The AI service is not configured for this deployment. Ask the administrator to configure the server-side NVIDIA NIM credentials.", 503);
-  const baseUrl = (process.env.NVIDIA_NIM_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, "");
-  const model = process.env.NVIDIA_NIM_MODEL || "nvidia/nemotron-3.5-bolt-e4b";
-
   const { data: allowed, error: limitError } = await supabase.rpc("consume_assistant_rate_limit");
   if (limitError) return fail("The assistant is temporarily unavailable. Please try again shortly.", 503);
   if (!allowed) return fail("You have reached the assistant limit of 12 messages per minute. Please wait a moment.", 429);
 
-  const [{ data: snapshot, error: snapshotError }, { data: profile }] = await Promise.all([
+  const [{ data: snapshotData, error: snapshotError }, { data: profile }] = await Promise.all([
     supabase.rpc("get_assistant_marketplace_snapshot"),
-    supabase.from("profiles").select("locality,municipality,district,preferred_language").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("district").eq("id", user.id).maybeSingle(),
   ]);
-  if (snapshotError) return fail("I could not safely retrieve your marketplace records. Please try again.", 503);
+  if (snapshotError || !snapshotData) return fail("I could not safely retrieve your marketplace records. Please try again.", 503);
+  const snapshot = snapshotData as Snapshot;
+
+  const marketplace = marketplaceAnswer(latest.content, snapshot);
+  if (marketplace) {
+    return NextResponse.json({
+      answer: marketplace,
+      sources: [],
+      language: parsed.data.language,
+      languageNotice: parsed.data.language === "en" ? null : "Verified Tshivenda, Xitsonga and Sepedi response generation is not available yet. This account summary is shown in English.",
+      mode: "database_calculation",
+      externalProviderUsed: false,
+      asOf: snapshot.as_of,
+    }, { headers: { "Cache-Control": "private, no-store" } });
+  }
 
   const stopWords = new Set(["the","and","for","with","from","that","this","what","when","where","how","can","you","are","is","my","our","about","please","tell","me","does","have","has","was","were","into","your","need","want","much","many","show","give","should"]);
   const terms = latest.content.toLowerCase().normalize("NFKD").replace(/[^\p{L}\p{N}\s-]/gu, " ").split(/\s+/)
@@ -53,75 +122,32 @@ export async function POST(request: NextRequest) {
   const searchQuery = [...new Set(terms)].join(" OR ");
   let knowledge: KnowledgeHit[] = [];
   if (searchQuery.length >= 2) {
-    const { data } = await supabase.rpc("search_agri_knowledge", {
+    const { data, error } = await supabase.rpc("search_agri_knowledge", {
       query_text: searchQuery,
       locality_filter: profile?.district || "Vhembe",
       crop_filter: null,
       result_limit: 5,
     });
-    knowledge = (data ?? []) as KnowledgeHit[];
+    if (!error) knowledge = (data ?? []) as KnowledgeHit[];
   }
 
   const sources = knowledge.map((item, index) => ({
     id: index + 1, title: item.title, publisher: item.publisher, url: item.source_url,
     heading: item.heading, locality: item.locality_tags, crops: item.crop_tags,
   }));
-  const knowledgeContext = knowledge.map((item, index) =>
-    "[Source " + (index + 1) + "] " + item.title + " — " + item.publisher +
-    "\n" + (item.heading ?? "") + "\n" + item.content + "\nURL: " + item.source_url
-  ).join("\n\n");
+  const answer = knowledge.length
+    ? "I found these approved agricultural notes relevant to " + (profile?.district || "Vhembe") + ". These are source summaries, not a substitute for advice from your local extension officer.\n\n" +
+      knowledge.map((item, index) => (index + 1) + ". " + (item.heading || item.title) + "\n" + item.content + " [Source " + (index + 1) + "]").join("\n\n")
+    : "I could not find a matching approved agricultural source in the current knowledge library. I won't guess a local planting, fertiliser or pesticide recommendation. Please ask a local agricultural extension officer or try a different crop/topic.";
 
-  const languageNames: Record<string, string> = {
-    en: "English", ve: "Tshivenda", ts: "Xitsonga", nso: "Sepedi",
-  };
-  const system = [
-    "You are the AgricNorthX assistant for smallholder farmers and buyers in Limpopo, South Africa.",
-    "Use the signed-in user's marketplace snapshot below as the only source for personal account facts, orders, sales, delivery status, listing counts, subscriptions and bookkeeping.",
-    "Never invent, estimate or extrapolate account figures. State the relevant as-of timestamp. Distinguish fulfilled sales value from paid cash. For bookkeeping, use net_profit for recorded income minus expenses, cash_position for paid income minus paid expenses, and unpaid_income for amounts not yet received. If a field is absent, say it is unavailable.",
-    "The snapshot is scoped by auth.uid() in a private server-side database function and verified server-side authentication. Never disclose data about another user or infer other users' activity.",
-    "For agricultural advice, use only the supplied retrieved source passages for specific local claims. Cite claims as [Source 1], [Source 2], etc. If the passages do not support an answer, say that the knowledge library does not yet contain a verified answer and recommend a local agricultural extension officer. Never fabricate citations.",
-    "Never give pesticide mixing rates, chemical application rates, withdrawal periods or veterinary treatment instructions unless a current approved source explicitly provides them; tell the farmer to follow the registered product label and local extension advice.",
-    "Be concise, practical, and clear about uncertainty. Use metric units and South African Rand (ZAR) when relevant.",
-    "Reply in " + languageNames[parsed.data.language] + " where you can do so reliably. Tshivenda, Xitsonga and Sepedi output is experimental and has not been validated by native speakers; do not claim fluency or certified translation. If you cannot confidently express a safety-critical instruction, say so and provide a short English clarification.",
-    "If asked about voice, explain that this assistant currently supports typed input only; browser speech support is not enabled or verified for the priority languages.",
-  ].join("\n\n");
-
-  const context = "AUTHENTICATED USER MARKETPLACE SNAPSHOT (computed from current database records; do not alter these values):\n" +
-    JSON.stringify(snapshot) +
-    "\n\nRETRIEVED AGRICULTURAL KNOWLEDGE (cite only these sources):\n" +
-    (knowledgeContext || "No matching approved agricultural documents were found for this question.");
-
-  try {
-    const response = await fetch(baseUrl + "/chat/completions", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        max_tokens: 900,
-        stream: false,
-        chat_template_kwargs: { enable_thinking: false },
-        messages: [
-          { role: "system", content: system + "\n\n" + context },
-          ...messages,
-        ],
-      }),
-      signal: AbortSignal.timeout(25000),
-      cache: "no-store",
-    });
-    if (!response.ok) return fail("The AI service could not answer right now. Please try again.", 502);
-    const payload = await response.json() as { choices?: Array<{ message?: { content?: string | null } }> };
-    const answer = payload.choices?.[0]?.message?.content?.trim();
-    if (!answer) return fail("The assistant returned an empty response. Please try again.", 502);
-    return NextResponse.json({
-      answer,
-      sources,
-      language: parsed.data.language,
-      languageNotice: parsed.data.language === "en" ? null : "Priority-language responses are experimental and have not yet been reviewed by native speakers.",
-      voice: { available: false, mode: "typed_input_only" },
-      asOf: (snapshot as { as_of?: string } | null)?.as_of ?? new Date().toISOString(),
-    }, { headers: { "Cache-Control": "private, no-store" } });
-  } catch {
-    return fail("The assistant connection timed out. Please try again.", 502);
-  }
+  return NextResponse.json({
+    answer,
+    sources,
+    language: parsed.data.language,
+    languageNotice: parsed.data.language === "en" ? null : "Verified Tshivenda, Xitsonga and Sepedi response generation is not available yet. The retrieved source notes are shown in English.",
+    mode: "approved_source_retrieval",
+    externalProviderUsed: false,
+    voice: { available: false, mode: "typed_input_only" },
+    asOf: snapshot.as_of,
+  }, { headers: { "Cache-Control": "private, no-store" } });
 }
