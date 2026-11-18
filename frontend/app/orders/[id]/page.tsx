@@ -38,7 +38,6 @@ export default async function OrderPage({
     supabase.from("order_allocations").select("id,listing_id,farmer_id,quantity_allocated,agreed_unit_price,status").eq("order_id", id),
     supabase.from("order_events").select("event_type,from_status,to_status,note,created_at").eq("order_id", id).order("created_at"),
     supabase.from("order_comments").select("id,author_id,author_display_name,author_role,body,created_at").eq("order_id",id).order("created_at"),\n    supabase.from("order_schedule_events").select("id,event_type,previous_schedule,new_schedule,note,created_at").eq("order_id",id).order("created_at",{ascending:false}),
-    profile?.role === "buyer" ? supabase.from("product_reviews").select("id").eq("order_id",id).maybeSingle() : Promise.resolve({data:null}),
   ]);
 
   return (
