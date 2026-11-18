@@ -53,7 +53,9 @@ function localReply(lang:(typeof codes)[number],message:string,orders:Order[],al
   const income=monthOnly?Number(monthStats?.income??0):Number(bookkeepingStats.total_income??0);
   const expenses=monthOnly?Number(monthStats?.expenses??0):Number(bookkeepingStats.total_expenses??0);
   const paymentBreakdown=monthOnly?"Monthly aggregate does not split paid and unpaid entries.":`Marked paid: ${money(Number(bookkeepingStats.paid_income??0))}; marked unpaid: ${money(Number(bookkeepingStats.unpaid_income??0))}.`;
-  return `${t.sales} (${monthOnly?"this month":"all recorded dates"}):\n• Recorded income: ${money(income)}\n• Recorded expenses: ${money(expenses)}\n• ${paymentBreakdown}\nThese are bookkeeping records, not independently verified bank receipts or profit. Completed marketplace allocations are automatically entered as unpaid income until payment is marked received; manual income may also be included.`;
+  const soldUnits=listings.reduce((sum,item)=>sum+Number(item.quantity_sold),0);
+  const best=listings.filter(item=>Number(item.quantity_sold)>0).sort((left,right)=>right.quantity_sold-left.quantity_sold).slice(0,3).map(item=>`${item.produce_name} (${item.quantity_sold} ${item.unit})`);
+  return `${t.sales} (${monthOnly?"this month":"all recorded dates"}):\n• Recorded income: ${money(income)}\n• Recorded expenses: ${money(expenses)}\n• Quantity marked sold on retrieved listings: ${soldUnits}\n• Top listings by recorded sold quantity: ${best.length?best.join(", "):"not available"}\n• ${paymentBreakdown}\nThese are bookkeeping records, not independently verified bank receipts or profit. Completed marketplace allocations are automatically entered as unpaid income until payment is marked received; manual income may also be included.`;
  }
  if(/listing|listings|stock|produce|harvest|zwibveledzwa|swibyariwa|ditšweletšwa|imikhiqizo|iimveliso|aanbieding/.test(q)){
   const active=listings.filter(l=>l.status==="active");
