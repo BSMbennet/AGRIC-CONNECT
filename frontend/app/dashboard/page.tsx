@@ -108,21 +108,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <AppNav active="dashboard" />
       {params.cart_requested && <ClearCartOnSuccess />}
       <section className="mx-auto max-w-6xl px-5 py-10">
-        <p className="text-sm font-semibold capitalize text-leaf">Your workspace · {profile.role.replaceAll("_", " ")}</p>
-        <h1 className="mt-2 text-3xl font-bold text-forest">Hello, {profile.display_name}</h1>
-        <p className="mt-2 text-slate-600">{profile.locality || "Vhembe"}, Limpopo</p>
-        {params.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{params.error === "insufficient_stock" ? "Not enough stock remains to accept that request." : params.error === "fulfill" ? "This supply allocation could not be marked as fulfilled." : params.error === "preorder" ? "The pre-order could not be confirmed." : params.error === "schedule" ? "Please provide a valid future delivery or collection date, time and location." : params.error === "rejection" ? "Please provide a rejection reason of at least 3 characters." : params.error === "request_unavailable" ? "This buyer request is no longer pending. Refresh the dashboard to see its current status." : params.error === "listing_unavailable" ? "This produce listing is no longer active. Check your listing status." : params.error === "not_authorized" ? "You do not have permission to accept this request. Make sure you are signed in to the farmer account that owns the listing." : "The requested action could not be completed. Refresh the dashboard and try again."}</p>}
-        {params.requested && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your buyer request has been sent.</p>}
-        {params.preorder_confirmed && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Pre-order confirmed. No stock has been reserved; agree the harvest and collection details with the buyer.</p>}
-        {params.rejected && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">The buyer request was rejected.</p>}
-        {params.listing_updated && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your listing visibility has been updated.</p>}
-        <section className="mt-8 rounded-2xl border border-emerald-900/10 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-forest">Notifications</h2>
-            <span className="text-xs text-slate-500">
-              {(notifications ?? []).filter((notification) => !notification.read_at).length} unread
-            </span>
-      <section className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
+        <section className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-leaf">{profile.role.replaceAll("_", " ")} workspace</p>
