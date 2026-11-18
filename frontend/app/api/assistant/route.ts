@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
     "crop", "plant", "planting", "seed", "soil", "water", "irrigation", "pest", "disease",
     "fertiliser", "fertilizer", "maize", "tomato", "tomatoes", "bean", "beans", "cowpea",
     "spinach", "cabbage", "onion", "carrot", "beetroot", "leafy", "harvest", "climate",
-    "rainfall", "citrus", "mango", "avocado", "macadamia", "sweet potato", "vegetable",
+    "rainfall", "citrus", "mango", "avocado", "macadamia", "sweet potato", "vegetable", "tuta", "absoluta", "blight", "nematode", "fusarium", "pesticide", "herbicide", "fertility", "fertiliser", "fertilizer", "mulch", "compost", "harvesting",
   ];
   if (!agriculturalTerms.some((term) => latest.content.toLowerCase().includes(term))) {
     return NextResponse.json({
