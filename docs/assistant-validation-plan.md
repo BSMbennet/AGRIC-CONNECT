@@ -32,7 +32,7 @@ This checklist is the release gate for the assistant. A language label or succes
 
 ## Agricultural RAG/source quality
 
-- [x] Initial source registry includes LDARD tomato guidance, LDARD crop-guide index, WRC Vhembe leafy-vegetable guideline record and ARC information hub.
+- [x] Initial source registry includes LDARD tomato guidance, LDARD crop-guide index, WRC Vhembe leafy-vegetable guideline record, ARC information hub and a University of the Free State Vhembe crop-suitability study.
 - [x] The seeded Vhembe leafy-vegetable chunk clearly states that only catalogue metadata was verified and does not invent detailed production recommendations.
 - [ ] Ingest and review the full downloadable WRC Vhembe leafy-vegetable guideline before using it for specific cultivation advice.
 - [ ] Add full crop-specific documents for maize, beans, leafy vegetables, citrus, mango, avocado, macadamia, soil/water management and integrated pest management.
