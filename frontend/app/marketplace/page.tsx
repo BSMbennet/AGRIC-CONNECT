@@ -105,7 +105,8 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
                 <p className="mt-5 text-2xl font-bold text-forest">R{Number(item.asking_price).toFixed(2)} <span className="text-xs font-medium text-slate-500">/ {item.price_unit}</span></p>
                 <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>
                 {item.quality_notes && <p className="mt-3 line-clamp-2 text-sm leading-5 text-slate-600">{item.quality_notes}</p>}
-                <Link href={`/marketplace/${item.id}`} className="mt-5 inline-flex items-center justify-center rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-leaf">View produce details</Link>\n                <AddToCartButton listingId={item.id} />
+                <Link href={`/marketplace/${item.id}`} className="mt-5 inline-flex items-center justify-center rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-leaf">View produce details</Link>
+                <AddToCartButton listingId={item.id} />
               </article>
             );
           })}
