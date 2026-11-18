@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Bot, ChevronDown, Loader2, MessageCircle, Mic, MicOff, Send, Volume2, VolumeX, Trash2, Minus, X } from "lucide-react";
+import { Bot, ChevronDown, Loader2, MessageCircle, Mic, MicOff, Send, Volume2, VolumeX, Trash2, Minus, Square, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { updatePreferredLanguage } from "@/actions/preferences";
