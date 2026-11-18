@@ -20,7 +20,7 @@ export async function AppNav({active=""}:{active?:string}){
       </div>
       <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
         <Link href="/marketplace" className={link("marketplace")}>{t("marketplace")}</Link>
-        {user&&<><Link href="/cart" className={link("cart")}>{t("cart")}</Link><Link href="/dashboard" className={link("dashboard")}>{t("dashboard")}</Link>{profile?.role==="farmer"&&<Link href="/bookkeeping" className={link("bookkeeping")}>Bookkeeping</Link>}<Link href="/profile" className={link("profile")}>{t("profile")}</Link><form action={logout}><button className="text-slate-600 hover:text-forest">{t("signOut")}</button></form></>}
+        {user&&<><Link href="/cart" className={link("cart")}>{t("cart")}</Link><Link href="/dashboard" className={link("dashboard")}>{t("dashboard")}</Link><Link href="/assistant" className={link("assistant")}>Assistant</Link>{profile?.role==="farmer"&&<Link href="/bookkeeping" className={link("bookkeeping")}>Bookkeeping</Link>}<Link href="/profile" className={link("profile")}>{t("profile")}</Link><form action={logout}><button className="text-slate-600 hover:text-forest">{t("signOut")}</button></form></>}
         {!user&&<><Link href="/login" className="text-forest hover:text-leaf">Sign in</Link><Link href="/register" className="rounded-lg bg-forest px-3 py-2 text-white hover:bg-leaf">Join</Link></>}
       </nav>
     </div>
