@@ -12,6 +12,21 @@ function itemsFor(role: Role | null, t: (key: string) => string): NavItem[] {
 
   items.push({ href: "/dashboard", label: t("dashboard") });
   if (role === "buyer") items.push({ href: "/cart", label: t("cart") });
+  if (role === "farmer") {
+    items.push(
+      { href: "/fields", label: "Fields" },
+      { href: "/weather", label: "Weather" },
+      { href: "/farm-products", label: "Farm products" },
+      { href: "/subscriptions", label: "Subscription" },
+      { href: "/wallet", label: "Wallet" },
+    );
+  }
+  if (role === "farmer" || role === "cooperative_manager" || role === "admin") {
+    items.push({ href: "/market-insights", label: "Insights" }, { href: "/pricing", label: "Pricing guide" });
+  }
+  if (role === "farmer" || role === "cooperative_manager") {
+    items.push({ href: "/bookkeeping", label: "Bookkeeping" });
+  }
   if (role === "farmer") items.push(
     { href: "/fields", label: "Fields" },
     { href: "/weather", label: "Weather" },

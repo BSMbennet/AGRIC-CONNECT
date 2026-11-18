@@ -1,0 +1,24 @@
+name: Render adapter syntax
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python-syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Render adapter dependencies
+        run: pip install -r render_service/requirements.txt
+      - name: Compile FastAPI adapter
+        run: python -m compileall -q render_service
+      - name: Verify StripeClient async Checkout API
+        working-directory: render_service
+        run: python -c "from main import app; from stripe import StripeClient; assert callable(StripeClient('sk_test_placeholder').v1.checkout.sessions.create_async)"
