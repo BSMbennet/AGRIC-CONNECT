@@ -26,3 +26,10 @@ Text language selection and response-language instructions cover all eleven lang
 - The assistant context excludes phone numbers and private fulfilment instructions.
 - It distinguishes fulfilled order value from profit or proof of payment.
 - Test buyer/seller isolation and all eleven languages with native speakers; run pnpm typecheck, lint, test and build from frontend before production.
+
+## Northern Limpopo language quality and voice limits
+The chat interface offers Tshivenda, Xitsonga and Sepedi, plus the other eight language options. The API now explicitly instructs the configured language model to keep replies in the selected language, distinguish Tshivenda from Sepedi and Sesotho, accept code-switching, and avoid inventing translations for safety-critical advice. Built-in fallback messages are short, fixed translations, not a full translation engine.
+
+Do not promise reliable AI fluency until native speakers have tested common farmer conversations. NVIDIA's Nemotron 3.5 Bolt E4B model card lists English as primary and names Spanish, French, German, Italian and Japanese (with Chinese in the post-training language description); it does not specifically validate Tshivenda, Xitsonga or Sepedi. NVIDIA's published speech ASR/TTS support matrices likewise do not list these South African languages. The browser voice buttons therefore work only when the user's browser/device actually supplies recognition or a matching installed speech voice. A visible text-chat fallback remains available.
+
+Before public launch, build a native-speaker-reviewed test set for Tshivenda, Xitsonga and Sepedi covering marketplace terms, quantities, units, crop symptoms, irrigation, weather uncertainty and chemical safety. Record pass/fail results separately for text understanding, response quality, speech recognition and speech playback. Do not translate pesticide labels, dosage instructions or withholding periods without agricultural expert review.
