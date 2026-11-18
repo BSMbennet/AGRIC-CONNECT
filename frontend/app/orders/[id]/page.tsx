@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { fulfillAllocation, addOrderComment, updateBuyerOrderDetails, updateOrderFulfilmentSchedule, confirmOrderDeliveryFee, markOrderOutForDelivery, confirmOrderDelivery } from "@/actions/orders";
 import { PackageCheck } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
@@ -17,7 +18,7 @@ export default async function OrderPage({
 }) {
   const { id } = await params;
   const queryParams = await searchParams;
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
