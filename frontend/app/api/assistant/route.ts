@@ -92,7 +92,7 @@ export async function POST(req:Request){
  const locality=[profile?.locality,profile?.municipality,profile?.district].filter(Boolean).join(", ");
  const knowledge=searchAgriculturalKnowledge(input.data.message,locality);
  const reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription,activeListingCount,bookkeepingStats);
- const fallbackReply=reply+(knowledge.length&&lang==="en"?"\n\nRelevant verified sources:\n"+knowledge.map(x=>`• ${x.title} (${x.publicationDate}) — ${x.sourceUrl}`).join("\n"):"");
+ const fallbackReply=reply+(knowledge.length&&lang==="en"?"\n\nRelevant source notes:\n"+knowledge.map(x=>`${x.title}: ${x.summary}`).join("\n\n"):"");
  const sources=knowledge.map(x=>({title:x.title,url:x.sourceUrl,publicationDate:x.publicationDate}));
  const context={profile:profile?{name:profile.display_name,role:profile.role,preferredLanguage:profile.preferred_language,locality}:null,
  buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency,fulfilmentState:x.fulfilment_state,fulfilmentMethod:x.fulfilment_method,scheduledStart:x.scheduled_start,scheduledEnd:x.scheduled_end,collectionWindowStart:x.collection_window_start,collectionWindowEnd:x.collection_window_end})),
