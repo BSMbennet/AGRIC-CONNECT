@@ -345,15 +345,20 @@ export type Database = {
       }
       orders: {
         Row: {
+          buyer_contact_number: string | null
           buyer_id: string
+          buyer_name: string | null
           collection_method: string | null
           collection_point: string | null
           collection_window_end: string | null
           collection_window_start: string | null
           created_at: string
           currency: string
+          delivery_location: string | null
+          fulfilment_preference: string
           id: string
           listing_id: string | null
+          order_instructions: string | null
           quantity_agreed: number
           status: Database["public"]["Enums"]["order_status"]
           unit: string
@@ -361,15 +366,20 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          buyer_contact_number?: string | null
           buyer_id: string
+          buyer_name?: string | null
           collection_method?: string | null
           collection_point?: string | null
           collection_window_end?: string | null
           collection_window_start?: string | null
           created_at?: string
           currency?: string
+          delivery_location?: string | null
+          fulfilment_preference?: string
           id?: string
           listing_id?: string | null
+          order_instructions?: string | null
           quantity_agreed: number
           status?: Database["public"]["Enums"]["order_status"]
           unit: string
@@ -377,15 +387,20 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          buyer_contact_number?: string | null
           buyer_id?: string
+          buyer_name?: string | null
           collection_method?: string | null
           collection_point?: string | null
           collection_window_end?: string | null
           collection_window_start?: string | null
           created_at?: string
           currency?: string
+          delivery_location?: string | null
+          fulfilment_preference?: string
           id?: string
           listing_id?: string | null
+          order_instructions?: string | null
           quantity_agreed?: number
           status?: Database["public"]["Enums"]["order_status"]
           unit?: string
