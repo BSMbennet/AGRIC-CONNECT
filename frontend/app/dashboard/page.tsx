@@ -53,6 +53,7 @@ type BuyerOrder = {
   scheduled_end?: string | null;
   fulfilment_location?: string | null;
   delivery_fee?: number;
+  fulfilment_state?: string;
 };
 
 type BuyerRequestWithListing = BuyerRequest & {
