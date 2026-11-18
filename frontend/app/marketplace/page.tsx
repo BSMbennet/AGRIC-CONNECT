@@ -24,7 +24,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   const { data: { user } } = await supabase.auth.getUser();
   let query = supabase
     .from("produce_listings")
-    .select("id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,is_organic,unit,asking_price,price_unit,locality,municipality,available_from,harvest_date,quality_notes,created_at,expires_at,image_urls")
+    .select("id,farmer_id,produce_name,category,quantity_available,reserved_quantity,quantity_sold,is_organic,unit,asking_price,price_unit,locality,municipality,available_from,harvest_date,quality_notes,created_at,expires_at,image_urls")
     .eq("status", "active")
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
@@ -106,7 +106,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
                 <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>{item.expires_at&&<p className="mt-1 text-xs font-semibold text-amber-700">Listing expires {new Intl.DateTimeFormat("en-ZA",{dateStyle:"medium",timeStyle:"short"}).format(new Date(item.expires_at))}</p>}
                 {item.quality_notes && <p className="mt-3 line-clamp-2 text-sm leading-5 text-slate-600">{item.quality_notes}</p>}
                 <Link href={`/marketplace/${item.id}`} className="mt-5 inline-flex items-center justify-center rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-leaf">View produce details</Link>
-                <AddToCartButton listingId={item.id} />
+                <AddToCartButton listingId={item.id} sellerId={item.farmer_id} currentUserId={user?.id} />
               </article>
             );
           })}
