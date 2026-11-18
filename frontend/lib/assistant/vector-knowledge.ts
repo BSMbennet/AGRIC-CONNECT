@@ -28,7 +28,18 @@ type KnowledgeDbClient = {
     match_count:number;
     locality_filter:string|null;
     crop_filter:null;
-  })=>Promise<{data:VectorMatch[]|null;error:unknown}>;
+  })=>Promise<{data:Array<{
+    chunk_id:string;
+    title:string;
+    heading:string|null;
+    crop_tags:string[];
+    locality_tags:string[];
+    publisher:string;
+    source_url:string;
+    published_on:string|null;
+    content:string;
+    similarity:number;
+  }>|null;error:unknown}>;
 };
 
 async function searchApprovedFullText(client:KnowledgeDbClient,query:string,limit:number):Promise<AgriculturalKnowledgeDocument[]>{
