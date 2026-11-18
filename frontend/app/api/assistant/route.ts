@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { searchAgriculturalKnowledge } from "@/lib/assistant/agricultural-knowledge";
 import { detectAssistantLanguage } from "@/lib/assistant/language-detection";
 import { searchVectorAgriculturalKnowledge } from "@/lib/assistant/vector-knowledge";
@@ -39,8 +40,9 @@ function isRateLimited(userId:string){
  if(requestWindows.size>5000){for(const [key,value] of requestWindows){if(now-value.start>=60_000)requestWindows.delete(key);}}
  return window.count>20;
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- New consent tables are defined in the staged SQL migration, not current generated types.
-async function persistConversation(supabase:any,userId:string,language:(typeof codes)[number],message:string,reply:string){
+// Assistant-memory tables are added by a staged migration, so use the
+// Supabase client's supported dynamic-schema surface at this boundary.
+async function persistConversation(supabase:SupabaseClient,userId:string,language:(typeof codes)[number],message:string,reply:string){
  try{
   const {data:preference,error:preferenceError}=await supabase.from("agri_ai_memory_preferences").select("enabled").eq("user_id",userId).maybeSingle();
   if(preferenceError||preference?.enabled!==true)return;
@@ -149,7 +151,7 @@ export async function POST(req:Request){
  const enabled=process.env.AI_ASSISTANT_ENABLED==="true";
  const key=process.env.AI_ASSISTANT_API_KEY||process.env.NVIDIA_NIM_API_KEY;
  const model=process.env.AI_ASSISTANT_MODEL||process.env.NVIDIA_NIM_MODEL;
- if(!enabled||!key||!model){await persistConversation(supabase,user.id,lang,input.data.message,fallbackReply);return NextResponse.json({reply:fallbackReply,mode:"account-context",detectedLanguage:detected?.language??null,sources});}
+ if(!enabled||!key||!model){await persistConversation(supabase as unknown as SupabaseClient,user.id,lang,input.data.message,fallbackReply);return NextResponse.json({reply:fallbackReply,mode:"account-context",detectedLanguage:detected?.language??null,sources});}
  const base=(process.env.AI_ASSISTANT_BASE_URL||process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
  try{
   const history=(input.data.history??[]).slice(-8).map(m=>({role:m.role,content:m.content}));
