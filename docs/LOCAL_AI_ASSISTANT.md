@@ -15,7 +15,7 @@ Set server-side environment variables in the existing Vercel project only:
 - NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
 - NVIDIA_NIM_MODEL=<the exact model identifier enabled for your account>
 
-No paid service, GPU, subscription, or infrastructure is provisioned by this code. Without these settings the assistant still answers marketplace activity from the signed-in user's own records; generative agronomy answers are not enabled.
+No paid service, GPU, subscription, or infrastructure is provisioned by this code. Without these settings the assistant still answers marketplace activity from the signed-in user's own records; generative agronomy answers are not enabled. When NIM is enabled, the configured provider receives a minimized account context (crop/listing names, order status, quantities, order values, role and locality) with the user's message. Phone numbers, buyer contact details and private fulfilment instructions are excluded. Review the selected provider's data terms before enabling it.
 
 ## Local speech caveat
 Text language selection and response-language instructions cover all eleven languages, but model fluency must be validated by native speakers. Voice input/output uses browser Web Speech APIs and varies by device. A matching installed voice is required for playback. NVIDIA's published Speech NIM ASR/TTS locale lists do not currently include the eleven South African official languages; do not advertise native NVIDIA voice support for them. Consistent local-language speech requires a separately validated provider/model.
