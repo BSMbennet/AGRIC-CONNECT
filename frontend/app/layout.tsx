@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 import { AssistantMount } from "@/components/assistant-mount";
-import { LanguageSelector } from "@/components/language-selector";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,25 +13,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#174B35",
+  themeColor: "#103D2B",
   width: "device-width",
   initialScale: 1,
 };
 
 export default async function RootLayout({ children }: { readonly children: React.ReactNode }) {
-  const [locale, messages, translations] = await Promise.all([
-    getLocale(),
-    getMessages(),
-    getTranslations("app"),
-  ]);
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
 
   return (
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages}>
-          <div className="sticky top-0 z-[60] flex justify-end border-b border-emerald-900/10 bg-white/95 px-5 py-2 backdrop-blur sm:px-8">
-            <LanguageSelector value={locale} label={translations("language")} />
-          </div>
           {children}
           <AssistantMount />
         </NextIntlClientProvider>
