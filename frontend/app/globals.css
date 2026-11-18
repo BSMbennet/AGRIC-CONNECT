@@ -28,3 +28,72 @@ button,input,select,textarea{font:inherit}::selection{background:#DCEBDD;color:v
   @keyframes hero-drift{from{background-position:center,48% center}to{background-position:center,52% center}}
   @keyframes panel-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 }
+
+/* Shared AgricNorthX design system: extend the landing-page identity across app routes. */
+:root{
+  --agri-radius-sm:.75rem;
+  --agri-radius-md:1rem;
+  --agri-radius-lg:1.5rem;
+  --agri-shadow:0 10px 30px rgba(16,61,43,.07);
+  --agri-shadow-hover:0 18px 42px rgba(16,61,43,.12);
+  --agri-border:rgba(16,61,43,.11);
+}
+body{background:var(--cream)}
+.agri-page{isolation:isolate}
+.agri-page main,.agri-page section{scroll-margin-top:5.5rem}
+.agri-page h1,.agri-page h2,.agri-page h3,.agri-page h4{letter-spacing:-.025em}
+.agri-page h1{line-height:1.08}
+.agri-page article,.agri-page .dashboard-disclosure,.agri-page form.rounded-2xl,.agri-page form.rounded-3xl{
+  border-color:var(--agri-border);
+  box-shadow:var(--agri-shadow);
+}
+.agri-page article{transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease}
+.agri-page article:hover{border-color:rgba(57,169,107,.28)}
+.agri-page input:not([type=checkbox]):not([type=radio]):not([type=hidden]),
+.agri-page select,.agri-page textarea{
+  border-color:rgba(16,61,43,.17);
+  border-radius:var(--agri-radius-sm);
+  background-color:rgba(255,255,255,.96);
+  color:var(--ink);
+  transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
+}
+.agri-page input::placeholder,.agri-page textarea::placeholder{color:#89958d}
+.agri-page input:focus,.agri-page select:focus,.agri-page textarea:focus{
+  border-color:var(--leaf);
+  outline:0;
+  box-shadow:0 0 0 3px rgba(57,169,107,.14);
+}
+.agri-page button:not(:disabled){transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease}
+.agri-page button:disabled{cursor:not-allowed;opacity:.55}
+.agri-page a{ text-underline-offset:3px }
+.agri-page a:focus-visible,.agri-page button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.agri-page .rounded-xl.border,.agri-page .rounded-2xl.border,.agri-page .rounded-3xl.border{border-color:var(--agri-border)}
+.agri-page .bg-white{background-color:rgba(255,255,255,.96)}
+.agri-page .bg-emerald-50{background-color:#edf6ed}
+.agri-page .bg-emerald-100{background-color:#e1f0e2}
+.agri-page .text-forest{color:var(--forest)}
+.agri-page .text-leaf{color:#278653}
+.agri-page .bg-forest{background-color:var(--forest)}
+.agri-page .bg-forest:hover{background-color:#1c6845}
+.agri-page .bg-lime{background-color:var(--lime)}
+.agri-page .shadow-soft{box-shadow:var(--agri-shadow)}
+.agri-page .card-lift:hover{box-shadow:var(--agri-shadow-hover)}
+.agri-page .dashboard-disclosure{border-radius:var(--agri-radius-lg);background:rgba(255,255,255,.96)}
+.agri-page .dashboard-disclosure>summary{min-height:64px;padding:1rem 1.2rem}
+.agri-page .dashboard-disclosure[open]>summary{background:linear-gradient(90deg,rgba(234,244,231,.72),rgba(255,255,255,.96))}
+.agri-page .market-hero{position:relative;overflow:hidden}
+.agri-page .market-hero:after{content:"";position:absolute;inset:auto 0 0;height:5px;background:linear-gradient(90deg,var(--lime),rgba(57,169,107,.25),transparent)}
+.agri-page .market-hero>*{position:relative;z-index:1}
+.agri-page .hero-panel,.agri-page .hero-chip{border-radius:var(--agri-radius-lg)}
+.agri-page [role=alert],.agri-page [role=status]{border-radius:var(--agri-radius-md)}
+.agri-page table{border-collapse:separate;border-spacing:0}
+.agri-page th{color:var(--forest);font-weight:700}
+.agri-page td,.agri-page th{border-color:var(--agri-border)}
+@media(max-width:640px){
+  .agri-page article{border-radius:1.15rem}
+  .agri-page .dashboard-disclosure>summary{padding:.85rem 1rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .agri-page article,.agri-page button{transition:none}
+}
+
