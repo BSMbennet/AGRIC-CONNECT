@@ -16,7 +16,6 @@ export default async function OrderPage({
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string; updated?: string; accepted?: string; schedule_updated?: string; fee_confirmed?: string; delivery_started?: string; delivery_confirmed?: string; payment?: string; payment_error?: string }>;
-  searchParams: Promise<{ error?: string; payment_error?: string; payment?: string; delivery_confirmed?: string; updated?: string; accepted?: string; schedule_updated?: string; fee_confirmed?: string; delivery_started?: string }>;
 }) {
   const { id } = await params;
   const queryParams = await searchParams;
