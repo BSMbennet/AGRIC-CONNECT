@@ -98,7 +98,7 @@ insert into public.agri_knowledge_chunks
   (source_id,chunk_index,heading,content,locality_tags,crop_tags)
 select s.id,0,d.heading,d.content,d.locality_tags,d.crop_tags
 from seed d
-join public.agri_knowledge_sources s on s.source_url=d.source_url
+join inserted_sources s on s.source_url=d.source_url
 on conflict (source_id,chunk_index) do update set
   heading=excluded.heading,content=excluded.content,
   locality_tags=excluded.locality_tags,crop_tags=excluded.crop_tags;
