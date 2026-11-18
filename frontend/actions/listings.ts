@@ -27,7 +27,10 @@ export async function createListing(formData: FormData) {
     municipality: formData.get("municipality") || "",
     district: formData.get("district"),
   });
-  if (!parsed.success) {\n    console.error("[listings] validation failed", parsed.error.flatten());\n    redirect("/listings/new?error=invalid");\n  }
+  if (!parsed.success) {
+    console.error("[listings] validation failed", parsed.error.flatten());
+    redirect("/listings/new?error=invalid");
+  }
 
   const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
@@ -69,7 +72,10 @@ export async function createListing(formData: FormData) {
     client_submission_id: parsed.data.client_submission_id,
   }, { onConflict: "farmer_id,client_submission_id", ignoreDuplicates: true }).select("id").maybeSingle();
 
-  if (error) {\n    console.error("[listings] insert failed", { code: error.code, message: error.message, details: error.details, hint: error.hint });\n    redirect(error.message.includes("farmer_listing_limit_reached") ? "/listings/new?error=limit" : "/listings/new?error=save");\n  }
+  if (error) {
+    console.error("[listings] insert failed", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+    redirect(error.message.includes("farmer_listing_limit_reached") ? "/listings/new?error=limit" : "/listings/new?error=save");
+  }
   let listingId = inserted?.id;
   if (!listingId) {
     const { data: existing, error: lookupError } = await supabase.from("produce_listings")
@@ -85,7 +91,10 @@ export async function createListing(formData: FormData) {
     fulfilment_details: parsed.data.fulfilment_details,
     updated_at: new Date().toISOString(),
   });
-  if (privateDetailsError) {\n    console.error("[listings] private details save failed", { code: privateDetailsError.code, message: privateDetailsError.message });\n    redirect("/listings/new?error=save");\n  }
+  if (privateDetailsError) {
+    console.error("[listings] private details save failed", { code: privateDetailsError.code, message: privateDetailsError.message });
+    redirect("/listings/new?error=save");
+  }
   revalidatePath("/marketplace");
   revalidatePath("/dashboard");
   redirect("/listings/" + listingId + "/photos?created=1");
