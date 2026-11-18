@@ -14,6 +14,7 @@ type StripeSubscriptionObject = {
 type StripeWebhookEvent = {
   id?: string;
   type?: string;
+  livemode?: boolean;
   data?: { object?: StripeSubscriptionObject };
 };
 
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+
+  if (event.livemode !== false) return NextResponse.json({ error: "Live-mode events are disabled" }, { status: 403 });
 
   const eventType = event.type || "";
   if (!["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"].includes(eventType)) {
