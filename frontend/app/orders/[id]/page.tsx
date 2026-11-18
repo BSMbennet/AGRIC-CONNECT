@@ -36,7 +36,7 @@ export default async function OrderPage({
   ]);
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
+    <main className="min-h-screen agri-page">
       <header className="border-b border-emerald-900/10 bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4"><Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={21}/> AgricNorthX</Link><nav className="flex gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link></nav></div></header>
       <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <Link href="/dashboard" className="text-sm font-bold text-leaf">← Back to dashboard</Link>
