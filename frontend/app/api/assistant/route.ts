@@ -39,6 +39,7 @@ function isRateLimited(userId:string){
  if(requestWindows.size>5000){for(const [key,value] of requestWindows){if(now-value.start>=60_000)requestWindows.delete(key);}}
  return window.count>20;
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- New consent tables are defined in the staged SQL migration, not current generated types.
 async function persistConversation(supabase:any,userId:string,language:(typeof codes)[number],message:string,reply:string){
  try{
   const {data:preference,error:preferenceError}=await supabase.from("agri_ai_memory_preferences").select("enabled").eq("user_id",userId).maybeSingle();
@@ -98,7 +99,7 @@ export async function POST(req:Request){
  const supabase=await createClient(),auth=await supabase.auth.getUser(),user=auth.data.user;
  if(auth.error||!user)return NextResponse.json({error:"Sign in to use your private Agric Assistant."},{status:401});
  if(isRateLimited(user.id))return NextResponse.json({error:"You have reached the assistant request limit. Please wait a minute and try again."},{status:429});
- const statsPromise=(supabase as any).rpc("get_bookkeeping_dashboard_stats");
+ const statsPromise=(supabase as unknown as {rpc:(name:string)=>Promise<{data:BookkeepingStats|null;error:unknown}>}).rpc("get_bookkeeping_dashboard_stats");
  const [p,o,a,l,b,s,n,stats]=await Promise.all([
   supabase.from("profiles").select("display_name,role,locality,municipality,district,preferred_language").eq("id",user.id).maybeSingle(),
   supabase.from("orders").select("id,status,quantity_agreed,unit,unit_price,currency,created_at,fulfilment_state,fulfilment_method,scheduled_start,scheduled_end,collection_window_start,collection_window_end,fulfilment_location,listing:produce_listings(produce_name,locality)").eq("buyer_id",user.id).order("created_at",{ascending:false}).limit(50),
