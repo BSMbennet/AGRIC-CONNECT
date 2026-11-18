@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";\nimport { AppNav } from "@/components/app-nav";
+import { createClient } from "@/lib/supabase/server";
+import { AppNav } from "@/components/app-nav";
 export default async function ListingReviewsPage({params}:{params:Promise<{listingId:string}>}){
  const {listingId}=await params;const supabase=await createClient();
  const [{data:listing},{data:reviews}]=await Promise.all([
