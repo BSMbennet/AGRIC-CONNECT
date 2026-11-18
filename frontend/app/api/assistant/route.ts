@@ -109,7 +109,7 @@ function localReply(lang:(typeof codes)[number],message:string,orders:Order[],al
   const best=listings.filter(item=>Number(item.quantity_sold)>0).sort((left,right)=>right.quantity_sold-left.quantity_sold).slice(0,3).map(item=>`${item.produce_name} (${item.quantity_sold} ${item.unit})`);
   return `${t.listings}: ${activeListingCount} active of ${limit} allowed on the ${plan} plan\n• Quantity recorded as sold across retrieved listings: ${soldUnits}\n• Best-selling listings by recorded quantity: ${best.length?best.join(", "):"not available"}\n${rows.length?rows.join("\n"):t.none}`;
  }
- if(/crop|plant|pest|disease|irrigat|soil|maize|tomato|mango|avocado|fertili|worm|fungus|leaf|wilting|zwimela|vurimi|swimilani|dibjalo|izitshalo|izityalo|gewas|dijalo/.test(q))return t.farming;
+ if(/crop|plant|pest|disease|irrigat|soil|maize|tomato|mango|avocado|fertili|worm|fungus|leaf|wilting|cattle|livestock|goat|sheep|poultry|chicken|broiler|layer|animal|feed|vaccin|weed|harvest|seed|manure|compost|zwimela|vurimi|swimilani|dibjalo|izitshalo|izityalo|gewas|dijalo|khuhu|mavhele/.test(q))return t.farming;
  return t.general+"\n"+t.none;
 }
 export async function POST(req:Request){
@@ -154,7 +154,7 @@ export async function POST(req:Request){
  const marketReply=market
   ? `For current South African fresh-produce market intelligence, consult the NAMC report/dashboard: ${market.url}. AGRIC AI does not yet have a verified structured live price feed, so I will not invent a current price.`
   : "";
- const farmingQuestion=/crop|plant|pest|disease|irrigat|soil|maize|tomato|mango|avocado|fertili|worm|fungus|leaf|wilting|mavhele|zwimela|vurimi|swimilani|dibjalo|izitshalo|izityalo|gewas|dijalo/i.test(input.data.message);\n const knowledgeReply=knowledge.length?"\\n\\nAgricultural information from retrieved sources (source notes are in English):\\n"+knowledge.map(x=>`${x.title}: ${x.summary}`).join("\\n\\n")+"\\n\\nFor crop-specific advice, share your crop, growth stage, locality and symptoms. Confirm chemical treatments and rates with a local extension officer.":"";\n const fallbackReply=(weatherQuestion?weatherReply:reply)+(marketQuestion?"\\n\\n"+marketReply:"")+(farmingQuestion?knowledgeReply:"");
+ const farmingQuestion=/crop|plant|pest|disease|irrigat|soil|maize|tomato|mango|avocado|fertili|worm|fungus|leaf|wilting|cattle|livestock|goat|sheep|poultry|chicken|broiler|layer|animal|feed|vaccin|weed|harvest|seed|manure|compost|mavhele|zwimela|vurimi|swimilani|dibjalo|izitshalo|izityalo|gewas|dijalo/i.test(input.data.message);\n const knowledgeReply=knowledge.length?"\n\nAgricultural information from retrieved sources (source notes are in English):\n"+knowledge.map(x=>`${x.title}: ${x.summary}`).join("\n\n")+"\n\nFor crop-specific advice, share your crop, growth stage, locality and symptoms. Confirm chemical treatments and rates with a local extension officer.":"";\n const fallbackReply=(weatherQuestion?weatherReply:reply)+(marketQuestion?"\n\n"+marketReply:"")+(farmingQuestion?knowledgeReply:"");
  const sources=knowledge.map(x=>({title:x.title,url:x.sourceUrl,publicationDate:x.publicationDate}));
  if(market)sources.push({title:market.title,url:market.url,publicationDate:"Latest report listing — see official page"});
  const context={profile:profile?{name:profile.display_name,role:profile.role,preferredLanguage:profile.preferred_language,locality}:null,
