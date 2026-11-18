@@ -31,15 +31,15 @@ export async function POST(request: NextRequest) {
   const latest = [...messages].reverse().find((message) => message.role === "user");
   if (!latest) return fail("Ask a question to continue.", 400);
 
-  const { data: allowed, error: limitError } = await supabase.rpc("consume_assistant_rate_limit");
-  if (limitError) return fail("The assistant is temporarily unavailable. Please try again shortly.", 503);
-  if (!allowed) return fail("You have reached the assistant limit of 12 messages per minute. Please wait a moment.", 429);
-
   if (process.env.AI_ASSISTANT_ENABLED !== "true") return fail("The assistant is temporarily disabled by the application administrator.", 503);
   const apiKey = process.env.NVIDIA_NIM_API_KEY;
   if (!apiKey) return fail("The AI service is not configured for this deployment. Ask the administrator to configure the server-side NVIDIA NIM credentials.", 503);
   const baseUrl = (process.env.NVIDIA_NIM_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\\/+$/, "");
   const model = process.env.NVIDIA_NIM_MODEL || "nvidia/nemotron-3.5-bolt-e4b";
+
+  const { data: allowed, error: limitError } = await supabase.rpc("consume_assistant_rate_limit");
+  if (limitError) return fail("The assistant is temporarily unavailable. Please try again shortly.", 503);
+  if (!allowed) return fail("You have reached the assistant limit of 12 messages per minute. Please wait a moment.", 429);
 
   const [{ data: snapshot, error: snapshotError }, { data: profile }] = await Promise.all([
     supabase.rpc("get_assistant_marketplace_snapshot"),
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
   const system = [
     "You are the AgricNorthX assistant for smallholder farmers and buyers in Limpopo, South Africa.",
     "Use the signed-in user's marketplace snapshot below as the only source for personal account facts, orders, sales, delivery status, listing counts, subscriptions and bookkeeping.",
-    "Never invent, estimate or extrapolate account figures. State the relevant as-of timestamp. Distinguish fulfilled sales value from paid cash; use bookkeeping unpaid income when discussing amounts still owed. If a field is absent, say it is unavailable.",
-    "The snapshot is scoped to the authenticated user by Supabase RLS and server-side auth. Never disclose data about another user or infer other users' activity.",
+    "Never invent, estimate or extrapolate account figures. State the relevant as-of timestamp. Distinguish fulfilled sales value from paid cash. For bookkeeping, use net_profit for recorded income minus expenses, cash_position for paid income minus paid expenses, and unpaid_income for amounts not yet received. If a field is absent, say it is unavailable.",
+    "The snapshot is scoped by auth.uid() in a private server-side database function and verified server-side authentication. Never disclose data about another user or infer other users' activity.",
     "For agricultural advice, use only the supplied retrieved source passages for specific local claims. Cite claims as [Source 1], [Source 2], etc. If the passages do not support an answer, say that the knowledge library does not yet contain a verified answer and recommend a local agricultural extension officer. Never fabricate citations.",
     "Never give pesticide mixing rates, chemical application rates, withdrawal periods or veterinary treatment instructions unless a current approved source explicitly provides them; tell the farmer to follow the registered product label and local extension advice.",
     "Be concise, practical, and clear about uncertainty. Use metric units and South African Rand (ZAR) when relevant.",
