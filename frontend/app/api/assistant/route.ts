@@ -71,8 +71,7 @@ function marketplaceAnswer(question: string, snapshot: Snapshot): string | null 
       "• Seller delivery orders: " + s.seller.delivery_orders + "\n• Seller deliveries currently scheduled/in progress: " + s.seller.scheduled_deliveries +
       "\n• Buyer delivery orders: " + (s.buyer.delivery_orders ?? 0) + "\n• Buyer deliveries currently scheduled: " + (s.buyer.scheduled_deliveries ?? 0) + ".";
   }
-  if (orders) {
-    return "Your marketplace orders (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
+  if (/marketplace|my account|my farm|summary|overview/.test(q)) {\n    return "Your AgricNorthX account summary (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\\n" +\n      "• Listings: " + s.listings.active + " active of " + s.listings.limit + " allowed\\n" +\n      "• Buyer orders: " + s.buyer.order_count + " total (" + s.buyer.open_orders + " open)\\n" +\n      "• Seller allocations: " + s.seller.allocation_count + " total (" + s.seller.open_allocations + " open)\\n" +\n      "• Fulfilled seller sales: " + zar(s.seller.fulfilled_sales_value) + "\\n" +\n      "• Bookkeeping net profit/loss: " + zar(s.bookkeeping.net_profit) + "\\n" +\n      "• Paid cash position: " + zar(s.bookkeeping.cash_position) + ".";\n  }\n  if (orders) {\n    return "Your marketplace orders (as of " + new Date(s.as_of).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" }) + "):\n" +
       "Buyer side — " + s.buyer.order_count + " orders total, " + s.buyer.open_orders + " open, " + s.buyer.fulfilled_orders + " fulfilled.\n" +
       "Seller side — " + s.seller.allocation_count + " allocations total, " + s.seller.open_allocations + " open, " + s.seller.fulfilled_allocations + " fulfilled.";
   }
@@ -116,7 +115,7 @@ export async function POST(request: NextRequest) {
     }, { headers: { "Cache-Control": "private, no-store" } });
   }
 
-  const stopWords = new Set(["the","and","for","with","from","that","this","what","when","where","how","can","you","are","is","my","our","about","please","tell","me","does","have","has","was","were","into","your","need","want","much","many","show","give","should"]);
+  const agriculturalTerms = ["crop","plant","planting","seed","soil","water","irrigation","pest","disease","fertiliser","fertilizer","maize","tomato","bean","beans","cowpea","spinach","cabbage","onion","carrot","beetroot","leafy","harvest","climate","rainfall","citrus","mango","avocado","macadamia","sweet potato","vegetable"];\n  if (!agriculturalTerms.some((term) => latest.content.toLowerCase().includes(term))) {\n    return NextResponse.json({ answer: "I can help with your own marketplace records or with agricultural topics covered by the approved source library. Ask about listings, orders, sales, deliveries, subscriptions or bookkeeping, or name a crop or farming topic.", sources: [], language: parsed.data.language, languageNotice: parsed.data.language === "en" ? null : "Verified Tshivenda, Xitsonga and Sepedi response generation is not available yet. This reply is shown in English.", mode: "local_assistant", externalProviderUsed: false, asOf: snapshot.as_of }, { headers: { "Cache-Control": "private, no-store" } });\n  }\n\n  const stopWords = new Set(["the","and","for","with","from","that","this","what","when","where","how","can","you","are","is","my","our","about","please","tell","me","does","have","has","was","were","into","your","need","want","much","many","show","give","should"]);
   const terms = latest.content.toLowerCase().normalize("NFKD").replace(/[^\p{L}\p{N}\s-]/gu, " ").split(/\s+/)
     .filter((word) => word.length > 2 && !stopWords.has(word)).slice(0, 10);
   const searchQuery = [...new Set(terms)].join(" OR ");
