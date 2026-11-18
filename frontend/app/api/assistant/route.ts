@@ -5,10 +5,12 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const codes=["en","ve","ts","nso","zu","xh","af","tn","st","ss","nr"] as const;
 const schema=z.object({message:z.string().trim().min(1).max(2000),language:z.enum(codes).default("en"),history:z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().max(2000)})).max(8).optional()});
-type Profile={display_name:string;role:string;locality:string|null;municipality:string|null;district:string|null};
-type Order={id:string;status:string;quantity_agreed:number;unit:string;unit_price:number;currency:string;created_at:string;listing?:{produce_name?:string;locality?:string}|null};
-type Allocation={quantity_allocated:number;agreed_unit_price:number;status:string;order?:{id?:string;status?:string;currency?:string}|null;listing?:{produce_name?:string}|null};
+type Profile={display_name:string;role:string;locality:string|null;municipality:string|null;district:string|null;preferred_language?:string};
+type Order={id:string;status:string;quantity_agreed:number;unit:string;unit_price:number;currency:string;created_at:string;fulfilment_state:string;fulfilment_method:string;scheduled_start:string|null;scheduled_end:string|null;collection_window_start:string|null;collection_window_end:string|null;fulfilment_location:string|null;listing?:{produce_name?:string;locality?:string}|null};
+type Allocation={quantity_allocated:number;agreed_unit_price:number;status:string;order?:{id?:string;status?:string;currency?:string;fulfilment_state?:string;fulfilment_method?:string;scheduled_start?:string|null;scheduled_end?:string|null;fulfilment_location?:string|null}|null;listing?:{produce_name?:string}|null};
 type Listing={produce_name:string;status:string;quantity_available:number;quantity_sold:number;reserved_quantity:number;unit:string;asking_price:number;currency:string;locality:string};
+type LedgerEntry={entry_type:string;amount:number;entry_date:string;payment_status:string;entry_source:string;related_order_id:string|null;related_allocation_id:string|null};
+type Subscription={plan:string;status:string;current_period_end:string|null};
 const names:Record<(typeof codes)[number],string>={en:"English",ve:"Tshivenda",ts:"itsonga",nso:"Sepedi",zu:"isiZulu",xh:"isiXhosa",af:"Afrikaans",tn:"Setswana",st:"Sesotho",ss:"siSwati",nr:"isiNdebele"};
 const fallback:Record<(typeof codes)[number],{orders:string;sales:string;listings:string;farming:string;general:string;none:string}>={
 en:{orders:"Your recent buyer orders",sales:"Your seller activity",listings:"Your listings",farming:"For safer crop advice, tell me the crop, growth stage, symptoms, locality and when the problem started. I will not guess a pesticide or dose.",general:"I can help with your marketplace activity and practical farming questions. Ask about your orders, sales, listings, crops, pests or irrigation.",none:"No matching activity is visible in the records available to your account."},
@@ -24,20 +26,41 @@ ss:{orders:"Ema-oda akho akamuva",sales:"Umsebenti wakho wekutsengisa",listings:
 nr:{orders:"Ama-oda wakho wakamuva",sales:"Umsebenzi wakho wokuthengisa",listings:"Imikhiqizo yakho",farming:"Ngitjela isivuno, isigaba sokukhula, amatshwayo, indawo nokuthi umraro uthome nini. Angizukucagela umuthi namkha isilinganiso.",general:"Ngingakusiza ngama-oda, ukuthengisa nemikhiqizo yezokulima.",none:"Awukho umsebenzi obonakala ku-akhawunti yakho."}
 };
 const money=(n:number,c="ZAR")=>new Intl.NumberFormat("en-ZA",{style:"currency",currency:c,maximumFractionDigits:2}).format(n);
-function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[]){
+const requestWindows=new Map<string,{start:number;count:number}>();
+function isRateLimited(userId:string){
+ const now=Date.now(),window=requestWindows.get(userId);
+ if(!window||now-window.start>=60_000){requestWindows.set(userId,{start:now,count:1});return false;}
+ window.count+=1;
+ if(requestWindows.size>5000){for(const [key,value] of requestWindows){if(now-value.start>=60_000)requestWindows.delete(key);}}
+ return window.count>20;
+}
+function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[],ledger:LedgerEntry[],subscription:Subscription|null){
  const t=fallback[lang],q=message.toLowerCase();
  if(/order|orders|status|oda|doda|tioda|diotara|ama-oda|ii-odolo|bestelling|bestellings/.test(q)){
-  const rows=orders.slice(0,6).map(o=>`• ${o.listing?.produce_name??"Produce"}: ${o.status}, ${o.quantity_agreed} ${o.unit}, ${money(o.quantity_agreed*o.unit_price,o.currency)} (\#${o.id.slice(0,8)})`);
-  return `${t.orders}:\n${rows.length?rows.join("\n"):t.none}`;
+  const rows=orders.slice(0,6).map(o=>{
+   const schedule=o.scheduled_start?new Date(o.scheduled_start).toLocaleString("en-ZA",{dateStyle:"medium",timeStyle:"short",timeZone:"Africa/Johannesburg"}):"not scheduled";
+   const fulfilment=o.fulfilment_state?o.fulfilment_state.replaceAll("_"," "):"not recorded";
+   return `• ${o.listing?.produce_name??"Produce"}: ${o.status}; ${o.quantity_agreed} ${o.unit}; ${money(o.quantity_agreed*o.unit_price,o.currency)}; fulfilment: ${fulfilment}; scheduled: ${schedule} (\#${o.id.slice(0,8)})`;
+  });
+  return `${t.orders}:\n${rows.length?rows.join("\n"):t.none}\nA date is shown only when the order has a saved schedule.`;
  }
  if(/sale|sales|sold|revenue|income|profit|sell|thengiso|xavisa|thekišo|thekiso|ukuthengisa|intengiso|verkoop/.test(q)){
-  const done=allocations.filter(a=>a.status==="fulfilled"),open=allocations.filter(a=>a.status!=="fulfilled"&&a.order?.status==="accepted");
-  return `${t.sales}:\n• ${done.length} fulfilled allocation(s): ${money(done.reduce((s,a)=>s+a.quantity_allocated*a.agreed_unit_price,0))} recorded fulfilled order value\n• ${open.length} accepted allocation(s): ${money(open.reduce((s,a)=>s+a.quantity_allocated*a.agreed_unit_price,0))} not yet fulfilled\nThese are order values, not profit or proof of payment.`;
+  const now=new Date(),monthStart=new Date(now.getFullYear(),now.getMonth(),1).toLocaleDateString("en-CA",{timeZone:"Africa/Johannesburg"});
+  const monthOnly=/this month|monthly|month|month-to-date|ngweti|kgwedi|maand|inyanga/.test(q);
+  const inScope=(e:LedgerEntry)=>!monthOnly||e.entry_date>=monthStart;
+  const income=ledger.filter(e=>e.entry_type==="income"&&inScope(e));
+  const paid=income.filter(e=>e.payment_status==="paid").reduce((s,e)=>s+Number(e.amount),0);
+  const unpaid=income.filter(e=>e.payment_status==="unpaid").reduce((s,e)=>s+Number(e.amount),0);
+  const completed=income.filter(e=>e.entry_source==="fulfilled_order").reduce((s,e)=>s+Number(e.amount),0);
+  const expenses=ledger.filter(e=>e.entry_type==="expense"&&inScope(e)).reduce((s,e)=>s+Number(e.amount),0);
+  return `${t.sales} (${monthOnly?"this month":"all recorded dates"}):\n• Recorded income: ${money(paid+unpaid)}\n• Marked paid: ${money(paid)}\n• Marked unpaid: ${money(unpaid)}\n• Automatically recorded fulfilled-order sales included above: ${money(completed)}\n• Recorded expenses: ${money(expenses)}\nThese are bookkeeping records, not independently verified bank receipts or profit. Accepted but unfulfilled allocations are not counted as completed sales.`;
  }
  if(/listing|listings|stock|produce|harvest|zwibveledzwa|swibyariwa|ditšweletšwa|imikhiqizo|iimveliso|aanbieding/.test(q)){
   const active=listings.filter(l=>l.status==="active");
   const rows=active.slice(0,6).map(l=>`• ${l.produce_name}: ${Math.max(0,l.quantity_available-l.quantity_sold-l.reserved_quantity)} ${l.unit} available at ${money(l.asking_price,l.currency)} per ${l.unit}`);
-  return `${t.listings}: ${active.length} active\n${rows.length?rows.join("\n"):t.none}`;
+  const limit=subscription?.plan==="premium"?200:subscription?.plan==="pro"?50:10;
+  const plan=subscription&&(subscription.status==="active"||subscription.status==="trialing")?subscription.plan:"free";
+  return `${t.listings}: ${active.length} active of ${limit} allowed on the ${plan} plan\n${rows.length?rows.join("\n"):t.none}`;
  }
  if(/crop|plant|pest|disease|irrigat|soil|maize|tomato|mango|avocado|fertili|worm|fungus|leaf|wilting|zwimela|vurimi|swimilani|dibjalo|izitshalo|izityalo|gewas|dijalo/.test(q))return t.farming;
  return t.general+"\n"+t.none;
@@ -47,19 +70,25 @@ export async function POST(req:Request){
  if(!input.success)return NextResponse.json({error:"Enter a question of up to 2,000 characters."},{status:400});
  const supabase=await createClient(),auth=await supabase.auth.getUser(),user=auth.data.user;
  if(auth.error||!user)return NextResponse.json({error:"Sign in to use your private Agric Assistant."},{status:401});
- const [p,o,a,l]=await Promise.all([
-  supabase.from("profiles").select("display_name,role,locality,municipality,district").eq("id",user.id).maybeSingle(),
-  supabase.from("orders").select("id,status,quantity_agreed,unit,unit_price,currency,created_at,listing:produce_listings(produce_name,locality)").eq("buyer_id",user.id).order("created_at",{ascending:false}).limit(10),
-  supabase.from("order_allocations").select("quantity_allocated,agreed_unit_price,status,order:orders(id,status,currency),listing:produce_listings(produce_name)").eq("farmer_id",user.id).limit(20),
-  supabase.from("produce_listings").select("produce_name,status,quantity_available,quantity_sold,reserved_quantity,unit,asking_price,currency,locality").eq("farmer_id",user.id).order("updated_at",{ascending:false}).limit(20)
+ if(isRateLimited(user.id))return NextResponse.json({error:"You have reached the assistant request limit. Please wait a minute and try again."},{status:429});
+ const [p,o,a,l,b,s]=await Promise.all([
+  supabase.from("profiles").select("display_name,role,locality,municipality,district,preferred_language").eq("id",user.id).maybeSingle(),
+  supabase.from("orders").select("id,status,quantity_agreed,unit,unit_price,currency,created_at,fulfilment_state,fulfilment_method,scheduled_start,scheduled_end,collection_window_start,collection_window_end,fulfilment_location,listing:produce_listings(produce_name,locality)").eq("buyer_id",user.id).order("created_at",{ascending:false}).limit(20),
+  supabase.from("order_allocations").select("quantity_allocated,agreed_unit_price,status,order:orders(id,status,currency,fulfilment_state,fulfilment_method,scheduled_start,scheduled_end,fulfilment_location),listing:produce_listings(produce_name)").eq("farmer_id",user.id).order("order_id",{ascending:false}).limit(50),
+  supabase.from("produce_listings").select("produce_name,status,quantity_available,quantity_sold,reserved_quantity,unit,asking_price,currency,locality").eq("farmer_id",user.id).order("updated_at",{ascending:false}).limit(50),
+  supabase.from("farm_bookkeeping_entries").select("entry_type,amount,entry_date,payment_status,entry_source,related_order_id,related_allocation_id").eq("owner_id",user.id).order("entry_date",{ascending:false}).limit(250),
+  supabase.from("farmer_subscriptions").select("plan,status,current_period_end").eq("farmer_id",user.id).in("status",["active","trialing"]).order("current_period_end",{ascending:false}).limit(1).maybeSingle()
  ]);
- const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[];
- if(o.error||a.error||l.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
- const lang=input.data.language, reply=localReply(lang,input.data.message,orders,allocations,listings);
- const context={profile:profile?{name:profile.display_name,role:profile.role,locality:[profile.locality,profile.municipality,profile.district].filter(Boolean).join(", ")}:null,
- buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency})),
- sellerAllocations:allocations.map(x=>({status:x.status,orderStatus:x.order?.status,crop:x.listing?.produce_name,quantity:x.quantity_allocated,unitPrice:x.agreed_unit_price,currency:x.order?.currency??"ZAR"})),
- listings:listings.map(x=>({crop:x.produce_name,status:x.status,available:Math.max(0,x.quantity_available-x.quantity_sold-x.reserved_quantity),sold:x.quantity_sold,unit:x.unit,askingPrice:x.asking_price,currency:x.currency}))};
+ const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[],ledger=(b.data??[]) as unknown as LedgerEntry[],subscription=(s.data??null) as Subscription|null;
+ if(o.error||a.error||l.error||b.error||s.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
+ const lang=input.data.language, reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription);
+ const context={profile:profile?{name:profile.display_name,role:profile.role,preferredLanguage:profile.preferred_language,locality:[profile.locality,profile.municipality,profile.district].filter(Boolean).join(", ")}:null,
+ buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency,fulfilmentState:x.fulfilment_state,fulfilmentMethod:x.fulfilment_method,scheduledStart:x.scheduled_start,scheduledEnd:x.scheduled_end,collectionWindowStart:x.collection_window_start,collectionWindowEnd:x.collection_window_end})),
+ sellerAllocations:allocations.map(x=>({status:x.status,orderStatus:x.order?.status,fulfilmentState:x.order?.fulfilment_state,scheduledStart:x.order?.scheduled_start,crop:x.listing?.produce_name,quantity:x.quantity_allocated,unitPrice:x.agreed_unit_price,currency:x.order?.currency??"ZAR"})),
+ listings:listings.map(x=>({crop:x.produce_name,status:x.status,available:Math.max(0,x.quantity_available-x.quantity_sold-x.reserved_quantity),sold:x.quantity_sold,unit:x.unit,askingPrice:x.asking_price,currency:x.currency})),
+ bookkeeping:ledger.map(x=>({type:x.entry_type,amount:x.amount,date:x.entry_date,paymentStatus:x.payment_status,source:x.entry_source})),
+ subscription:subscription?{plan:subscription.plan,status:subscription.status,currentPeriodEnd:subscription.current_period_end}:null,
+ listingLimits:{free:10,pro:50,premium:200,activeListings:listings.filter(x=>x.status==="active").length}};
  const enabled=process.env.AI_ASSISTANT_ENABLED==="true",key=process.env.NVIDIA_NIM_API_KEY,model=process.env.NVIDIA_NIM_MODEL;
  if(!enabled||!key||!model)return NextResponse.json({reply,mode:"account-context"});
  const base=(process.env.NVIDIA_NIM_BASE_URL||"https://integrate.api.nvidia.com/v1").replace(/\/$/,"");
@@ -72,7 +101,7 @@ LANGUAGE RULE: The user's selected language is ${names[lang]} (language code: ${
 
 The user's selected language is one of: English, Tshivenda, Xitsonga, Sepedi, isiZulu, isiXhosa, Afrikaans, Setswana, Sesotho, siSwati or isiNdebele. For Tshivenda, use Tshivenda rather than Sepedi. For Sepedi, use Northern Sotho rather than Sesotho. Keep these languages distinct.
 
-ACCOUNT QUESTIONS: The authenticated user's current account facts are in the JSON below; use them only for their own orders, sales and listings. Never invent prices, payments, orders, statuses or weather. Order values are not profit or proof of payment. Never disclose phone numbers, private delivery instructions, secrets or another user's data.
+ACCOUNT QUESTIONS: The authenticated user's current account facts are in the JSON below; use them only for their own orders, sales, bookkeeping and listings. Never invent prices, payments, orders, statuses or delivery dates. Distinguish order status from bookkeeping payment_status. Fulfilled-order bookkeeping entries are recorded sales values and start unpaid until marked paid. Never call unpaid amounts cash received or gross income profit. If a fact is absent, say it is not available. Never disclose phone numbers, private delivery instructions, secrets or another user's data.
 
 FARMING QUESTIONS: Give practical, cautious guidance. Ask for crop, growth stage, locality and symptoms when needed. Do not guess pesticide products, application rates, withholding periods or chemical doses. Encourage local extension support for serious disease, livestock or chemical safety issues.
 
