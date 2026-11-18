@@ -9,10 +9,31 @@ body { margin: 0; background: #F7F8F2; color: #17251D; font-family: Arial, Helve
 button, input { font: inherit; }
 ::selection { background: #DCEBDD; color: #174B35; }
 
-.agri-page {
-  background-color: #f7faf7;
-  background-image: linear-gradient(rgba(247,250,247,.90), rgba(247,250,247,.94)), url("/agricultural-landscape.svg");
-  background-position: center, center;
-  background-size: cover, cover;
-  background-attachment: fixed;
+/* Design tokens: forest, leaf, earth, cream, gold */
+:root{--forest:#174B35;--leaf:#2F7D4B;--earth:#7A5230;--cream:#F7F8F2;--gold:#C9A24A;--scene:url("/agricultural-landscape.svg")}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+
+/* Per-page agricultural scene. Small original SVGs; overlay keeps text readable. */
+.agri-page{
+  background-color:#f7faf7;
+  background-image:linear-gradient(rgba(247,250,247,.88),rgba(247,250,247,.94)),var(--scene);
+  background-position:center,center;background-size:cover,cover;background-attachment:scroll,fixed;
+  min-height:100vh;
 }
+@media (max-width:640px){.agri-page{background-attachment:scroll,scroll}}
+.scene-fields{--scene:url("/scenes/fields.svg")}
+.scene-market{--scene:url("/scenes/market.svg")}
+.scene-irrigation{--scene:url("/scenes/irrigation.svg")}
+.scene-harvest{--scene:url("/scenes/harvest.svg")}
+.scene-community{--scene:url("/scenes/community.svg")}
+.scene-knowledge{--scene:url("/scenes/knowledge.svg")}
+
+/* Subtle background drift; disabled for reduced motion and small screens */
+@media (min-width:641px) and (prefers-reduced-motion:no-preference){
+  .agri-page{animation:scene-drift 40s ease-in-out infinite alternate}
+}
+@keyframes scene-drift{from{background-position:center,48% 50%}to{background-position:center,52% 50%}}
+.card-lift{transition:transform .2s ease,box-shadow .2s ease}
+.card-lift:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(23,75,53,.12)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.card-lift:hover{transform:none}}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}

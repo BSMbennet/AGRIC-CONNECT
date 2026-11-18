@@ -1,3 +1,4 @@
+import { AppNav } from "@/components/app-nav";
 import Link from "next/link";
 import {createClient} from "@/lib/supabase/server";
 import {BookOpen} from "lucide-react";
@@ -7,7 +8,7 @@ export default async function KnowledgePage({searchParams}:{searchParams:Promise
   if(p.category)q=q.eq("category",p.category);
   const {data:posts,error}=await q;
   const categories=["Seeds and indigenous crops","Seasonal planting","Soil and water","Pest and disease management","Food preservation","Traditional foods and uses","Weather and local indicators","Other"];
-  return <main className="min-h-screen bg-[#f7faf7]"><header className="border-b border-emerald-900/10 bg-white"><div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4"><Link href="/" className="font-bold text-forest">AgricNorthX</Link><nav className="flex gap-4 text-sm font-semibold"><Link href="/marketplace">Marketplace</Link><Link href="/dashboard">Dashboard</Link></nav></div></header>
+  return <main className="agri-page scene-knowledge"><AppNav/>
   <section className="bg-forest text-white"><div className="mx-auto max-w-6xl px-5 py-12"><p className="text-xs font-bold uppercase tracking-widest text-emerald-200">Living knowledge · Vhembe and beyond</p><h1 className="mt-3 text-3xl font-bold sm:text-4xl">Indigenous farming knowledge</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50">A farmer-led library for local seed varieties, seasonal practices, soil care, traditional foods and knowledge carried across generations.</p><Link href="/knowledge/share" className="mt-6 inline-flex rounded-xl bg-white px-5 py-3 text-sm font-bold text-forest">Share your knowledge</Link></div></section>
   <section className="mx-auto max-w-6xl px-5 py-8">{p.shared&&<p role="status" className="mb-5 rounded-xl bg-emerald-100 p-3 text-sm text-emerald-900">Your knowledge has been shared.</p>}
   <form className="mb-6 flex flex-wrap gap-3"><select name="category" defaultValue={p.category||""} className="h-11 min-w-64 rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="">All knowledge topics</option>{categories.map(c=><option key={c}>{c}</option>)}</select><button className="rounded-xl bg-forest px-5 text-sm font-bold text-white">Filter</button></form>

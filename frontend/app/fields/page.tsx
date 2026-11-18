@@ -39,7 +39,7 @@ export default async function FieldsPage() {
     .limit(30);
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
+    <main className="agri-page scene-fields">
       <AppNav active="fields" />
       <section className="bg-forest text-white">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">

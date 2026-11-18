@@ -9,7 +9,7 @@ const highlights=[
 ];
 
 export default function HomePage(){
-  return <main className="min-h-screen agri-page">
+  return <main className="min-h-screen agri-page scene-fields">
     <AppNav />
     <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-12 sm:px-8 lg:grid-cols-[1.08fr_.92fr] lg:items-center lg:pb-24 lg:pt-20">
       <div><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 text-xs font-semibold text-forest"><MapPin size={14}/> Starting in Vhembe District, Limpopo</div>

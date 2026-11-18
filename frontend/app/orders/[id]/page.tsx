@@ -42,7 +42,7 @@ export default async function OrderPage({
   ]);
 
   return (
-    <main className="min-h-screen agri-page">
+    <main className="min-h-screen agri-page scene-harvest">
       <AppNav active="dashboard" />
       <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <Link href="/dashboard" className="text-sm font-bold text-leaf">← Back to dashboard</Link>

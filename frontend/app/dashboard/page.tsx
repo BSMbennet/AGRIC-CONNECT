@@ -98,7 +98,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const farmerAllocations = (farmerAllocationRows ?? []) as unknown as FarmerAllocation[];
 
   return (
-    <main className="min-h-screen agri-page">
+    <main className="min-h-screen agri-page scene-fields">
       <AppNav active="dashboard" />
       {params.cart_requested && <ClearCartOnSuccess />}
       <section className="mx-auto max-w-6xl px-5 py-10">
