@@ -54,10 +54,13 @@ async def _authenticate_frontend_request(request: Request, required_role: str) -
     config = _required_env(
         "AGRIC_CONNECT_INTERNAL_TOKEN",
         "SUPABASE_URL",
-        "SUPABASE_ANON_KEY",
         "SUPABASE_SECRET_KEY",
         "AGRICNORTHX_APP_URL",
     )
+    public_key = os.getenv("SUPABASE_ANON_KEY", "").strip() or os.getenv("SUPABASE_PUBLISHABLE_KEY", "").strip()
+    if not public_key:
+        raise HTTPException(status_code=503, detail="Integration service is not fully configured")
+    config["SUPABASE_ANON_KEY"] = public_key
     supplied_internal = request.headers.get("x-integration-token", "")
     if not hmac.compare_digest(config["AGRIC_CONNECT_INTERNAL_TOKEN"], supplied_internal):
         raise HTTPException(status_code=401, detail="Unauthorized integration request")
@@ -119,9 +122,10 @@ async def health() -> dict[str, str]:
 async def ready() -> dict[str, Any]:
     payment_configured = all(os.getenv(key) for key in (
         "STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_URL",
-        "SUPABASE_ANON_KEY", "SUPABASE_SECRET_KEY", "AGRIC_CONNECT_INTERNAL_TOKEN",
-        "AGRICNORTHX_APP_URL",
+        "SUPABASE_SECRET_KEY", "AGRIC_CONNECT_INTERNAL_TOKEN", "AGRICNORTHX_APP_URL",
     ))
+    public_key_configured = bool(os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_PUBLISHABLE_KEY"))
+    payment_configured = payment_configured and public_key_configured
     return {
         "status": "ready" if payment_configured or PROVIDER_WEBHOOK_SECRET else "not_configured",
         "provider_webhooks": "enabled" if PROVIDER_WEBHOOK_SECRET else "disabled",
