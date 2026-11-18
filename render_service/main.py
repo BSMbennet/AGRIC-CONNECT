@@ -40,9 +40,13 @@ def _required_env(*names: str) -> dict[str, str]:
     return values
 
 
+def _is_test_stripe_key(value: str) -> bool:
+    return bool(value) and value.startswith(("sk_test_", "rk_test_"))
+
+
 def _test_stripe_key() -> str:
     key = os.getenv("STRIPE_SECRET_KEY", "").strip()
-    if not key.startswith(("sk_test_", "rk_test_")):
+    if not _is_test_stripe_key(key):
         raise HTTPException(status_code=503, detail="Stripe test-mode credentials are required")
     return key
 
@@ -130,9 +134,6 @@ async def _admin_patch_payment(config: dict[str, str], payment_id: str, payload:
         if response.status_code not in (200, 204):
             raise HTTPException(status_code=502, detail="Unable to save the payment attempt")
 
-
-@app.get("/")
-async def root() -> dict[str, str]:
 
 SUPABASE_URL = (os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL") or "").rstrip("/")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SECRET_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY") or ""
@@ -644,305 +645,20 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(defaul
 
 
 @app.post("/webhooks/provider")
-async def provider_webhook(request: Request, x_provider_signature: str = Header(default="")) -> dict[str, str]:
-def ready() -> Dict[str, Any]:
-    test_key = is_test_secret_key(STRIPE_SECRET_KEY)
-    return {
-        "status": "ready" if test_key and SUPABASE_URL and SUPABASE_SERVICE_KEY and FRONTEND_BASE_URL else "not_configured",
-        "stripe_mode": "test" if test_key else ("blocked_live_key" if STRIPE_SECRET_KEY else "missing"),
-        "marketplace_checkout": "enabled" if test_key and SUPABASE_URL and SUPABASE_SERVICE_KEY and FRONTEND_BASE_URL else "disabled",
-        "stripe_webhook": "enabled" if test_key and STRIPE_WEBHOOK_SECRET and SUPABASE_URL and SUPABASE_SERVICE_KEY else "disabled",
-        "frontend_url_configured": bool(FRONTEND_BASE_URL),
-        "provider_webhooks": "enabled" if PROVIDER_WEBHOOK_SECRET else "disabled",
-    }
-
-
-@app.post("/payments/checkout")
-def marketplace_checkout(body: OrderCheckoutInput,
-                         authorization: str = Header(default="")) -> Dict[str, Any]:
-    require_stripe_test_mode()
-    require_supabase_admin()
-    buyer = verify_user(authorization, "buyer")
-    if not re.fullmatch(r"[0-9a-fA-F-]{36}", body.order_id):
-        raise HTTPException(status_code=400, detail="Invalid order ID")
-
-    payment = get_or_create_payment_attempt(body.order_id, body.payment_kind, buyer["id"])
-    try:
-        return create_order_checkout_session(payment, body.order_id, buyer)
-    except UpstreamError as exc:
-        raise HTTPException(status_code=502, detail="Payment service request failed") from exc
-
-
-@app.post("/subscriptions/checkout")
-def farmer_subscription_checkout(body: SubscriptionCheckoutInput,
-                                 authorization: str = Header(default="")) -> Dict[str, Any]:
-    require_stripe_test_mode()
-    require_supabase_admin()
-    farmer = verify_user(authorization, "farmer")
-
-    plan = body.plan
-    config = {
-        "pro": {"name": "Farmer Pro", "amount": 9900},
-        "premium": {"name": "Farmer Premium", "amount": 19900},
-    }[plan]
-    active_query = urlencode({
-        "farmer_id": "eq." + farmer["id"],
-        "status": "in.(active,trialing)",
-        "current_period_end": "gt." + datetime.now(timezone.utc).isoformat(),
-        "select": "id",
-        "limit": "1",
-    })
-    active_subscriptions = supabase_api("farmer_subscriptions?" + active_query)
-    if isinstance(active_subscriptions, list) and active_subscriptions:
-        raise HTTPException(status_code=409, detail="An active farmer subscription already exists")
-
-    base_path = "/subscriptions?status=success&session_id={CHECKOUT_SESSION_ID}"
-    success_url = frontend_url(base_path)
-    cancel_url = frontend_url("/subscriptions?status=cancelled")
-    minute_bucket = int(time.time() // 60)
-    idempotency_key = "agricnorthx-subscription-" + farmer["id"] + "-" + plan + "-" + str(minute_bucket)
-
-    form = {
-        "mode": "subscription",
-        "line_items[0][quantity]": "1",
-        "line_items[0][price_data][currency]": "zar",
-        "line_items[0][price_data][unit_amount]": str(config["amount"]),
-        "line_items[0][price_data][recurring][interval]": "month",
-        "line_items[0][price_data][product_data][name]": config["name"],
-        "line_items[0][price_data][product_data][description]": "Monthly AgricNorthX farmer subscription",
-        "success_url": success_url,
-        "cancel_url": cancel_url,
-        "client_reference_id": farmer["id"],
-        "metadata[farmer_id]": farmer["id"],
-        "metadata[plan]": plan,
-        "subscription_data[metadata][farmer_id]": farmer["id"],
-        "subscription_data[metadata][plan]": plan,
-        "integration_identifier": "agricnorthx_farmer_subscription_" + deterministic_letters(idempotency_key),
-    }
-    if farmer.get("email"):
-        form["customer_email"] = farmer["email"]
-
-    try:
-        session = stripe_api("POST", "/v1/checkout/sessions", form, idempotency_key)
-    except UpstreamError as exc:
-        error_data = exc.payload.get("error", {}) if isinstance(exc.payload, dict) else {}
-        print("Stripe farmer subscription Checkout failed:", error_data.get("type", exc.status))
-        raise HTTPException(status_code=502, detail="Stripe could not create the subscription Checkout Session") from exc
-
-    if not session.get("url"):
-        raise HTTPException(status_code=502, detail="Stripe did not return the subscription Checkout URL")
-    return {"status": "open", "checkout_url": session["url"]}
-
-
-def stripe_signature_valid(payload: bytes, signature_header: str) -> bool:
-    if not STRIPE_WEBHOOK_SECRET:
-        return False
-    timestamp = None
-    signatures = []
-    for field in signature_header.split(","):
-        key, _, value = field.partition("=")
-        if key == "t":
-            timestamp = value
-        elif key == "v1":
-            signatures.append(value)
-    if not timestamp or not timestamp.isdigit():
-        return False
-    if abs(time.time() - int(timestamp)) > 300:
-        return False
-    signed_payload = timestamp.encode("ascii") + b"." + payload
-    expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
-    return any(hmac.compare_digest(expected, supplied) for supplied in signatures)
-
-
-def link_session_from_webhook(payment_id: str, session_id: str) -> Optional[Dict[str, Any]]:
-    payment = get_order_payment(payment_id)
-    if not payment:
-        return None
-    stored_session_id = payment.get("stripe_checkout_session_id")
-    if stored_session_id and stored_session_id != session_id:
-        raise HTTPException(status_code=400, detail="Stripe Checkout Session does not match payment attempt")
-    if not stored_session_id:
-        attach_checkout_session(payment_id, session_id)
-        payment = get_order_payment(payment_id)
-    return payment
-
-
-def handle_marketplace_payment_event(event: Dict[str, Any], session: Dict[str, Any]) -> None:
-    event_id = str(event.get("id") or "")
-    event_type = str(event.get("type") or "")
-    metadata = session.get("metadata") or {}
-    payment_id = str(metadata.get("payment_id") or "")
-    session_id = str(session.get("id") or "")
-    if not event_id or not payment_id or not session_id:
-        raise HTTPException(status_code=400, detail="Stripe order payment metadata is incomplete")
-
-    payment = link_session_from_webhook(payment_id, session_id)
-    if not payment:
-        raise HTTPException(status_code=404, detail="Order payment attempt was not found")
-
-    if event_type in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
-        if event_type == "checkout.session.completed" and session.get("payment_status") == "unpaid":
-            return
-        if session.get("payment_status") != "paid":
-            return
-        amount_total = session.get("amount_total")
-        currency = str(session.get("currency") or "")
-        if not isinstance(amount_total, int) or currency.lower() != "zar":
-            raise HTTPException(status_code=400, detail="Stripe amount or currency is invalid")
-
-        payment_intent = session.get("payment_intent")
-        payment_intent_id = payment_intent if isinstance(payment_intent, str) else (
-            payment_intent.get("id") if isinstance(payment_intent, dict) else ""
-        )
-        supabase_rpc("record_order_payment_success", {
-            "p_payment_id": payment_id,
-            "p_stripe_checkout_session_id": session_id,
-            "p_stripe_payment_intent_id": payment_intent_id or "",
-            "p_event_id": event_id,
-            "p_event_type": event_type,
-            "p_amount_minor": amount_total,
-            "p_currency": currency,
-        })
-    elif event_type in ("checkout.session.async_payment_failed", "checkout.session.expired"):
-        supabase_rpc("record_order_payment_failure", {
-            "p_payment_id": payment_id,
-            "p_event_id": event_id,
-            "p_event_type": event_type,
-            "p_failure_status": "expired" if event_type == "checkout.session.expired" else "failed",
-        })
-
-
-def subscription_id_from_invoice(invoice: Dict[str, Any]) -> Optional[str]:
-    value = invoice.get("subscription")
-    if isinstance(value, str):
-        return value
-    if isinstance(value, dict) and isinstance(value.get("id"), str):
-        return value["id"]
-    parent = invoice.get("parent") or {}
-    details = parent.get("subscription_details") or {}
-    value = details.get("subscription")
-    if isinstance(value, str):
-        return value
-    if isinstance(value, dict) and isinstance(value.get("id"), str):
-        return value["id"]
-    return None
-
-
-def persist_subscription(subscription_id: str, fallback: Optional[Dict[str, Any]] = None,
-                         force_canceled: bool = False) -> None:
-    try:
-        subscription = stripe_api("GET", "/v1/subscriptions/" + subscription_id)
-    except UpstreamError:
-        if not fallback:
-            raise
-        subscription = fallback
-
-    metadata = subscription.get("metadata") or {}
-    farmer_id = metadata.get("farmer_id")
-    plan = metadata.get("plan")
-    if not farmer_id or plan not in ("pro", "premium"):
-        raise HTTPException(status_code=400, detail="Farmer subscription metadata is incomplete")
-
-    customer = subscription.get("customer")
-    customer_id = customer if isinstance(customer, str) else (
-        customer.get("id", "") if isinstance(customer, dict) else ""
-    )
-    period_end = subscription.get("current_period_end")
-    row = {
-        "farmer_id": farmer_id,
-        "plan": plan,
-        "status": "canceled" if force_canceled else str(subscription.get("status") or "incomplete"),
-        "stripe_customer_id": customer_id,
-        "stripe_subscription_id": str(subscription.get("id") or subscription_id),
-        "current_period_end": datetime.fromtimestamp(period_end, timezone.utc).isoformat() if period_end else None,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    path = "farmer_subscriptions?" + urlencode({"on_conflict": "stripe_subscription_id"})
-    supabase_api(path, "POST", row, "resolution=merge-duplicates,return=minimal")
-
-
-def handle_subscription_event(event_type: str, obj: Dict[str, Any]) -> None:
-    if event_type in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
-        if event_type == "checkout.session.completed" and obj.get("payment_status") == "unpaid":
-            return
-        subscription = obj.get("subscription")
-        if isinstance(subscription, dict):
-            subscription = subscription.get("id")
-        if isinstance(subscription, str) and subscription:
-            persist_subscription(subscription)
-        return
-
-    if event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
-        subscription_id = str(obj.get("id") or "")
-        if subscription_id:
-            persist_subscription(subscription_id, obj,
-                                 event_type == "customer.subscription.deleted")
-        return
-
-    if event_type in ("invoice.paid", "invoice.payment_failed"):
-        subscription_id = subscription_id_from_invoice(obj)
-        if subscription_id:
-            persist_subscription(subscription_id)
-
-
-@app.post("/webhooks/stripe")
-async def stripe_webhook(request: Request,
-                         stripe_signature: str = Header(default="", alias="Stripe-Signature")) -> Dict[str, bool]:
-    require_stripe_test_mode()
-    if not STRIPE_WEBHOOK_SECRET:
-        raise HTTPException(status_code=503, detail="Stripe webhook signing secret is not configured")
-    require_supabase_admin()
-
-    raw = await request.body()
-    if not stripe_signature_valid(raw, stripe_signature):
-        raise HTTPException(status_code=400, detail="Invalid Stripe signature")
-    try:
-        event = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=400, detail="Invalid Stripe event JSON") from exc
-
-    if event.get("livemode") is not False:
-        raise HTTPException(status_code=400, detail="Only Stripe test-mode events are accepted")
-    event_type = str(event.get("type") or "")
-    obj = ((event.get("data") or {}).get("object") or {})
-    if not event.get("id") or not isinstance(obj, dict):
-        raise HTTPException(status_code=400, detail="Stripe event data is incomplete")
-
-    try:
-        if obj.get("mode") == "payment" and event_type in (
-            "checkout.session.completed",
-            "checkout.session.async_payment_succeeded",
-            "checkout.session.async_payment_failed",
-            "checkout.session.expired",
-        ):
-            handle_marketplace_payment_event(event, obj)
-        elif obj.get("mode") == "subscription" and event_type in (
-            "checkout.session.completed",
-            "checkout.session.async_payment_succeeded",
-        ):
-            handle_subscription_event(event_type, obj)
-        elif event_type in (
-            "customer.subscription.updated",
-            "customer.subscription.deleted",
-            "invoice.paid",
-            "invoice.payment_failed",
-        ):
-            handle_subscription_event(event_type, obj)
-    except UpstreamError as exc:
-        print("Stripe webhook reconciliation upstream failure:", exc.status)
-        raise HTTPException(status_code=500, detail="Stripe event reconciliation failed") from exc
-    return {"received": True}
-
-
-@app.post("/webhooks/provider")
-async def provider_webhook(request: Request,
-                           x_provider_signature: str = Header(default="")) -> Dict[str, str]:
+async def provider_webhook(
+    request: Request,
+    x_provider_signature: str = Header(default=""),
+) -> dict[str, str]:
     if not PROVIDER_WEBHOOK_SECRET:
         raise HTTPException(status_code=503, detail="Provider webhook is not configured")
+
     raw = await request.body()
-    expected = hmac.new(PROVIDER_WEBHOOK_SECRET.encode(), raw, hashlib.sha256).hexdigest()
+    expected = hmac.new(PROVIDER_WEBHOOK_SECRET.encode("utf-8"), raw, hashlib.sha256).hexdigest()
     supplied = x_provider_signature.removeprefix("sha256=")
     if not hmac.compare_digest(expected, supplied):
         raise HTTPException(status_code=401, detail="Invalid provider signature")
-    return {"status": "received", "message": "Provider webhook accepted; no marketplace transaction was changed"}
-    return {"status": "received", "message": "Provider webhook accepted; no payment state changed"}
+
+    return {
+        "status": "received",
+        "message": "Provider webhook accepted; no marketplace transaction was changed",
+    }

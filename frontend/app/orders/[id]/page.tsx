@@ -16,7 +16,6 @@ export default async function OrderPage({
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string; updated?: string; accepted?: string; schedule_updated?: string; fee_confirmed?: string; delivery_started?: string; delivery_confirmed?: string; payment?: string; payment_error?: string }>;
-  searchParams: Promise<{ error?: string; payment_error?: string; payment?: string; delivery_confirmed?: string; updated?: string; accepted?: string; schedule_updated?: string; fee_confirmed?: string; delivery_started?: string }>;
 }) {
   const { id } = await params;
   const queryParams = await searchParams;
@@ -45,10 +44,6 @@ export default async function OrderPage({
     supabase.from("order_schedule_events").select("id,event_type,previous_schedule,new_schedule,note,created_at").eq("order_id",id).order("created_at",{ascending:false}),
     paymentDb.from("order_payments").select("id,payment_kind,amount_minor,currency,status,paid_at,created_at").eq("order_id",id).order("created_at"),
   ]);
-  const { data: payments } = await supabase.from("order_payments")
-    .select("id,payment_kind,amount_minor,currency,status,created_at")
-    .eq("order_id", id).order("created_at", { ascending: false });
-
   const goodsTotal = (allocations ?? []).reduce(
     (sum, allocation) => sum + Number(allocation.quantity_allocated) * Number(allocation.agreed_unit_price), 0
   );
