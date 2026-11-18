@@ -8,9 +8,9 @@ type Source = { id: number; title: string; publisher: string; url: string; headi
 
 const languages = [
   { value: "en", label: "English" },
-  { value: "ve", label: "Tshivenda · experimental" },
-  { value: "ts", label: "Xitsonga · experimental" },
-  { value: "nso", label: "Sepedi · experimental" },
+  { value: "ve", label: "Tshivenda · not yet available" },
+  { value: "ts", label: "Xitsonga · not yet available" },
+  { value: "nso", label: "Sepedi · not yet available" },
 ] as const;
 
 export function AssistantChat() {
@@ -58,7 +58,7 @@ export function AssistantChat() {
             <span className="rounded-xl bg-emerald-50 p-2 text-forest"><Sprout size={21}/></span>
             <div><h2 className="font-bold text-forest">Ask AgricNorthX</h2><p className="text-xs text-slate-500">Marketplace records + cited agricultural guidance</p></div>
           </div>
-          <label className="text-xs font-semibold text-slate-600">Reply language
+          <label className="text-xs font-semibold text-slate-600">Requested language
             <select value={language} onChange={(e) => setLanguage(e.target.value as typeof language)} className="ml-2 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm">
               {languages.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
