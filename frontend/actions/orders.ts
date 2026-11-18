@@ -153,3 +153,15 @@ export async function confirmPreorderRequest(formData: FormData) {
   revalidatePath("/dashboard");
   redirect("/dashboard?preorder_confirmed=1");
 }
+
+export async function markOrderOutForDelivery(formData: FormData) {
+  const orderId = String(formData.get("order_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) redirect("/dashboard?error=order");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.rpc("mark_order_out_for_delivery", { p_order_id: orderId });
+  if (error) redirect("/orders/" + orderId + "?error=delivery_status");
+  revalidatePath("/dashboard"); revalidatePath("/orders/" + orderId);
+  redirect("/orders/" + orderId + "?delivery_started=1");
+}
