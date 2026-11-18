@@ -7,9 +7,9 @@ export type ListingDraft = {
   is_organic: boolean;
   produce_name: string;
   quantity_available: number;
-  unit: "kg" | "bunch" | "crate" | "bag";
+  unit: "kg" | "bunch" | "crate" | "bag" | "head" | "ton";
   asking_price: number;
-  price_unit: "kg" | "bunch" | "crate" | "bag";
+  price_unit: "kg" | "bunch" | "crate" | "bag" | "head" | "ton";
   available_from: string;
   harvest_date: string;
   expires_at?: string;
