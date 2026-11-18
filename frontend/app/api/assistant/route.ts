@@ -146,7 +146,28 @@ export async function POST(req:Request){
  const input=schema.safeParse(await req.json().catch(()=>null));
  if(!input.success)return NextResponse.json({error:"Enter a question of up to 2,000 characters."},{status:400});
  const supabase=await createClient(),auth=await supabase.auth.getUser(),user=auth.data.user;
- if(auth.error||!user)return NextResponse.json({error:"Sign in to use your private Agric Assistant."},{status:401});
+ if(auth.error||!user){
+  // Public Gemini access is limited to general farming/language help.
+  // Private marketplace and account questions always require an authenticated user.
+  if(isAccountSpecificQuestion(input.data.message)){
+   return NextResponse.json({error:"Sign in to view your private orders, sales, listings and bookkeeping."},{status:401});
+  }
+  const heuristic=input.data.language==="auto"?detectAssistantLanguage(input.data.message):null;
+  const detectedLanguage=input.data.language==="auto"
+   ?heuristic?.language??await detectLanguageWithModel(input.data.message)
+   :null;
+  if(input.data.language==="auto"&&!detectedLanguage){
+   return NextResponse.json({reply:"I could not confidently identify the language. Please choose a language from the language selector.",mode:"language-clarification",detectedLanguage:null,sources:[]});
+  }
+  const lang:(typeof codes)[number]=input.data.language==="auto"?detectedLanguage!:input.data.language;
+  const publicKnowledge=searchAgriculturalKnowledge(input.data.message,"").slice(0,6);
+  const sources=publicKnowledge.map(item=>({title:item.title,url:item.sourceUrl,publicationDate:item.publicationDate}));
+  const reply=process.env.GEMINI_API_KEY
+   ?await generateWithGemini(input.data.message,lang,publicKnowledge.map(item=>({title:item.title,summary:item.summary,sourceUrl:item.sourceUrl})))
+   :null;
+  if(!reply)return NextResponse.json({error:"The public farming assistant is temporarily unavailable. Please try again later."},{status:503});
+  return NextResponse.json({reply,mode:"gemini-public",detectedLanguage,sources});
+ }
  if(isRateLimited(user.id))return NextResponse.json({error:"You have reached the assistant request limit. Please wait a minute and try again."},{status:429});
  const statsPromise=(supabase as unknown as {rpc:(name:string)=>Promise<{data:BookkeepingStats|null;error:unknown}>}).rpc("get_bookkeeping_dashboard_stats");
  const [p,o,a,l,b,s,n,stats]=await Promise.all([
