@@ -8,7 +8,6 @@ import { AppNav } from "@/components/app-nav";
 import { createProductReview } from "@/actions/reviews";
 
 type OrderComment = { id: string; author_id: string; author_display_name: string; author_role: string; body: string; created_at: string };
-type PaymentEntry = { id: string; payment_kind: "deposit" | "balance"; amount_minor: number | string; currency: string; status: string; paid_at: string | null; created_at: string };
 
 export default async function OrderPage({
   params,
@@ -58,12 +57,6 @@ export default async function OrderPage({
     !!allocations?.length && allocations.every((allocation) => allocation.status === "fulfilled") &&
     paidMinor >= totalMinor && !order.delivery_confirmed_at;
   const zar = (minor: number) => (minor / 100).toLocaleString("en-ZA", { style: "currency", currency: "ZAR" });
-
-  const paymentRows = (payments ?? []) as PaymentEntry[];
-  const orderTotalMinor = Math.round((allocations ?? []).reduce((sum, allocation) => sum + Number(allocation.quantity_allocated) * Number(allocation.agreed_unit_price), 0) * 100);
-  const depositDueMinor = Math.max(50, Math.round(orderTotalMinor * 0.25));
-  const paidTotalMinor = paymentRows.filter((payment) => payment.status === "paid").reduce((sum, payment) => sum + Number(payment.amount_minor), 0);
-  const balanceDueMinor = Math.max(0, orderTotalMinor - paidTotalMinor);
 
   return (
     <main className="min-h-screen agri-page scene-harvest">
