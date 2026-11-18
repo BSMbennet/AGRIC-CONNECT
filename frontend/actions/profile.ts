@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export async function updateProfile(formData: FormData) {
   const display_name = String(formData.get("display_name") || "").trim();
@@ -10,7 +11,7 @@ export async function updateProfile(formData: FormData) {
   const locality = String(formData.get("locality") || "").trim();
   const district = String(formData.get("district") || "").trim();
   const preferred_language = String(formData.get("preferred_language") || "en");
-  if (display_name.length < 2 || display_name.length > 80 || locality.length > 100 || district.length < 2 || district.length > 100 || phone_e164.length > 20 || !["en", "tsh", "ve"].includes(preferred_language)) {
+  if (display_name.length < 2 || display_name.length > 80 || locality.length > 100 || district.length < 2 || district.length > 100 || phone_e164.length > 20 || !["en", "ve", "tsh", "ts", "nso"].includes(preferred_language)) {
     redirect("/profile?error=invalid");
   }
   const supabase = await createClient();
@@ -18,6 +19,8 @@ export async function updateProfile(formData: FormData) {
   if (!user) redirect("/login");
   const { error } = await supabase.from("profiles").update({ display_name, phone_e164: phone_e164 || null, locality: locality || null, district, preferred_language, updated_at: new Date().toISOString() }).eq("id", user.id);
   if (error) redirect("/profile?error=save");
+  const cookieStore = await cookies();
+  cookieStore.set("NEXT_LOCALE", preferred_language, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
   revalidatePath("/profile");
   revalidatePath("/dashboard");
   redirect("/profile?saved=1");

@@ -11,7 +11,7 @@ export default async function ProfilePage({searchParams}:{searchParams:Promise<{
   const {data:profile}=await supabase.from("profiles").select("display_name,role,phone_e164,locality,district,preferred_language").eq("id",user.id).single();
   if(!profile)redirect("/register?error=profile");
   const switchable=profile.role==="farmer"||profile.role==="buyer";
-  return <main className="min-h-screen bg-[#f7faf7]"><AppNav active="profile"/><section className="mx-auto max-w-3xl px-5 py-10">
+  return <main className="min-h-screen agri-page"><AppNav active="profile"/><section className="mx-auto max-w-3xl px-5 py-10">
     <p className="text-sm font-semibold text-leaf">Account</p><h1 className="mt-2 text-3xl font-bold text-forest">Profile settings</h1>
     <p className="mt-2 text-sm text-slate-600">Update your details and choose whether you are using AgricNorthX as a buyer or a farmer/seller.</p>
     {params.saved&&<p role="status" className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your profile has been saved.</p>}
@@ -22,7 +22,7 @@ export default async function ProfilePage({searchParams}:{searchParams:Promise<{
       <label className="text-sm font-semibold text-slate-700">Phone number<input name="phone_e164" type="tel" maxLength={20} defaultValue={profile.phone_e164??""} placeholder="+27..." className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></label>
       <label className="text-sm font-semibold text-slate-700">Locality / town<input name="locality" maxLength={100} defaultValue={profile.locality??""} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></label>
       <label className="text-sm font-semibold text-slate-700">District<input name="district" required minLength={2} maxLength={100} defaultValue={profile.district??"Vhembe"} className="mt-2 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"/></label>
-      <label className="text-sm font-semibold text-slate-700">Preferred language<select name="preferred_language" defaultValue={profile.preferred_language} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="en">English</option><option value="ve">Tshivenda</option></select></label>
+      <label className="text-sm font-semibold text-slate-700">Preferred language<select name="preferred_language" defaultValue={profile.preferred_language} className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"><option value="en">English</option><option value="ve">Tshivenda</option><option value="tsh">Tshivenda (legacy setting)</option><option value="ts">itsonga</option><option value="nso">Sepedi</option></select></label>
       <button className="rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white sm:col-span-2">Save profile</button>
     </form>
     <section className="mt-6 rounded-2xl border border-emerald-900/10 bg-white p-6"><h2 className="text-lg font-bold text-forest">Account type</h2><p className="mt-1 text-sm text-slate-600">Current role: <strong className="capitalize">{profile.role.replaceAll("_"," ")}</strong></p>

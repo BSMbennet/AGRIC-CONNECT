@@ -1,0 +1,1 @@
+revoke all on table public.cvs from anon, public; grant select, insert, update, delete on table public.cvs to authenticated;

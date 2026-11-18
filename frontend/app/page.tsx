@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Sprout, ShoppingBasket, Truck, ShieldCheck, MapPin, CloudSun, BarChart3, BookOpen } from "lucide-react";
+import { AppNav } from "@/components/app-nav";
 
 const highlights=[
   {icon:Sprout,title:"List your harvest",text:"Farmers and community agents can publish available produce."},
@@ -8,11 +9,8 @@ const highlights=[
 ];
 
 export default function HomePage(){
-  return <main className="min-h-screen">
-    <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-      <Link href="/" className="flex items-center gap-3" aria-label="AgricNorthX home"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-forest text-white"><Sprout size={23}/></span><span><span className="block text-lg font-bold tracking-tight text-forest">AgricNorthX</span><span className="block text-xs text-slate-500">Local harvest. Smarter decisions. Better markets.</span></span></Link>
-      <nav className="flex items-center gap-3"><Link href="/marketplace" className="hidden rounded-full px-4 py-2 text-sm font-semibold text-forest hover:bg-white sm:inline-flex">Marketplace</Link><Link href="/login" className="rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-leaf">Sign in <ArrowRight className="ml-2 inline" size={15}/></Link></nav>
-    </header>
+  return <main className="min-h-screen agri-page">
+    <AppNav />
     <section className="mx-auto grid max-w-7xl gap-12 px-5 pb-16 pt-12 sm:px-8 lg:grid-cols-[1.08fr_.92fr] lg:items-center lg:pb-24 lg:pt-20">
       <div><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 text-xs font-semibold text-forest"><MapPin size={14}/> Starting in Vhembe District, Limpopo</div>
         <h1 className="max-w-3xl text-5xl font-bold leading-[1.06] tracking-tight text-forest sm:text-6xl">Your harvest deserves a <span className="text-leaf">better market.</span></h1>

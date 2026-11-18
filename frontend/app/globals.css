@@ -8,3 +8,11 @@ html, body { min-height: 100%; }
 body { margin: 0; background: #F7F8F2; color: #17251D; font-family: Arial, Helvetica, sans-serif; }
 button, input { font: inherit; }
 ::selection { background: #DCEBDD; color: #174B35; }
+
+.agri-page {
+  background-color: #f7faf7;
+  background-image: linear-gradient(rgba(247,250,247,.90), rgba(247,250,247,.94)), url("/agricultural-landscape.svg");
+  background-position: center, center;
+  background-size: cover, cover;
+  background-attachment: fixed;
+}

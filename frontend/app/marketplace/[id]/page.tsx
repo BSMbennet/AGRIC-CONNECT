@@ -4,7 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createBuyerRequest } from "@/actions/requests";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapPin, Sprout } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { AppNav } from "@/components/app-nav";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 
 type PublicListing = {
   id: string;
@@ -68,13 +70,8 @@ export default async function ListingDetailPage({
   const canRequest = !!user && profile?.role === "buyer" && listing.farmer_id !== user.id && isAvailableNow;
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
-      <header className="border-b border-emerald-900/10 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
-          <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={21} /> AgriConnect</Link>
-          <nav className="flex items-center gap-4 text-sm font-semibold"><Link href="/marketplace" className="text-forest hover:text-leaf">Marketplace</Link><Link href={user ? "/dashboard" : "/login"} className="text-forest hover:text-leaf">{user ? "Dashboard" : "Sign in"}</Link>{user && <Link href="/profile" className="text-forest hover:text-leaf">Profile</Link>}</nav>
-        </div>
-      </header>
+    <main className="min-h-screen agri-page">
+      <AppNav active="marketplace" />
       <section className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <Link href="/marketplace" className="text-sm font-bold text-leaf">← Back to marketplace</Link>
         <article className="mt-5 rounded-3xl border border-emerald-900/10 bg-white p-6 shadow-sm sm:p-8">
@@ -85,9 +82,11 @@ export default async function ListingDetailPage({
           <p className="mt-2 flex items-center gap-1 text-sm text-slate-500"><MapPin size={15} /> {listing.locality}{listing.municipality ? `, ${listing.municipality}` : ""}{listing.district ? ` · ${listing.district}` : ""}</p>
           <p className="mt-7 text-3xl font-bold text-forest">R{Number(listing.asking_price).toFixed(2)} <span className="text-sm font-medium text-slate-500">per {listing.price_unit}</span></p>
           <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">{available.toLocaleString()} {listing.unit} available</span>{!isAvailableNow && available > 0 && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800">Available from {listing.available_from}</span>}</div>
-          <dl className="mt-6 grid grid-cols-2 gap-4 rounded-2xl bg-[#f7faf7] p-4 text-sm"><div><dt className="text-slate-500">Available from</dt><dd className="mt-1 font-semibold text-forest">{listing.available_from}</dd></div><div><dt className="text-slate-500">Harvest date</dt><dd className="mt-1 font-semibold text-forest">{listing.harvest_date || "Not specified"}</dd></div></dl>
+          <dl className="mt-6 grid grid-cols-2 gap-4 rounded-2xl bg-[#f7faf7] p-4 text-sm"><div><dt className="text-slate-500">Available from</dt><dd className="mt-1 font-semibold text-forest">{listing.available_from}</dd></div><div><dt className="text-slate-500">Harvest date</dt><dd className="mt-1 font-semibold text-forest">{listing.harvest_date || "Not specified"}</dd></div><div><dt className="text-slate-500">Listing expiry</dt><dd className="mt-1 font-semibold text-forest">{listing.expires_at ? new Intl.DateTimeFormat("en-ZA",{dateStyle:"medium",timeStyle:"short"}).format(new Date(listing.expires_at)) : "No expiry set"}</dd></div></dl>
           {listing.quality_notes && <div className="mt-6"><h2 className="font-bold text-forest">Quality and harvest notes</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{listing.quality_notes}</p></div>}
           <p className="mt-6 text-xs leading-5 text-slate-500">The seller&apos;s exact farm location and private contact details are not displayed publicly. Prices and produce descriptions are farmer-provided and should be confirmed before purchase.</p>
+          <Link href={`/reviews/${listing.id}`} className="mt-4 inline-block text-sm font-semibold text-leaf">Read verified buyer reviews</Link>
+          {canRequest && <AddToCartButton listingId={listing.id} />}
         </article>
 
         {queryParams.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not submit your request. Please check the quantity and try again.</p>}

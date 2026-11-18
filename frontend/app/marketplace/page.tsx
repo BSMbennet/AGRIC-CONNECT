@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Search, MapPin, PackageCheck, SlidersHorizontal, Sprout } from "lucide-react";
+import { Search, MapPin, PackageCheck, SlidersHorizontal } from "lucide-react";
+import { AppNav } from "@/components/app-nav";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 
 type SearchParams = Promise<{
   q?: string;
@@ -46,18 +48,8 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   });
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
-      <header className="border-b border-emerald-900/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={22} /> AgricNorthX</Link>
-          <nav className="flex items-center gap-3 text-sm font-semibold">
-            <Link href="/marketplace" className="text-leaf">Marketplace</Link>
-            <Link href="/market-insights" className="text-forest hover:text-leaf">Market insights</Link>
-            <Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link>
-            {user ? <Link href="/profile" className="text-forest hover:text-leaf">Profile</Link> : <Link href="/login" className="rounded-full bg-forest px-4 py-2 text-white hover:bg-leaf">Sign in</Link>}
-          </nav>
-        </div>
-      </header>
+    <main className="min-h-screen agri-page">
+      <AppNav active="marketplace" />
 
       <section className="bg-forest text-white">
         <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
@@ -111,9 +103,10 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
                 <h3 className="mt-4 text-xl font-bold text-forest"><Link href={`/marketplace/${item.id}`} className="hover:text-leaf">{item.produce_name}</Link></h3>
                 <p className="mt-1 flex items-center gap-1 text-sm text-slate-500"><MapPin size={14} /> {item.locality}{item.municipality ? `, ${item.municipality}` : ""}</p>
                 <p className="mt-5 text-2xl font-bold text-forest">R{Number(item.asking_price).toFixed(2)} <span className="text-xs font-medium text-slate-500">/ {item.price_unit}</span></p>
-                <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>
+                <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>{item.expires_at&&<p className="mt-1 text-xs font-semibold text-amber-700">Listing expires {new Intl.DateTimeFormat("en-ZA",{dateStyle:"medium",timeStyle:"short"}).format(new Date(item.expires_at))}</p>}
                 {item.quality_notes && <p className="mt-3 line-clamp-2 text-sm leading-5 text-slate-600">{item.quality_notes}</p>}
                 <Link href={`/marketplace/${item.id}`} className="mt-5 inline-flex items-center justify-center rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-leaf">View produce details</Link>
+                <AddToCartButton listingId={item.id} />
               </article>
             );
           })}
