@@ -97,7 +97,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <h1 className="mt-2 text-3xl font-bold text-forest">Hello, {profile.display_name}</h1>
         <p className="mt-2 text-slate-600">{profile.locality || "Vhembe"}, Limpopo</p>
         {params.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{params.error === "insufficient_stock" ? "Not enough stock remains to accept that request." : params.error === "fulfill" ? "This supply allocation could not be marked as fulfilled." : params.error === "preorder" ? "The pre-order could not be confirmed." : "The requested action could not be completed."}</p>}
-        {params.requested && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your buyer request has been sent.</p>}\n        {params.preorder_confirmed && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Pre-order confirmed. No stock has been reserved; agree the harvest and collection details with the buyer.</p>}
+        {params.requested && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your buyer request has been sent.</p>}
+        {params.preorder_confirmed && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Pre-order confirmed. No stock has been reserved; agree the harvest and collection details with the buyer.</p>}
         {params.rejected && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">The buyer request was rejected.</p>}
         {params.listing_updated && <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Your listing visibility has been updated.</p>}
         <section className="mt-8 rounded-2xl border border-emerald-900/10 bg-white p-5">
