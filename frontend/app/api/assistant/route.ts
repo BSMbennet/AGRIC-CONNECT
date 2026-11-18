@@ -38,7 +38,7 @@ function isRateLimited(userId:string){
 }
 function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[],ledger:LedgerEntry[],subscription:Subscription|null,activeListingCount:number,bookkeepingStats:BookkeepingStats){
  const t=fallback[lang],q=message.toLowerCase();
- if(/order|orders|status|oda|doda|tioda|diotara|ama-oda|ii-odolo|bestelling|bestellings/.test(q)){
+ if(/order|orders|status|delivery|dispatch|dispatched|delivered|collection|fulfilment|fulfillment|oda|doda|tioda|diotara|ama-oda|ii-odolo|bestelling|bestellings/.test(q)){
   const rows=orders.slice(0,6).map(o=>{
    const schedule=(o.scheduled_start??o.collection_window_start)?new Date((o.scheduled_start??o.collection_window_start) as string).toLocaleString("en-ZA",{dateStyle:"medium",timeStyle:"short",timeZone:"Africa/Johannesburg"}):"not scheduled";
    const fulfilment=o.fulfilment_state?o.fulfilment_state.replaceAll("_"," "):"not recorded";
