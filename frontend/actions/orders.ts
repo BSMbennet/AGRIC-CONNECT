@@ -7,25 +7,50 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function acceptRequest(formData: FormData) {
   const requestId = String(formData.get("request_id") || "");
-  if (!/^[0-9a-f-]{36}$/i.test(requestId)) redirect("/dashboard?error=request");
+  const method = String(formData.get("fulfilment_method") || "");
+  const startValue = String(formData.get("scheduled_start") || "");
+  const endValue = String(formData.get("scheduled_end") || "");
+  const location = String(formData.get("fulfilment_location") || "").trim();
+  const instructions = String(formData.get("seller_instructions") || "").trim();
+  const fee = Number(formData.get("delivery_fee") || 0);
+  if (!/^[0-9a-f-]{36}$/i.test(requestId) || !["delivery", "collection"].includes(method) ||
+      !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(startValue) ||
+      (endValue && !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(endValue)) ||
+      location.length < 3 || location.length > 300 || instructions.length > 1000 ||
+      !Number.isFinite(fee) || fee < 0 || (method === "collection" && fee !== 0)) redirect("/dashboard?error=schedule");
+  const start = new Date(startValue + ":00+02:00");
+  const end = endValue ? new Date(endValue + ":00+02:00") : null;
+  if (Number.isNaN(start.getTime()) || start <= new Date() || (end && (Number.isNaN(end.getTime()) || end <= start))) redirect("/dashboard?error=schedule");
   const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data, error } = await supabase.rpc("accept_buyer_request", { p_request_id: requestId });
-  if (error || !data?.id) redirect(`/dashboard?error=${encodeURIComponent(error?.message.includes("insufficient_stock") ? "insufficient_stock" : "accept")}`);
+  const { data, error } = await supabase.rpc("accept_buyer_request_with_schedule", {
+    p_request_id: requestId,
+    p_fulfilment_method: method,
+    p_scheduled_start: start.toISOString(),
+    p_scheduled_end: end?.toISOString() ?? null,
+    p_fulfilment_location: location,
+    p_seller_instructions: instructions,
+    p_delivery_fee: fee,
+  });
+  if (error || !data?.id) {
+    const reason = error?.message.includes("insufficient_stock") ? "insufficient_stock" : "accept";
+    redirect("/dashboard?error=" + reason);
+  }
   revalidatePath("/dashboard");
   revalidatePath("/marketplace");
-  revalidatePath(`/orders/${data.id}`);
-  redirect(`/orders/${data.id}`);
+  revalidatePath("/orders/" + data.id);
+  redirect("/orders/" + data.id + "?accepted=1");
 }
 
 export async function rejectRequest(formData: FormData) {
   const requestId = String(formData.get("request_id") || "");
-  if (!/^[0-9a-f-]{36}$/i.test(requestId)) redirect("/dashboard?error=request");
+  const reason = String(formData.get("rejection_reason") || "").trim();
+  if (!/^[0-9a-f-]{36}$/i.test(requestId) || reason.length < 3 || reason.length > 500) redirect("/dashboard?error=rejection");
   const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { error } = await supabase.rpc("reject_buyer_request", { p_request_id: requestId });
+  const { error } = await supabase.rpc("reject_buyer_request_with_reason", { p_request_id: requestId, p_reason: reason });
   if (error) redirect("/dashboard?error=reject");
   revalidatePath("/dashboard");
   redirect("/dashboard?rejected=1");
@@ -74,4 +99,45 @@ export async function updateBuyerOrderDetails(formData: FormData) {
   if(error)redirect("/orders/"+orderId+"?error=order_details");
   revalidatePath("/orders/"+orderId);revalidatePath("/dashboard");
   redirect("/orders/"+orderId+"?updated=1");
+}
+
+export async function updateOrderFulfilmentSchedule(formData: FormData) {
+  const orderId = String(formData.get("order_id") || "");
+  const method = String(formData.get("fulfilment_method") || "");
+  const startValue = String(formData.get("scheduled_start") || "");
+  const endValue = String(formData.get("scheduled_end") || "");
+  const location = String(formData.get("fulfilment_location") || "").trim();
+  const instructions = String(formData.get("seller_instructions") || "").trim();
+  const fee = Number(formData.get("delivery_fee") || 0);
+  if (!/^[0-9a-f-]{36}$/i.test(orderId) || !["delivery", "collection"].includes(method) ||
+      !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(startValue) ||
+      (endValue && !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/.test(endValue)) ||
+      location.length < 3 || location.length > 300 || instructions.length > 1000 ||
+      !Number.isFinite(fee) || fee < 0 || (method === "collection" && fee !== 0)) redirect("/orders/" + orderId + "?error=schedule");
+  const start = new Date(startValue + ":00+02:00");
+  const end = endValue ? new Date(endValue + ":00+02:00") : null;
+  if (Number.isNaN(start.getTime()) || start <= new Date() || (end && (Number.isNaN(end.getTime()) || end <= start))) redirect("/orders/" + orderId + "?error=schedule");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.rpc("update_order_fulfilment_schedule", {
+    p_order_id: orderId, p_fulfilment_method: method, p_scheduled_start: start.toISOString(),
+    p_scheduled_end: end?.toISOString() ?? null, p_fulfilment_location: location,
+    p_seller_instructions: instructions, p_delivery_fee: fee,
+  });
+  if (error) redirect("/orders/" + orderId + "?error=schedule");
+  revalidatePath("/dashboard"); revalidatePath("/orders/" + orderId);
+  redirect("/orders/" + orderId + "?schedule_updated=1");
+}
+
+export async function confirmOrderDeliveryFee(formData: FormData) {
+  const orderId = String(formData.get("order_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) redirect("/dashboard?error=order");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.rpc("confirm_order_delivery_fee", { p_order_id: orderId });
+  if (error) redirect("/orders/" + orderId + "?error=fee");
+  revalidatePath("/orders/" + orderId); revalidatePath("/dashboard");
+  redirect("/orders/" + orderId + "?fee_confirmed=1");
 }
