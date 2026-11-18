@@ -49,17 +49,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
 
   return (
     <main className="min-h-screen agri-page">
-      <header className="border-b border-emerald-900/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={22} /> AgricNorthX</Link>
-          <nav className="flex items-center gap-3 text-sm font-semibold">
-            <Link href="/marketplace" className="text-leaf">Marketplace</Link>
-            <Link href="/market-insights" className="text-forest hover:text-leaf">Market insights</Link>
-            <Link href="/dashboard" className="text-forest hover:text-leaf">Dashboard</Link>
-            {user ? <Link href="/profile" className="text-forest hover:text-leaf">Profile</Link> : <Link href="/login" className="rounded-full bg-forest px-4 py-2 text-white hover:bg-leaf">Sign in</Link>}
-          </nav>
-        </div>
-      </header>
+      <AppNav active="marketplace" />
 
       <section className="bg-forest text-white">
         <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
