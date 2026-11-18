@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
-import { loadTransactions } from "@/lib/bookkeeping/load";
+import { BookkeepingLoadError, loadTransactions } from "@/lib/bookkeeping/load";
+import { BookkeepingUnavailable } from "@/components/bookkeeping-unavailable";
 import { CATEGORY_LABELS } from "@/lib/bookkeeping/schema";
 import { cropPerformance, expenseBreakdown, inRange, periodRange, summarise, todayInJohannesburg, type Period } from "@/lib/bookkeeping/reports";
 
@@ -17,7 +18,10 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
 
   const period = (["day", "week", "month", "year"].includes(sp.period ?? "") ? sp.period : "month") as Period;
   const range = periodRange(period, todayInJohannesburg());
-  const txs = (await loadTransactions(supabase, user.id)).filter((t) => inRange(t, range.from, range.to));
+  let loaded: Awaited<ReturnType<typeof loadTransactions>>;
+  try { loaded = await loadTransactions(supabase, user.id); }
+  catch (e) { return <BookkeepingUnavailable notSetUp={e instanceof BookkeepingLoadError && e.notSetUp} />; }
+  const txs = loaded.filter((t) => inRange(t, range.from, range.to));
   const s = summarise(txs);
   return (
     <main className="mx-auto max-w-3xl bg-white p-8 text-slate-900 print:p-0">

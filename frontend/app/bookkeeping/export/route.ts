@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
   const p = request.nextUrl.searchParams.get("period");
   const period = (["day", "week", "month", "year"].includes(p ?? "") ? p : "month") as Period;
   const range = periodRange(period, todayInJohannesburg());
-  const txs = await loadTransactions(supabase, user.id, range);
+  let txs: Awaited<ReturnType<typeof loadTransactions>>;
+  try { txs = await loadTransactions(supabase, user.id, range); }
+  catch { return new NextResponse("Bookkeeping is not available right now.", { status: 503 }); }
   return new NextResponse(toCsv(txs, CATEGORY_LABELS), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

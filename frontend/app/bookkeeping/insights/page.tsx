@@ -7,7 +7,8 @@ import { Reveal } from "@/components/reveal";
 import { Donut, Gauge, ProfitLine, RankBars } from "@/components/premium-charts";
 import { createClient } from "@/lib/supabase/server";
 import { hasPremiumAnalytics } from "@/lib/entitlements";
-import { loadTransactions } from "@/lib/bookkeeping/load";
+import { BookkeepingLoadError, loadTransactions } from "@/lib/bookkeeping/load";
+import { BookkeepingUnavailable } from "@/components/bookkeeping-unavailable";
 import { CATEGORY_LABELS } from "@/lib/bookkeeping/schema";
 import { collectionRate, cropMargins, cumulative, expenseBreakdown, monthlyNet, profitMargin, summarise, todayInJohannesburg, topCounterparties } from "@/lib/bookkeeping/reports";
 
@@ -22,7 +23,9 @@ export default async function InsightsPage() {
   if (!profile || !["farmer", "cooperative_manager"].includes(profile.role)) redirect("/dashboard");
 
   const entitled = await hasPremiumAnalytics(supabase, user.id, profile.role);
-  const all = await loadTransactions(supabase, user.id);
+  let all: Awaited<ReturnType<typeof loadTransactions>>;
+  try { all = await loadTransactions(supabase, user.id); }
+  catch (e) { return <BookkeepingUnavailable notSetUp={e instanceof BookkeepingLoadError && e.notSetUp} />; }
   const total = summarise(all);
 
   if (!entitled) {

@@ -5,7 +5,8 @@ import { CountUp } from "@/components/count-up";
 import { Reveal } from "@/components/reveal";
 import { BreakdownChart, TrendChart } from "@/components/bookkeeping-charts";
 import { createClient } from "@/lib/supabase/server";
-import { loadTransactions } from "@/lib/bookkeeping/load";
+import { BookkeepingLoadError, loadTransactions } from "@/lib/bookkeeping/load";
+import { BookkeepingUnavailable } from "@/components/bookkeeping-unavailable";
 import { CATEGORY_LABELS, METHOD_LABELS } from "@/lib/bookkeeping/schema";
 import { cropPerformance, expenseBreakdown, inRange, monthlyTrend, outstanding, periodRange, summarise, todayInJohannesburg, toCents, type Period } from "@/lib/bookkeeping/reports";
 import { deleteTransaction, recordPayment } from "@/actions/bookkeeping";
@@ -26,7 +27,9 @@ export default async function BookkeepingPage({ searchParams }: { searchParams: 
   const period = (PERIODS.some((p) => p.id === sp.period) ? sp.period : "month") as Period;
   const today = todayInJohannesburg();
   const range = periodRange(period, today);
-  const all = await loadTransactions(supabase, user.id);
+  let all: Awaited<ReturnType<typeof loadTransactions>>;
+  try { all = await loadTransactions(supabase, user.id); }
+  catch (e) { return <BookkeepingUnavailable notSetUp={e instanceof BookkeepingLoadError && e.notSetUp} />; }
   const current = all.filter((t) => inRange(t, range.from, range.to));
   const s = summarise(current);
   const open = outstanding(all);
