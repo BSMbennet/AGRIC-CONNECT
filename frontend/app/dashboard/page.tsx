@@ -90,7 +90,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const farmerAllocations = (farmerAllocationRows ?? []) as unknown as FarmerAllocation[];
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
+    <main className="min-h-screen agri-page">
       <AppNav active="dashboard" />
       <section className="mx-auto max-w-6xl px-5 py-10">
         <p className="text-sm font-semibold capitalize text-leaf">Your workspace · {profile.role.replaceAll("_", " ")}</p>
