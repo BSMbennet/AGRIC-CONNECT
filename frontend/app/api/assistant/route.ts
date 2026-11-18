@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { searchAgriculturalKnowledge } from "@/lib/assistant/agricultural-knowledge";
 import { detectAssistantLanguage } from "@/lib/assistant/language-detection";
+import { searchVectorAgriculturalKnowledge } from "@/lib/assistant/vector-knowledge";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const codes=["en","ve","ts","nso","zu","xh","af","tn","st","ss","nr"] as const;
@@ -115,7 +116,10 @@ export async function POST(req:Request){
  }
  const lang:(typeof codes)[number]=input.data.language==="auto"?detected!.language!:input.data.language;
  const locality=[profile?.locality,profile?.municipality,profile?.district].filter(Boolean).join(", ");
- const knowledge=searchAgriculturalKnowledge(input.data.message,locality);
+ const lexicalKnowledge=searchAgriculturalKnowledge(input.data.message,locality);
+ let vectorKnowledge=[];
+ try{vectorKnowledge=await searchVectorAgriculturalKnowledge(supabase,input.data.message,locality,4);}catch{/* Fall back to the reviewed local corpus if embeddings or pgvector are not configured. */}
+ const knowledge=[...vectorKnowledge,...lexicalKnowledge].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index).slice(0,6);
  const reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription,activeListingCount,bookkeepingStats);
  const fallbackReply=reply+(knowledge.length&&lang==="en"?"\n\nRelevant source notes:\n"+knowledge.map(x=>`${x.title}: ${x.summary}`).join("\n\n"):"");
  const sources=knowledge.map(x=>({title:x.title,url:x.sourceUrl,publicationDate:x.publicationDate}));
