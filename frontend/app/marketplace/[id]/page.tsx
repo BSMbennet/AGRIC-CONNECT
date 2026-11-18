@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { canShowAddToCart } from "@/lib/cart-guard";
 
 type PublicListing = {
   id: string;
@@ -86,7 +87,7 @@ export default async function ListingDetailPage({
           {listing.quality_notes && <div className="mt-6"><h2 className="font-bold text-forest">Quality and harvest notes</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{listing.quality_notes}</p></div>}
           <p className="mt-6 text-xs leading-5 text-slate-500">The seller&apos;s exact farm location and private contact details are not displayed publicly. Prices and produce descriptions are farmer-provided and should be confirmed before purchase.</p>
           <Link href={`/reviews/${listing.id}`} className="mt-4 inline-block text-sm font-semibold text-leaf">Read verified buyer reviews</Link>
-          {canRequest && <AddToCartButton listingId={listing.id} />}
+          {canRequest && canShowAddToCart({ viewerId: user?.id ?? null, listingFarmerId: listing.farmer_id, available: true }) && <AddToCartButton listingId={listing.id} />}
         </article>
 
         {queryParams.error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">We could not submit your request. Please check the quantity and try again.</p>}

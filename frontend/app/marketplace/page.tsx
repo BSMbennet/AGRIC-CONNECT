@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Search, MapPin, PackageCheck, SlidersHorizontal } from "lucide-react";
 import { AppNav } from "@/components/app-nav";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { canShowAddToCart } from "@/lib/cart-guard";
 
 type SearchParams = Promise<{
   q?: string;
@@ -46,6 +47,13 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
     const available = Number(item.quantity_available) - Number(item.reserved_quantity) - Number(item.quantity_sold);
     return available > 0 && available >= minQuantity;
   });
+  // Which of these listings belong to the signed-in viewer? (own-listing check uses the real user id)
+  const ownIds = new Set<string>();
+  if (user && listings.length) {
+    const { data: own, error: ownErr } = await supabase.from("produce_listings").select("id").eq("farmer_id", user.id).in("id", listings.map((l) => l.id));
+    if (ownErr) console.error("[marketplace] own-listing lookup failed", ownErr.code);
+    for (const r of own ?? []) ownIds.add(r.id as string);
+  }
 
   return (
     <main className="min-h-screen agri-page scene-market">
@@ -106,7 +114,8 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
                 <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>{item.expires_at&&<p className="mt-1 text-xs font-semibold text-amber-700">Listing expires {new Intl.DateTimeFormat("en-ZA",{dateStyle:"medium",timeStyle:"short"}).format(new Date(item.expires_at))}</p>}
                 {item.quality_notes && <p className="mt-3 line-clamp-2 text-sm leading-5 text-slate-600">{item.quality_notes}</p>}
                 <Link href={`/marketplace/${item.id}`} className="mt-5 inline-flex items-center justify-center rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-leaf">View produce details</Link>
-                <AddToCartButton listingId={item.id} />
+                {canShowAddToCart({ viewerId: user?.id ?? null, listingFarmerId: ownIds.has(item.id) ? user?.id : null, available: available > 0 }) && <AddToCartButton listingId={item.id} />}
+                {ownIds.has(item.id) && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-center text-xs font-semibold text-emerald-800">This is your listing</p>}
               </article>
             );
           })}
