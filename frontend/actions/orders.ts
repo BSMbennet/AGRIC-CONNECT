@@ -35,7 +35,13 @@ export async function acceptRequest(formData: FormData) {
     p_delivery_fee: fee,
   });
   if (error || !data?.id) {
-    const reason = error?.message.includes("insufficient_stock") ? "insufficient_stock" : "accept";
+    const message = error?.message ?? "";
+    const reason = message.includes("insufficient_stock") ? "insufficient_stock"
+      : message.includes("invalid_schedule") ? "schedule"
+      : message.includes("request_not_pending") || message.includes("request_not_found") ? "request_unavailable"
+      : message.includes("listing_not_active") || message.includes("listing_not_found") ? "listing_unavailable"
+      : message.includes("unauthorized") ? "not_authorized"
+      : "accept";
     redirect("/dashboard?error=" + reason);
   }
   revalidatePath("/dashboard");
