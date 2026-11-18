@@ -5,8 +5,8 @@ with seed(title,publisher,source_url,source_type,published_on,locality_tags,crop
  (
   'Brackenridgea zanguebarica (Mutavhatsindi): Conservation and Propagation Status',
   'South African National Biodiversity Institute, PlantZAfrica',
-  'https://plantzafrica.com/plantab/brackenzang.html',
-  'extension',null::date,
+  'https://pza.sanbi.org/brackenridgea-zanguebarica',
+  'extension','2025-10-01'::date,
   array['Mafukani','Mutale','Vhembe','Limpopo','South Africa']::text[],
   array['Mutavhatsindi','Brackenridgea zanguebarica','threatened medicinal plants','conservation']::text[],
   'Critically endangered Vhembe plant — do not wild-harvest',
@@ -15,7 +15,7 @@ with seed(title,publisher,source_url,source_type,published_on,locality_tags,crop
  (
   'Buddleja salviifolia: Indigenous Sagewood Propagation',
   'South African National Biodiversity Institute, PlantZAfrica',
-  'https://plantzafrica.com/plantab/buddlsalv.html',
+  'https://pza.sanbi.org/buddleja-salviifolia',
   'extension',null::date,
   array['South Africa','Northern South Africa','Limpopo']::text[],
   array['Buddleja salviifolia','sagewood','indigenous medicinal plants','cuttings','seed propagation']::text[],
@@ -25,7 +25,7 @@ with seed(title,publisher,source_url,source_type,published_on,locality_tags,crop
  (
   'Crotalaria natalitia: Indigenous Legume Propagation and Soil Role',
   'South African National Biodiversity Institute, PlantZAfrica',
-  'https://plantzafrica.com/plantcd/crotalarianatnat.html',
+  'https://pza.sanbi.org/crotalaria-natalitia-var-natalitia',
   'extension',null::date,
   array['Northern South Africa','Limpopo','Mpumalanga','South Africa']::text[],
   array['Crotalaria natalitia','indigenous legumes','traditional crops','nitrogen fixation','seed propagation']::text[],
