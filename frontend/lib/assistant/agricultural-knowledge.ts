@@ -182,8 +182,7 @@ export const agriculturalKnowledge: AgriculturalKnowledgeDocument[] = [
     verificationStatus: "verified",
     summary: "This WRC research report examines operation of smallholder irrigation schemes in Vhembe. It provides local systems context for shared canal infrastructure, scheme performance and the role of irrigation in smallholder production. It should inform questions about scheme management, not be treated as a current water allocation notice or a crop-specific irrigation prescription.",
     keywords: ["irrigation", "canal", "water", "smallholder", "scheme", "vhembe", "limpopo", "water management", "infrastructure"]
-  }
-
+  },
   {
     id: "wrc-smallholder-soil-manure-seed-saving",
     title: "Climate-resilient soil fertility, manure and seed-saving practices",
