@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   ).join("\n\n");
 
   const languageNames: Record<string, string> = {
-    en: "English", ve: "Tshivenda", ts: "itsonga", nso: "Sepedi",
+    en: "English", ve: "Tshivenda", ts: "Xitsonga", nso: "Sepedi",
   };
   const system = [
     "You are the AgricNorthX assistant for smallholder farmers and buyers in Limpopo, South Africa.",
