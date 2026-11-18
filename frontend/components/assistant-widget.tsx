@@ -34,6 +34,7 @@ export function AssistantWidget({initialLanguage="en"}:{initialLanguage?:string}
  const [signedIn,setSignedIn]=useState<boolean|null>(null),[open,setOpen]=useState(false),[messages,setMessages]=useState<Msg[]>([]);
  const [draft,setDraft]=useState(""),[busy,setBusy]=useState(false),[listening,setListening]=useState(false),[notice,setNotice]=useState("");
  const speech=useRef<Speech|null>(null), t=words[lang], locale=useMemo(()=>languages.find(x=>x[0]===lang)?.[2]??"en-ZA",[lang]);
+ useEffect(()=>{const next=initialLanguage==="tsh"?"ve":languages.some(x=>x[0]===initialLanguage)?initialLanguage as Lang:"en";setLang(next);},[initialLanguage]);
  useEffect(()=>{let alive=true;createClient().auth.getUser().then(({data})=>{if(alive)setSignedIn(Boolean(data.user));}).catch(()=>{if(alive)setSignedIn(false);});return()=>{alive=false;speech.current?.stop();};},[]);
  useEffect(()=>{if(open&&!messages.length)setMessages([{role:"assistant",content:t[2]}]);},[open,messages.length,t]);
  async function setLanguage(value:string){if(!languages.some(x=>x[0]===value))return;setLang(value as Lang);setNotice("");await updatePreferredLanguage(value);router.refresh();}
