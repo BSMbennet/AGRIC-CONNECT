@@ -4,44 +4,44 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
 import { NavMenu, type NavItem } from "@/components/nav-menu";
 import { LanguageSelector } from "@/components/language-selector";
-import { Store, ClipboardList, LayoutDashboard, Wallet, CloudSun, Sprout, BarChart3, BookOpen, Users, User, ShieldCheck, Layers3, Tag, Bell } from "lucide-react";
+import { Bell, Sprout } from "lucide-react";
 
 type Role = "farmer" | "buyer" | "agent" | "cooperative_manager" | "admin";
 type NavModel = { primary: NavItem[]; secondary: NavItem[] };
 
 function navigationFor(role: Role | null, t: (key: string) => string): NavModel {
-  const primary: NavItem[] = [{ href: "/marketplace", label: t("marketplace"), icon: Store }];
-  const secondary: NavItem[] = role ? [{ href: "/dashboard#notifications", label: "Notifications", icon: Bell }, { href: "/knowledge", label: "Community knowledge", icon: BookOpen }] : [{ href: "/knowledge", label: "Community knowledge", icon: BookOpen }];
+  const primary: NavItem[] = [{ href: "/marketplace", label: t("marketplace"), icon: "store" }];
+  const secondary: NavItem[] = role ? [{ href: "/dashboard#notifications", label: "Notifications", icon: "bell" }, { href: "/knowledge", label: "Community knowledge", icon: "book-open" }] : [{ href: "/knowledge", label: "Community knowledge", icon: "book-open" }];
   if (!role) {
-    secondary.push({ href: "/weather", label: "Farm weather", icon: CloudSun });
+    secondary.push({ href: "/weather", label: "Farm weather", icon: "cloud-sun" });
     return { primary, secondary };
   }
-  if (role === "farmer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: ClipboardList });
-  else if (role === "buyer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: ClipboardList });
-  primary.push({ href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard });
-  if (role === "farmer") primary.push({ href: "/wallet", label: "Wallet", icon: Wallet });
+  if (role === "farmer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: "clipboard-list" });
+  else if (role === "buyer") primary.push({ href: "/dashboard#orders", label: "Orders", icon: "clipboard-list" });
+  primary.push({ href: "/dashboard", label: t("dashboard"), icon: "layout-dashboard" });
+  if (role === "farmer") primary.push({ href: "/wallet", label: "Wallet", icon: "wallet" });
   if (role === "farmer") secondary.push(
-    { href: "/fields", label: "My fields", icon: Sprout }, { href: "/weather", label: "Weather planner", icon: CloudSun },
-    { href: "/farm-products", label: "Farm products", icon: Sprout }, { href: "/subscriptions", label: "Subscription plan", icon: Tag },
-    { href: "/market-insights", label: "Market insights", icon: BarChart3 }, { href: "/pricing", label: "Pricing guide", icon: Tag },
-    { href: "/bookkeeping", label: "Bookkeeping", icon: Layers3 }, { href: "/profile", label: t("profile"), icon: User },
+    { href: "/fields", label: "My fields", icon: "sprout" }, { href: "/weather", label: "Weather planner", icon: "cloud-sun" },
+    { href: "/farm-products", label: "Farm products", icon: "sprout" }, { href: "/subscriptions", label: "Subscription plan", icon: "tag" },
+    { href: "/market-insights", label: "Market insights", icon: "bar-chart" }, { href: "/pricing", label: "Pricing guide", icon: "tag" },
+    { href: "/bookkeeping", label: "Bookkeeping", icon: "layers" }, { href: "/profile", label: t("profile"), icon: "user" },
   );
   else if (role === "buyer") secondary.push(
-    { href: "/cart", label: t("cart"), icon: ClipboardList }, { href: "/coop/aggregate", label: "Combine supply", icon: Layers3 },
-    { href: "/profile", label: t("profile"), icon: User },
+    { href: "/cart", label: t("cart"), icon: "clipboard-list" }, { href: "/coop/aggregate", label: "Combine supply", icon: "layers" },
+    { href: "/profile", label: t("profile"), icon: "user" },
   );
   else if (role === "agent") secondary.push(
-    { href: "/agent/register-farmer", label: "Register farmer", icon: Users }, { href: "/market-insights", label: "Market insights", icon: BarChart3 },
-    { href: "/profile", label: t("profile"), icon: User },
+    { href: "/agent/register-farmer", label: "Register farmer", icon: "users" }, { href: "/market-insights", label: "Market insights", icon: "bar-chart" },
+    { href: "/profile", label: t("profile"), icon: "user" },
   );
   else if (role === "cooperative_manager") secondary.push(
-    { href: "/coop/aggregate", label: "Aggregate supply", icon: Layers3 }, { href: "/bookkeeping", label: "Bookkeeping", icon: Tag },
-    { href: "/market-insights", label: "Market insights", icon: BarChart3 }, { href: "/pricing", label: "Pricing guide", icon: Tag },
-    { href: "/profile", label: t("profile"), icon: User },
+    { href: "/coop/aggregate", label: "Aggregate supply", icon: "layers" }, { href: "/bookkeeping", label: "Bookkeeping", icon: "tag" },
+    { href: "/market-insights", label: "Market insights", icon: "bar-chart" }, { href: "/pricing", label: "Pricing guide", icon: "tag" },
+    { href: "/profile", label: t("profile"), icon: "user" },
   );
   else secondary.push(
-    { href: "/admin", label: "Admin console", icon: ShieldCheck }, { href: "/market-insights", label: "Market insights", icon: BarChart3 },
-    { href: "/pricing", label: "Pricing guide", icon: Tag }, { href: "/profile", label: t("profile"), icon: User },
+    { href: "/admin", label: "Admin console", icon: "shield-check" }, { href: "/market-insights", label: "Market insights", icon: "bar-chart" },
+    { href: "/pricing", label: "Pricing guide", icon: "tag" }, { href: "/profile", label: t("profile"), icon: "user" },
   );
   return { primary, secondary };
 }
