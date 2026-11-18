@@ -165,3 +165,18 @@ export async function markOrderOutForDelivery(formData: FormData) {
   revalidatePath("/dashboard"); revalidatePath("/orders/" + orderId);
   redirect("/orders/" + orderId + "?delivery_started=1");
 }
+
+
+export async function confirmOrderDelivery(formData: FormData) {
+  const orderId = String(formData.get("order_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) redirect("/dashboard?error=delivery_confirmation");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.rpc("confirm_order_delivery", { p_order_id: orderId });
+  if (error) redirect("/orders/" + orderId + "?error=delivery_confirmation");
+  revalidatePath("/orders/" + orderId);
+  revalidatePath("/dashboard");
+  revalidatePath("/wallet");
+  redirect("/orders/" + orderId + "?delivery_confirmed=1");
+}
