@@ -20,6 +20,8 @@ type BuyerRequest = {
   order_instructions?: string | null;
   created_at: string;
   status: string;
+  request_type?: string;
+  requested_harvest_date?: string | null;
 };
 
 type ListingWithRequests = {
