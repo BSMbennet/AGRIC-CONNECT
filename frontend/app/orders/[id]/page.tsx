@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fulfillAllocation, addOrderComment, updateBuyerOrderDetails } from "@/actions/orders";
 import { PackageCheck, Sprout } from "lucide-react";
+import { createProductReview } from "@/actions/reviews";
 
 type OrderComment = { id: string; author_id: string; author_display_name: string; author_role: string; body: string; created_at: string };
 
@@ -28,10 +29,10 @@ export default async function OrderPage({
   const { data: sellerDetails } = order.listing_id
     ? await supabase.from("listing_private_details").select("contact_phone,fulfilment_details").eq("listing_id",order.listing_id).maybeSingle()
     : { data: null };
-  const [{ data: allocations }, { data: events }, { data: comments }] = await Promise.all([
+  const [{ data: allocations }, { data: events }, { data: comments }, { data: existingReview }] = await Promise.all([
     supabase.from("order_allocations").select("id,listing_id,farmer_id,quantity_allocated,agreed_unit_price,status").eq("order_id", id),
     supabase.from("order_events").select("event_type,from_status,to_status,note,created_at").eq("order_id", id).order("created_at"),
-    supabase.from("order_comments").select("id,author_id,author_display_name,author_role,body,created_at").eq("order_id",id).order("created_at"),
+    supabase.from("order_comments").select("id,author_id,author_display_name,author_role,body,created_at").eq("order_id",id).order("created_at"),\n    profile?.role === "buyer" ? supabase.from("product_reviews").select("id").eq("order_id",id).maybeSingle() : Promise.resolve({data:null}),
   ]);
 
   return (
