@@ -85,7 +85,7 @@ async function generateWithGemini(message:string,language:(typeof codes)[number]
  }catch{return null;}
 }
 function isAccountSpecificQuestion(message:string){
- return /\\b(order|orders|listing|listings|sale|sales|bookkeeping|ledger|subscription|payment|payments|invoice|balance|revenue|profit|cash|account|profile|my records|my activity|my stock|my delivery|my collection)\\b/i.test(message);
+ return /\b(order|orders|listing|listings|sale|sales|bookkeeping|ledger|subscription|payment|payments|invoice|balance|revenue|profit|cash|account|profile|my records|my activity|my stock|my delivery|my collection)\b/i.test(message);
 }
 
 const requestWindows=new Map<string,{start:number;count:number}>();
