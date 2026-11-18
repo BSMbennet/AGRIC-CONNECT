@@ -13,14 +13,44 @@ type VectorMatch = {
   crop_tags:string[];
   similarity:number;
 };
+type FullTextRow = {
+  id:string;
+  heading:string|null;
+  content:string;
+  locality_tags:string[];
+  crop_tags:string[];
+  source:{
+    title:string;
+    publisher:string;
+    source_url:string;
+    published_on:string|null;
+    language:string;
+    status:string;
+  };
+};
+type KnowledgeDbClient = {
+  from:(table:"agri_knowledge_chunks")=>({
+    select:(columns:string)=>({
+      textSearch:(column:"search_document",query:string,options:{config:"simple";type:"websearch"})=>({
+        limit:(count:number)=>Promise<{data:FullTextRow[]|null;error:unknown}>
+      })
+    })
+  });
+  rpc:(name:"match_agri_knowledge_chunks",args:{
+    query_embedding:number[];
+    match_count:number;
+    locality_filter:string|null;
+    crop_filter:null;
+  })=>Promise<{data:VectorMatch[]|null;error:unknown}>;
+};
 
-async function searchApprovedFullText(client:any,query:string,limit:number):Promise<AgriculturalKnowledgeDocument[]>{
+async function searchApprovedFullText(client:KnowledgeDbClient,query:string,limit:number):Promise<AgriculturalKnowledgeDocument[]>{
   const {data,error}=await client.from("agri_knowledge_chunks")
     .select("id,heading,content,locality_tags,crop_tags,source:agri_knowledge_sources!inner(title,publisher,source_url,published_on,language,status)")
     .textSearch("search_document",query,{config:"simple",type:"websearch"})
     .limit(Math.max(1,Math.min(limit,8)));
   if(error||!data?.length)return [];
-  return data.map((row:any)=>({
+  return data.map(row=>({
     id:"fts-"+row.id,
     title:row.source.title,
     topic:row.heading??"Agricultural production guidance",
@@ -44,7 +74,7 @@ export async function searchVectorAgriculturalKnowledge(
   locality = "",
   limit = 4
 ): Promise<AgriculturalKnowledgeDocument[]> {
-  const client=supabase as any;
+  const client=supabase as KnowledgeDbClient;
   if(!query.trim())return [];
   const apiKey=process.env.AI_EMBEDDING_API_KEY;
   const model=process.env.AI_EMBEDDING_MODEL;
@@ -60,14 +90,14 @@ export async function searchVectorAgriculturalKnowledge(
   if(!response.ok)throw new Error("Embedding provider unavailable");
   const payload=await response.json() as {data?:Array<{embedding?:number[]}>};
   const embedding=payload.data?.[0]?.embedding;
-  if(!embedding||embedding.length!==1024||embedding.some(value=>!Number.isFinite(value)))return [];
+  if(!embedding||embedding.length!==1024||embedding.some(value=>!Number.isFinite(value)))return searchApprovedFullText(client,query,limit);
   const localityTag=locality.split(",")[0]?.trim()||null;
   const {data,error}=await client.rpc("match_agri_knowledge_chunks",{
     query_embedding:embedding,match_count:Math.max(1,Math.min(limit,8)),
     locality_filter:localityTag,crop_filter:null
   });
   if(error||!data?.length)return searchApprovedFullText(client,query,limit);
-  return data.map((match,index)=>({
+  return data.map(match=>({
     id:"db-"+match.chunk_id,
     title:match.title,
     topic:match.heading??"Agricultural production guidance",
