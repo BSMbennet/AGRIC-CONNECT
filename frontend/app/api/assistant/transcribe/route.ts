@@ -30,7 +30,8 @@ export async function POST(request:NextRequest){
   const parsed=languageSchema.safeParse(form.get("language"));
   const audio=form.get("audio");
   if(!parsed.success||!(audio instanceof File))return fail("Choose a language and record your question again.",400);
-  if(parsed.data==="auto"&&!supported.length)return fail("Voice transcription is not enabled for any configured language. Please type your message.",501);\n  if(parsed.data!=="auto"&&!supported.includes(parsed.data))return fail("Voice transcription has not been verified for this language. Please type your message.",501);
+  if(parsed.data==="auto"&&!supported.length)return fail("Voice transcription is not enabled for any configured language. Please type your message.",501);
+  if(parsed.data!=="auto"&&!supported.includes(parsed.data))return fail("Voice transcription has not been verified for this language. Please type your message.",501);
   if(audio.size<1||audio.size>12*1024*1024)return fail("Audio must be smaller than 12 MB.",413);
   if(!["audio/webm","audio/webm;codecs=opus","audio/ogg","audio/mp4","audio/mpeg","audio/wav"].some(type=>audio.type.startsWith(type)))return fail("This audio format is not supported. Please try a different browser.",415);
 
