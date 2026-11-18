@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppNav } from "@/components/app-nav";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const metadata = { title: "Farmer wallet | AgricNorthX" };
 
@@ -12,7 +13,7 @@ const zar = (amount: number) => amount.toLocaleString("en-ZA", {
 });
 
 export default async function FarmerWalletPage() {
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/wallet");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
