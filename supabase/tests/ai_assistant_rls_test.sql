@@ -1,0 +1,35 @@
+begin;
+create temp table r(name text, ok boolean); grant all on r to authenticated, anon;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000a',true);
+set local role authenticated;
+insert into public.ai_conversations(id,user_id,title) values ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-00000000000a','hi');
+insert into public.ai_messages(conversation_id,user_id,role,content) values ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-00000000000a','user','hello');
+insert into public.ai_usage(user_id,outcome) values ('00000000-0000-0000-0000-00000000000a','ok');
+do $$ declare f boolean; n int; begin
+  begin insert into public.ai_conversations(user_id) values ('00000000-0000-0000-0000-00000000000b'); f:=false; exception when others then f:=true; end;
+  insert into r values ('cannot create conversation for another user', f);
+  begin insert into public.ai_usage(user_id,outcome) values ('00000000-0000-0000-0000-00000000000b','ok'); f:=false; exception when others then f:=true; end;
+  insert into r values ('cannot write usage for another user', f);
+  begin insert into public.ai_messages(conversation_id,user_id,role,content) values ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-00000000000a','system','x'); f:=false; exception when check_violation then f:=true; end;
+  insert into r values ('only user/assistant roles allowed', f);
+  begin update public.ai_messages set content='tampered'; get diagnostics n=row_count; f:=false; exception when insufficient_privilege then f:=true; end;
+  insert into r values ('messages cannot be edited', f);
+end $$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000b',true);
+do $$ declare n int; f boolean; begin
+  select count(*) into n from public.ai_conversations; insert into r values ('B sees no conversations of A', n=0);
+  select count(*) into n from public.ai_messages; insert into r values ('B sees no messages of A', n=0);
+  select count(*) into n from public.ai_usage; insert into r values ('B sees no usage of A', n=0);
+  begin insert into public.ai_messages(conversation_id,user_id,role,content) values ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-00000000000b','user','injected'); f:=false; exception when others then f:=true; end;
+  insert into r values ('B cannot post into A conversation', f);
+  delete from public.ai_conversations; get diagnostics n=row_count; insert into r values ('B cannot delete A conversation', n=0);
+end $$;
+reset role; set local role anon;
+do $$ declare f boolean; begin begin perform 1 from public.ai_messages; f:=false; exception when insufficient_privilege then f:=true; end; insert into r values ('anon has no access', f); end $$;
+reset role; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000a',true); set local role authenticated;
+delete from public.ai_conversations;
+do $$ declare n int; begin reset role; select count(*) into n from public.ai_messages; insert into r values ('owner delete cascades messages', n=0); end $$;
+reset role;
+select name, case when ok then 'PASS' else 'FAIL' end result from r order by ok, name;
+do $$ begin if exists (select 1 from r where not ok) then raise exception 'ai RLS tests failed'; end if; end $$;
+rollback;

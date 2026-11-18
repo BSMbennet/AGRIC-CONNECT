@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
+import { AssistantMount } from "@/components/assistant-mount";
 
 export const metadata:Metadata={
   title:"AgricNorthX | Local harvest. Smarter decisions. Better markets.",
@@ -12,5 +13,5 @@ export const viewport:Viewport={themeColor:"#174B35",width:"device-width",initia
 
 export default async function RootLayout({children}:{readonly children:React.ReactNode}){
   const [locale,messages]=await Promise.all([getLocale(),getMessages()]);
-  return <html lang={locale}><body><NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider></body></html>;
+  return <html lang={locale}><body><NextIntlClientProvider messages={messages}>{children}<AssistantMount /></NextIntlClientProvider></body></html>;
 }
