@@ -17,32 +17,53 @@ export type Database = {
       buyer_requests: {
         Row: {
           buyer_id: string
+          buyer_name: string | null
+          contact_number: string | null
           created_at: string
+          delivery_location: string | null
+          fulfilment_preference: string
           id: string
           listing_id: string
           message: string | null
+          order_instructions: string | null
           proposed_price: number | null
           quantity_requested: number
+          request_type: string
+          requested_harvest_date: string | null
           status: Database["public"]["Enums"]["request_status"]
         }
         Insert: {
           buyer_id: string
+          buyer_name?: string | null
+          contact_number?: string | null
           created_at?: string
+          delivery_location?: string | null
+          fulfilment_preference?: string
           id?: string
           listing_id: string
           message?: string | null
+          order_instructions?: string | null
           proposed_price?: number | null
           quantity_requested: number
+          request_type?: string
+          requested_harvest_date?: string | null
           status?: Database["public"]["Enums"]["request_status"]
         }
         Update: {
           buyer_id?: string
+          buyer_name?: string | null
+          contact_number?: string | null
           created_at?: string
+          delivery_location?: string | null
+          fulfilment_preference?: string
           id?: string
           listing_id?: string
           message?: string | null
+          order_instructions?: string | null
           proposed_price?: number | null
           quantity_requested?: number
+          request_type?: string
+          requested_harvest_date?: string | null
           status?: Database["public"]["Enums"]["request_status"]
         }
         Relationships: [
@@ -494,6 +515,24 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      listing_private_details: {
+        Row: { listing_id: string; farmer_id: string; contact_phone: string; fulfilment_details: string; updated_at: string }
+        Insert: { listing_id: string; farmer_id: string; contact_phone: string; fulfilment_details: string; updated_at?: string }
+        Update: { listing_id?: string; farmer_id?: string; contact_phone?: string; fulfilment_details?: string; updated_at?: string }
+        Relationships: [
+          { foreignKeyName: "listing_private_details_listing_id_fkey"; columns: ["listing_id"]; isOneToOne: true; referencedRelation: "produce_listings"; referencedColumns: ["id"] },
+          { foreignKeyName: "listing_private_details_farmer_id_fkey"; columns: ["farmer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
+        ]
+      }
+      product_reviews: {
+        Row: { id: string; order_id: string; listing_id: string; buyer_id: string; rating: number; review_text: string; created_at: string }
+        Insert: { id?: string; order_id: string; listing_id: string; buyer_id: string; rating: number; review_text: string; created_at?: string }
+        Update: { id?: string; order_id?: string; listing_id?: string; buyer_id?: string; rating?: number; review_text?: string; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "product_reviews_order_id_fkey"; columns: ["order_id"]; isOneToOne: false; referencedRelation: "orders"; referencedColumns: ["id"] },
+          { foreignKeyName: "product_reviews_listing_id_fkey"; columns: ["listing_id"]; isOneToOne: false; referencedRelation: "produce_listings"; referencedColumns: ["id"] }
         ]
       }
       profiles: {
