@@ -19,7 +19,7 @@ Set server-side environment variables in the existing Vercel project only:
 No paid service, GPU, subscription, or infrastructure is provisioned by this code. Without these settings the assistant still answers marketplace activity from the signed-in user's own records; generative agronomy answers are not enabled. When NIM is enabled, the configured provider receives a minimized account context (crop/listing names, order status, quantities, order values, role and locality) with the user's message. Phone numbers, buyer contact details and private fulfilment instructions are excluded. Review the selected provider's data terms before enabling it.
 
 ## Local speech caveat
-Text language selection and response-language instructions cover all eleven languages, but model fluency must be validated by native speakers. Voice input/output uses browser Web Speech APIs and varies by device. A matching installed voice is required for playback. NVIDIA's published Speech NIM ASR/TTS locale lists do not currently include the eleven South African official languages; do not advertise native NVIDIA voice support for them. Consistent local-language speech requires a separately validated provider/model.
+Text language selection covers all eleven languages. Auto-detect is a conservative phrase-marker heuristic and asks the user to choose when uncertain; it is not a trained language-identification model. Voice input now records audio and sends it to an authenticated, configurable transcription adapter. Voice output tries an authenticated, configurable TTS adapter and then a matching installed browser voice. Neither hosted provider is configured by default. Each language must be explicitly added to the server-side allowlist only after quality and licensing checks. Native-speaker validation remains outstanding. See `docs/AGRIC_AI_LANGUAGE_AND_SPEECH_QA.md`.
 
 ## Security and launch checklist
 - User ID is always derived from verified Supabase Auth; no user ID is accepted from the client.
@@ -42,8 +42,8 @@ Sales are reported from the existing `get_bookkeeping_dashboard_stats()` aggrega
 
 The API has a per-user, per-running-instance limit of 20 requests per minute. This is a best-effort guard for serverless deployments, not a globally coordinated rate limiter; a shared persistent limiter would be required for strict enforcement across multiple instances.
 
-## Agricultural knowledge retrieval — starter corpus
-`frontend/lib/assistant/agricultural-knowledge.ts` contains a small, source-reviewed English starter corpus and keyword-based retrieval. Retrieved source metadata is passed to the configured model and source links are shown in chat. It is a first retrieval-augmented generation step, not yet a vector/embedding search engine or a comprehensive knowledge base.
+## Agricultural knowledge retrieval
+`frontend/lib/assistant/agricultural-knowledge.ts` contains a curated English starter corpus covering Limpopo crop guides, African leafy vegetables, maize, poultry, livestock and irrigation. Retrieval combines local keyword ranking with approved Supabase `agri_knowledge_chunks` using the existing full-text search column and authenticated RLS. An optional pgvector adapter is committed; it requires the staged migration and a compatible 1024-dimensional embedding provider. Retrieved source metadata is passed to the configured model and source links are shown in chat. This is still a starter knowledge base, not comprehensive coverage or a native-language corpus.
 
 Current documents:
 - Limpopo Department of Agriculture and Rural Development — Tomato Production in Limpopo Province: https://www.ldard.gov.za/index.php/tomato-production-in-limpopo-province
@@ -55,10 +55,26 @@ Current documents:
 Each entry records topic, crop category, geographic relevance, language, source, source URL, publication date, last verification date and verification status. The maize documents are explicitly date-scoped so a previous season's planting window is not presented as a current forecast.
 
 ## Remaining limitations
-- Knowledge retrieval is lexical and the starter corpus is small; embeddings/vector retrieval, document ingestion, multilingual source documents and broader crop/livestock coverage remain future work.
-- Local-language output quality has not been validated by native speakers. The current provider prompt does not establish reliable fluency in all eleven languages.
-- Speech recognition and speech synthesis remain browser/device-dependent. No hosted speech provider with verified Tshivenda, Xitsonga and Sepedi support is configured.
-- Conversation history is currently held in the open widget session only; consent-based cross-session conversation memory and user deletion controls are not implemented.
+- Persistent memory routes and consent UI are implemented, but the additive memory/vector migration is committed and not applied. The current preview uses the existing Supabase project; applying the migration there would alter the live database.
+- Native-speaker review is outstanding for all eleven languages. Auto-detection is heuristic and should be treated as best-effort.
+- Hosted ASR/TTS adapters are implemented but disabled until a licensed provider, model and per-language quality allowlist are configured. Browser TTS is device-dependent. No verified commercial speech stack for Tshivenda, Xitsonga and Sepedi is currently enabled.
+- Vector retrieval is optional and awaits the staged pgvector migration plus a compatible 1024-dimensional embedding provider. Approved full-text Supabase retrieval and the local curated corpus are available.
+- The weather connector uses Open-Meteo and includes the retrieval timestamp. Check its free API commercial-use terms before relying on it in a monetized marketplace deployment.
+- The market intelligence connector links to the NAMC report/dashboard. It does not yet return structured numeric live prices; AGRIC AI must say so rather than inventing prices.
 - The in-memory request limiter is best-effort only.
-- Weather, live market prices and other live external data are not connected.
-- Run the feature-branch preview build and automated tests before treating these changes as release-ready.
+- Two-user RLS integration tests and mobile regression instructions are committed; the tests require dedicated staging accounts and fixtures and have not yet been run.
+- A successful preview build and authenticated end-to-end test against the final commit are still required.
+
+## New AGRIC AI controls and provider configuration
+Conversation persistence is opt-in. The Memory on/off control in the chat header stores messages only after consent; disabling memory deletes the stored conversation. Clear conversation deletes the saved messages. The feature-branch migration is `frontend/supabase/migrations/202611180001_agri_ai_memory_and_vector_rag.sql`; it is not applied to the live Supabase project.
+
+Optional speech provider variables (server-side only):
+- `AI_SPEECH_API_KEY`, `AI_SPEECH_BASE_URL`, `AI_SPEECH_MODEL`, `AI_SPEECH_SUPPORTED_LANGUAGES`
+- `AI_TTS_API_KEY`, `AI_TTS_BASE_URL`, `AI_TTS_MODEL`, `AI_TTS_VOICE`, `AI_TTS_SUPPORTED_LANGUAGES`
+- `AI_EMBEDDING_API_KEY`, `AI_EMBEDDING_BASE_URL`, `AI_EMBEDDING_MODEL`
+
+Speech allowlists must contain only languages independently tested with the selected provider. The embedding model must return 1024-dimensional vectors. No speech or embedding provider credentials have been configured.
+
+Market price endpoint: `GET /api/assistant/market-prices`. It reports the current integration limitation and links to the official NAMC fresh-produce market intelligence page; it does not return numeric price quotes.
+
+See `docs/AGRIC_AI_LANGUAGE_AND_SPEECH_QA.md` and `docs/AGRIC_AI_TESTING.md` for the model/licence evaluation, native-speaker review matrix, RLS integration setup and mobile regression plan.
