@@ -78,10 +78,15 @@ create or replace function public.create_order_payment_attempt(
   p_payment_kind text
 ) returns table(payment_id uuid, amount_minor bigint, currency text)
 language plpgsql security definer set search_path = ''
+  p_payment_kind text,
+  p_buyer_id uuid
+) returns table(payment_id uuid, amount_minor bigint, currency text)
+language plpgsql security invoker set search_path = ''
 as $function$
 declare
   v_order public.orders;
   v_payment public.order_payments;
+  v_buyer_role public.user_role;
   v_total_minor bigint;
   v_paid_minor bigint;
   v_amount_minor bigint;
@@ -89,6 +94,9 @@ declare
   v_payment_id uuid;
 begin
   if auth.uid() is null then raise exception 'unauthorized'; end if;
+  if p_buyer_id is null then raise exception 'unauthorized'; end if;
+  select role into v_buyer_role from public.profiles where id = p_buyer_id;
+  if not found or v_buyer_role <> 'buyer' then raise exception 'unauthorized'; end if;
   if p_payment_kind not in ('deposit','balance') then raise exception 'invalid_payment_kind'; end if;
 
   select * into v_order
@@ -96,6 +104,7 @@ begin
   where id = p_order_id
   for update;
   if not found or v_order.buyer_id <> auth.uid() then raise exception 'unauthorized'; end if;
+  if not found or v_order.buyer_id is distinct from p_buyer_id then raise exception 'unauthorized'; end if;
   if v_order.status not in ('accepted','fulfilled') then raise exception 'order_not_accepted'; end if;
   if v_order.delivery_confirmed_at is not null then raise exception 'delivery_already_confirmed'; end if;
   if v_order.currency <> 'ZAR' then raise exception 'unsupported_currency'; end if;
@@ -159,6 +168,7 @@ create or replace function public.record_order_payment_success(
   p_currency text
 ) returns void
 language plpgsql security definer set search_path = ''
+language plpgsql security invoker set search_path = ''
 as $function$
 declare
   v_payment public.order_payments;
@@ -255,6 +265,7 @@ create or replace function public.record_order_payment_failure(
   p_failure_status text
 ) returns void
 language plpgsql security definer set search_path = ''
+language plpgsql security invoker set search_path = ''
 as $function$
 begin
   if p_failure_status not in ('failed','expired') then raise exception 'invalid_failure_status'; end if;
@@ -284,6 +295,21 @@ begin
   if auth.uid() is null then raise exception 'unauthorized'; end if;
   select * into v_order from public.orders where id = p_order_id for update;
   if not found or v_order.buyer_id <> auth.uid() then raise exception 'unauthorized'; end if;
+create or replace function public.confirm_order_delivery(p_order_id uuid, p_buyer_id uuid)
+returns void
+language plpgsql security invoker set search_path = ''
+as $function$
+declare
+  v_order public.orders;
+  v_buyer_role public.user_role;
+  v_total_minor bigint;
+  v_paid_minor bigint;
+begin
+  if p_buyer_id is null then raise exception 'unauthorized'; end if;
+  select role into v_buyer_role from public.profiles where id = p_buyer_id;
+  if not found or v_buyer_role <> 'buyer' then raise exception 'unauthorized'; end if;
+  select * into v_order from public.orders where id = p_order_id for update;
+  if not found or v_order.buyer_id is distinct from p_buyer_id then raise exception 'unauthorized'; end if;
   if v_order.status <> 'fulfilled' then raise exception 'order_not_fulfilled'; end if;
   if exists (
     select 1 from public.order_allocations a
@@ -302,6 +328,7 @@ begin
   if v_order.delivery_confirmed_at is not null then return; end if;
   update public.orders
   set delivery_confirmed_at = now(), delivery_confirmed_by = auth.uid(), updated_at = now()
+  set delivery_confirmed_at = now(), delivery_confirmed_by = p_buyer_id, updated_at = now()
   where id = p_order_id;
 
   update public.farmer_wallet_ledger
@@ -310,6 +337,7 @@ begin
 
   insert into public.order_events(order_id,actor_profile_id,event_type,from_status,to_status,note)
   values(p_order_id,auth.uid(),'buyer_delivery_confirmed','fulfilled','fulfilled',
+  values(p_order_id,p_buyer_id,'buyer_delivery_confirmed','fulfilled','fulfilled',
     'Buyer confirmed receipt. Farmer wallet entries remain unpaid pending an approved payout route.');
 
   insert into public.notifications(recipient_id,order_id,title,body,notification_type)
