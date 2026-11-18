@@ -44,12 +44,16 @@ export default async function CartPage() {
     .filter((x) => x.available > 0);
 
   const orderIds = (activeOrders ?? []).map((order) => order.id);
-  const [{ data: allocations }, { data: payments }] = orderIds.length
-    ? await Promise.all([
-        supabase.from("order_allocations").select("order_id,quantity_allocated,agreed_unit_price").in("order_id", orderIds),
-        supabase.from("order_payments").select("order_id,amount_minor,status").in("order_id", orderIds),
-      ])
-    : [{ data: [] }, { data: [] }];
+  let allocations: Array<{ order_id: string; quantity_allocated: number | string; agreed_unit_price: number | string }> = [];
+  let payments: Array<{ order_id: string; amount_minor: number | string; status: string }> = [];
+  if (orderIds.length) {
+    const [allocationResult, paymentResult] = await Promise.all([
+      supabase.from("order_allocations").select("order_id,quantity_allocated,agreed_unit_price").in("order_id", orderIds),
+      supabase.from("order_payments").select("order_id,amount_minor,status").in("order_id", orderIds),
+    ]);
+    allocations = (allocationResult.data ?? []) as typeof allocations;
+    payments = (paymentResult.data ?? []) as typeof payments;
+  }
 
   const unpaidOrders = ((activeOrders ?? []) as ActiveOrder[]).map((order) => {
     const orderAllocations = (allocations ?? []).filter((allocation) => allocation.order_id === order.id);
