@@ -94,7 +94,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <main className="min-h-screen agri-page">
-      <AppNav active="dashboard" />\n      {params.cart_requested && <ClearCartOnSuccess />}
+      <AppNav active="dashboard" />
+      {params.cart_requested && <ClearCartOnSuccess />}
       <section className="mx-auto max-w-6xl px-5 py-10">
         <p className="text-sm font-semibold capitalize text-leaf">Your workspace · {profile.role.replaceAll("_", " ")}</p>
         <h1 className="mt-2 text-3xl font-bold text-forest">Hello, {profile.display_name}</h1>
