@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function acceptRequest(formData: FormData) {
@@ -164,4 +165,37 @@ export async function markOrderOutForDelivery(formData: FormData) {
   if (error) redirect("/orders/" + orderId + "?error=delivery_status");
   revalidatePath("/dashboard"); revalidatePath("/orders/" + orderId);
   redirect("/orders/" + orderId + "?delivery_started=1");
+}
+
+export async function confirmOrderDelivery(formData: FormData) {
+  const orderId = String(formData.get("order_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(orderId)) redirect("/dashboard?error=delivery_confirmation");
+
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: order } = await supabase.from("orders")
+    .select("id,buyer_id,status")
+    .eq("id", orderId)
+    .eq("buyer_id", user.id)
+    .maybeSingle();
+  if (!order) redirect("/dashboard?error=delivery_confirmation");
+
+  const admin = createAdminClient();
+  const { error } = await admin.rpc("confirm_order_delivery", {
+    p_order_id: orderId,
+    p_buyer_id: user.id,
+  });
+  if (error) {
+    const reason = error.message.includes("order_balance_unpaid") ? "balance_unpaid"
+      : error.message.includes("order_not_fulfilled") ? "order_not_fulfilled"
+      : "delivery_confirmation";
+    redirect("/orders/" + orderId + "?error=" + reason);
+  }
+
+  revalidatePath("/orders/" + orderId);
+  revalidatePath("/wallet");
+  revalidatePath("/dashboard");
+  redirect("/orders/" + orderId + "?delivery_confirmed=1");
 }
