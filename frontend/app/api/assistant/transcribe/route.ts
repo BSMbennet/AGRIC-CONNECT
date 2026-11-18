@@ -8,11 +8,16 @@ const languages = ["en","ve","ts","nso","zu","xh","af","tn","st","ss","nr"] as c
 const languageSchema = z.enum(languages);
 
 const fail=(message:string,status:number)=>NextResponse.json({error:message},{status});
+const windows=new Map<string,{start:number;count:number}>();
+function rateLimited(userId:string){const now=Date.now(),current=windows.get(userId);if(!current||now-current.start>=60_000){windows.set(userId,{start:now,count:1});return false;}current.count+=1;return current.count>5;}
 
 export async function POST(request:NextRequest){
   const supabase=await createClient();
   const {data:{user},error}=await supabase.auth.getUser();
   if(error||!user)return fail("Sign in to use voice input.",401);
+  if(rateLimited(user.id))return fail("Voice transcription is limited to five recordings per minute. Please wait and try again.",429);
+  const contentLength=Number(request.headers.get("content-length")||0);
+  if(contentLength>13*1024*1024)return fail("Audio must be smaller than 12 MB.",413);
 
   const apiKey=process.env.AI_SPEECH_API_KEY;
   const model=process.env.AI_SPEECH_MODEL;
