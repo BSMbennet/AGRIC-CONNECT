@@ -18,15 +18,6 @@ type LedgerEntry={entry_type:string;amount:number;entry_date:string;payment_stat
 type Subscription={plan:string;status:string;current_period_end:string|null};
 type BookkeepingStats={total_income:number;total_expenses:number;net_profit:number;unpaid_income:number;cash_position:number;paid_income:number;months:{key:string;label:string;income:number;expenses:number}[]};
 async function detectLanguageWithModel(message:string):Promise<(typeof codes)[number]|null>{
- // Gemini free-tier requests are limited to general farming/language assistance.
- // Account-specific requests continue through the existing provider and its authenticated account context.
- if(process.env.GEMINI_API_KEY&&!isAccountSpecificQuestion(input.data.message)){
-  const geminiReply=await generateWithGemini(input.data.message,lang,knowledge.map(item=>({title:item.title,summary:item.summary,sourceUrl:item.sourceUrl})));
-  if(geminiReply){
-   await persistConversation(supabase as unknown as SupabaseClient,user.id,lang,input.data.message,geminiReply);
-   return NextResponse.json({reply:geminiReply,mode:"gemini-general",detectedLanguage,sources});
-  }
- }
  const enabled=process.env.AI_ASSISTANT_ENABLED==="true";
  const key=process.env.AI_ASSISTANT_API_KEY||process.env.NVIDIA_NIM_API_KEY;
  const model=process.env.AI_ASSISTANT_MODEL||process.env.NVIDIA_NIM_MODEL;
@@ -198,6 +189,15 @@ export async function POST(req:Request){
  const fallbackReply=(weatherQuestion?weatherReply:reply)+(marketQuestion?"\n\n"+marketReply:"")+(farmingQuestion?knowledgeReply:"");
  const sources=knowledge.map(x=>({title:x.title,url:x.sourceUrl,publicationDate:x.publicationDate}));
  if(market)sources.push({title:market.title,url:market.url,publicationDate:"Latest report listing — see official page"});
+ // Gemini free-tier requests are limited to general farming/language assistance.
+ // Do not send private account context or account-specific questions to Gemini.
+ if(process.env.GEMINI_API_KEY&&!isAccountSpecificQuestion(input.data.message)){
+  const geminiReply=await generateWithGemini(input.data.message,lang,knowledge.map(item=>({title:item.title,summary:item.summary,sourceUrl:item.sourceUrl})));
+  if(geminiReply){
+   await persistConversation(supabase as unknown as SupabaseClient,user.id,lang,input.data.message,geminiReply);
+   return NextResponse.json({reply:geminiReply,mode:"gemini-general",detectedLanguage,sources});
+  }
+ }
  const context={profile:profile?{name:profile.display_name,role:profile.role,preferredLanguage:profile.preferred_language,locality}:null,
  buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency,fulfilmentState:x.fulfilment_state,fulfilmentMethod:x.fulfilment_method,scheduledStart:x.scheduled_start,scheduledEnd:x.scheduled_end,collectionWindowStart:x.collection_window_start,collectionWindowEnd:x.collection_window_end})),
  sellerAllocations:allocations.map(x=>({status:x.status,orderStatus:x.order?.status,fulfilmentState:x.order?.fulfilment_state,scheduledStart:x.order?.scheduled_start,crop:x.listing?.produce_name,quantity:x.quantity_allocated,unitPrice:x.agreed_unit_price,currency:x.order?.currency??"ZAR"})),
