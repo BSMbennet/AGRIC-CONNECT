@@ -23,6 +23,7 @@ type BuyerRequest = {
   status: string;
   request_type?: string;
   requested_harvest_date?: string | null;
+  rejection_reason?: string | null;
 };
 
 type ListingWithRequests = {
