@@ -500,30 +500,27 @@ async def create_order_checkout(order_id: str, request: Request) -> dict[str, st
     if payment_kind not in ("deposit", "balance"):
         raise HTTPException(status_code=400, detail="Invalid payment type")
 
-    async with httpx.AsyncClient(timeout=20) as http:
-        attempt_response = await http.post(
-            config["SUPABASE_URL"] + "/rest/v1/rpc/create_order_payment_attempt",
-            headers={
-                "apikey": config["SUPABASE_ANON_KEY"],
-                "Authorization": authorization,
-                "Content-Type": "application/json",
-            },
-            json={"p_order_id": order_id, "p_payment_kind": payment_kind},
-        )
-        if attempt_response.status_code >= 400:
-            detail = "The order is not ready for this payment. Refresh the order and try again."
-            try:
-                detail = str(attempt_response.json().get("message", detail))
-            except (ValueError, json.JSONDecodeError):
-                pass
-            raise HTTPException(status_code=409, detail=detail)
-        attempt_data = attempt_response.json()
-        attempt = attempt_data[0] if isinstance(attempt_data, list) and attempt_data else attempt_data
-        payment_id = str(attempt.get("payment_id", ""))
-        amount_minor = int(attempt.get("amount_minor", 0))
-        currency = str(attempt.get("currency", "ZAR")).lower()
-        if not payment_id or amount_minor <= 0 or currency != "zar":
-            raise HTTPException(status_code=502, detail="The payment amount could not be verified")
+    # The buyer session and order ownership were verified above. Create the
+    # attempt with the service role because the RPC is intentionally not
+    # executable by browser-authenticated clients.
+    try:
+        attempt_data = supabase_rpc("create_order_payment_attempt", {
+            "p_order_id": order_id,
+            "p_payment_kind": payment_kind,
+            "p_buyer_id": str(user["id"]),
+        })
+    except UpstreamError as exc:
+        detail = "The order is not ready for this payment. Refresh the order and try again."
+        if isinstance(exc.payload, dict):
+            detail = str(exc.payload.get("message") or detail)
+        raise HTTPException(status_code=409, detail=detail) from exc
+
+    attempt = attempt_data[0] if isinstance(attempt_data, list) and attempt_data else attempt_data
+    payment_id = str(attempt.get("payment_id", "")) if isinstance(attempt, dict) else ""
+    amount_minor = int(attempt.get("amount_minor", 0)) if isinstance(attempt, dict) else 0
+    currency = str(attempt.get("currency", "ZAR")).lower() if isinstance(attempt, dict) else ""
+    if not payment_id or amount_minor < 50 or currency != "zar":
+        raise HTTPException(status_code=502, detail="The payment amount could not be verified")
 
     app_url = config["AGRICNORTHX_APP_URL"].rstrip("/")
     params: dict[str, Any] = {
