@@ -16,7 +16,7 @@ type SearchParams = Promise<{
   created?: string;
 }>;
 
-const categories = ["Vegetables", "Fruit", "Grains", "Legumes", "Herbs", "Other"];
+const categories = ["Vegetables", "Fruit", "Grains", "Legumes", "Herbs", "Livestock", "Manure", "Other"];
 
 export default async function MarketplacePage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -60,7 +60,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/register" className="rounded-full bg-lime px-5 py-3 text-sm font-extrabold text-forest transition hover:bg-white">Join as a buyer</Link>
-            <Link href="/listings/new" className="rounded-full border border-white/40 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15">Sell your harvest</Link>
+            <Link href="/listings/new" className="rounded-full border border-white/40 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/15">Sell products</Link>
           </div>
         </div>
       </section>
@@ -68,7 +68,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
       <section className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
         {params.created && <p role="status" className="mb-5 rounded-xl bg-emerald-100 p-3 text-sm font-medium text-emerald-900">Your produce listing has been published.</p>}
         <form className="rounded-3xl border border-emerald-950/10 bg-white p-4 shadow-soft sm:p-5">
-          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-forest"><SlidersHorizontal size={17} /> Find produce</div>
+          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-forest"><SlidersHorizontal size={17} /> Find products</div>
           <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(150px,1fr)_auto_auto]">
             <label className="relative">
               <span className="sr-only">Search produce</span>
@@ -93,7 +93,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
         </form>
 
         <div className="mt-8 flex flex-wrap items-end justify-between gap-2">
-          <div><h2 className="text-xl font-bold text-forest">Available produce</h2><p className="mt-1 text-sm text-slate-500">{error ? "Marketplace temporarily unavailable" : `${listings.length} listing${listings.length === 1 ? "" : "s"} found`}</p></div>
+          <div><h2 className="text-xl font-bold text-forest">Available products</h2><p className="mt-1 text-sm text-slate-500">{error ? "Marketplace temporarily unavailable" : `${listings.length} listing${listings.length === 1 ? "" : "s"} found`}</p></div>
           <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-500"><MapPin size={14} /> Local farmer listings</span>
         </div>
 
