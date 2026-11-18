@@ -122,8 +122,7 @@ export async function POST(req:Request){
  const weather=weatherQuestion?await getLocalWeatherContext(locality).catch(()=>null):null;
  const market=marketQuestion?marketIntelligenceSource:null;
  const lexicalKnowledge=searchAgriculturalKnowledge(input.data.message,locality);
- let vectorKnowledge=[];
- try{vectorKnowledge=await searchVectorAgriculturalKnowledge(supabase,input.data.message,locality,4);}catch{/* Fall back to the reviewed local corpus if embeddings or pgvector are not configured. */}
+ const vectorKnowledge=await searchVectorAgriculturalKnowledge(supabase,input.data.message,locality,4).catch(()=>[]);
  const knowledge=[...vectorKnowledge,...lexicalKnowledge].filter((item,index,all)=>all.findIndex(other=>other.id===item.id)===index).slice(0,6);
  const reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription,activeListingCount,bookkeepingStats);
  const weatherReply=weather
