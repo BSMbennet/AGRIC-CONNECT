@@ -12,6 +12,7 @@ type Allocation={quantity_allocated:number;agreed_unit_price:number;status:strin
 type Listing={produce_name:string;status:string;quantity_available:number;quantity_sold:number;reserved_quantity:number;unit:string;asking_price:number;currency:string;locality:string};
 type LedgerEntry={entry_type:string;amount:number;entry_date:string;payment_status:string;entry_source:string;related_order_id:string|null;related_allocation_id:string|null};
 type Subscription={plan:string;status:string;current_period_end:string|null};
+type BookkeepingStats={total_income:number;total_expenses:number;net_profit:number;unpaid_income:number;cash_position:number;paid_income:number;months:{key:string;label:string;income:number;expenses:number}[]};
 const names:Record<(typeof codes)[number],string>={en:"English",ve:"Tshivenda",ts:"itsonga",nso:"Sepedi",zu:"isiZulu",xh:"isiXhosa",af:"Afrikaans",tn:"Setswana",st:"Sesotho",ss:"siSwati",nr:"isiNdebele"};
 const fallback:Record<(typeof codes)[number],{orders:string;sales:string;listings:string;farming:string;general:string;none:string}>={
 en:{orders:"Your recent buyer orders",sales:"Your seller activity",listings:"Your listings",farming:"For safer crop advice, tell me the crop, growth stage, symptoms, locality and when the problem started. I will not guess a pesticide or dose.",general:"I can help with your marketplace activity and practical farming questions. Ask about your orders, sales, listings, crops, pests or irrigation.",none:"No matching activity is visible in the records available to your account."},
@@ -35,7 +36,7 @@ function isRateLimited(userId:string){
  if(requestWindows.size>5000){for(const [key,value] of requestWindows){if(now-value.start>=60_000)requestWindows.delete(key);}}
  return window.count>20;
 }
-function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[],ledger:LedgerEntry[],subscription:Subscription|null,activeListingCount:number){
+function localReply(lang:(typeof codes)[number],message:string,orders:Order[],allocations:Allocation[],listings:Listing[],ledger:LedgerEntry[],subscription:Subscription|null,activeListingCount:number,bookkeepingStats:BookkeepingStats){
  const t=fallback[lang],q=message.toLowerCase();
  if(/order|orders|status|oda|doda|tioda|diotara|ama-oda|ii-odolo|bestelling|bestellings/.test(q)){
   const rows=orders.slice(0,6).map(o=>{
@@ -46,15 +47,13 @@ function localReply(lang:(typeof codes)[number],message:string,orders:Order[],al
   return `${t.orders}:\n${rows.length?rows.join("\n"):t.none}\nA date is shown only when the order has a saved schedule.`;
  }
  if(/sale|sales|sold|revenue|income|profit|sell|thengiso|xavisa|thekišo|thekiso|ukuthengisa|intengiso|verkoop/.test(q)){
-  const now=new Date(),monthParts=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Johannesburg",year:"numeric",month:"2-digit"}).format(now),monthStart=monthParts+"-01";
+  const now=new Date(),parts=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Johannesburg",year:"numeric",month:"2-digit"}).formatToParts(now),monthKey=`${parts.find(x=>x.type==="year")?.value}-${parts.find(x=>x.type==="month")?.value}`;
   const monthOnly=/this month|monthly|month|month-to-date|ngweti|kgwedi|maand|inyanga/.test(q);
-  const inScope=(e:LedgerEntry)=>!monthOnly||e.entry_date>=monthStart;
-  const income=ledger.filter(e=>e.entry_type==="income"&&inScope(e));
-  const paid=income.filter(e=>e.payment_status==="paid").reduce((s,e)=>s+Number(e.amount),0);
-  const unpaid=income.filter(e=>e.payment_status==="unpaid").reduce((s,e)=>s+Number(e.amount),0);
-  const completed=income.filter(e=>e.entry_source==="fulfilled_order").reduce((s,e)=>s+Number(e.amount),0);
-  const expenses=ledger.filter(e=>e.entry_type==="expense"&&inScope(e)).reduce((s,e)=>s+Number(e.amount),0);
-  return `${t.sales} (${monthOnly?"this month":"all recorded dates"}):\n• Recorded income: ${money(paid+unpaid)}\n• Marked paid: ${money(paid)}\n• Marked unpaid: ${money(unpaid)}\n• Automatically recorded fulfilled-order sales included above: ${money(completed)}\n• Recorded expenses: ${money(expenses)}\nThese are bookkeeping records, not independently verified bank receipts or profit. Accepted but unfulfilled allocations are not counted as completed sales.`;
+  const monthStats=bookkeepingStats.months.find(x=>x.key===monthKey);
+  const income=monthOnly?Number(monthStats?.income??0):Number(bookkeepingStats.total_income??0);
+  const expenses=monthOnly?Number(monthStats?.expenses??0):Number(bookkeepingStats.total_expenses??0);
+  const paymentBreakdown=monthOnly?"Monthly aggregate does not split paid and unpaid entries.":`Marked paid: ${money(Number(bookkeepingStats.paid_income??0))}; marked unpaid: ${money(Number(bookkeepingStats.unpaid_income??0))}.`;
+  return `${t.sales} (${monthOnly?"this month":"all recorded dates"}):\n• Recorded income: ${money(income)}\n• Recorded expenses: ${money(expenses)}\n• ${paymentBreakdown}\nThese are bookkeeping records, not independently verified bank receipts or profit. Completed marketplace allocations are automatically entered as unpaid income until payment is marked received; manual income may also be included.`;
  }
  if(/listing|listings|stock|produce|harvest|zwibveledzwa|swibyariwa|ditšweletšwa|imikhiqizo|iimveliso|aanbieding/.test(q)){
   const active=listings.filter(l=>l.status==="active");
@@ -72,28 +71,31 @@ export async function POST(req:Request){
  const supabase=await createClient(),auth=await supabase.auth.getUser(),user=auth.data.user;
  if(auth.error||!user)return NextResponse.json({error:"Sign in to use your private Agric Assistant."},{status:401});
  if(isRateLimited(user.id))return NextResponse.json({error:"You have reached the assistant request limit. Please wait a minute and try again."},{status:429});
- const [p,o,a,l,b,s]=await Promise.all([
+ const statsPromise=(supabase as any).rpc("get_bookkeeping_dashboard_stats");
+ const [p,o,a,l,b,s,n,stats]=await Promise.all([
   supabase.from("profiles").select("display_name,role,locality,municipality,district,preferred_language").eq("id",user.id).maybeSingle(),
   supabase.from("orders").select("id,status,quantity_agreed,unit,unit_price,currency,created_at,fulfilment_state,fulfilment_method,scheduled_start,scheduled_end,collection_window_start,collection_window_end,fulfilment_location,listing:produce_listings(produce_name,locality)").eq("buyer_id",user.id).order("created_at",{ascending:false}).limit(20),
   supabase.from("order_allocations").select("quantity_allocated,agreed_unit_price,status,order:orders(id,status,currency,fulfilment_state,fulfilment_method,scheduled_start,scheduled_end,fulfilment_location),listing:produce_listings(produce_name)").eq("farmer_id",user.id).order("order_id",{ascending:false}).limit(50),
   supabase.from("produce_listings").select("produce_name,status,quantity_available,quantity_sold,reserved_quantity,unit,asking_price,currency,locality").eq("farmer_id",user.id).order("updated_at",{ascending:false}).limit(50),
   supabase.from("farm_bookkeeping_entries").select("entry_type,amount,entry_date,payment_status,entry_source,related_order_id,related_allocation_id").eq("owner_id",user.id).order("entry_date",{ascending:false}).limit(250),
   supabase.from("farmer_subscriptions").select("plan,status,current_period_end").eq("farmer_id",user.id).in("status",["active","trialing"]).gt("current_period_end",new Date().toISOString()).order("current_period_end",{ascending:false}).limit(1).maybeSingle(),
-  supabase.from("produce_listings").select("id",{count:"exact",head:true}).eq("farmer_id",user.id).eq("status","active")
+  supabase.from("produce_listings").select("id",{count:"exact",head:true}).eq("farmer_id",user.id).eq("status","active"),
+  statsPromise
  ]);
- const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[],ledger=(b.data??[]) as unknown as LedgerEntry[],subscription=(s.data??null) as Subscription|null,activeListingCount=n.count??0;
- if(o.error||a.error||l.error||b.error||s.error||n.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
+ const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[],ledger=(b.data??[]) as unknown as LedgerEntry[],subscription=(s.data??null) as Subscription|null,activeListingCount=n.count??0,bookkeepingStats=(stats.data??{total_income:0,total_expenses:0,net_profit:0,unpaid_income:0,cash_position:0,paid_income:0,months:[]}) as BookkeepingStats;
+ if(o.error||a.error||l.error||b.error||s.error||n.error||stats.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
  const lang=input.data.language;
  const locality=[profile?.locality,profile?.municipality,profile?.district].filter(Boolean).join(", ");
  const knowledge=searchAgriculturalKnowledge(input.data.message,locality);
- const reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription,activeListingCount);
+ const reply=localReply(lang,input.data.message,orders,allocations,listings,ledger,subscription,activeListingCount,bookkeepingStats);
  const fallbackReply=reply+(knowledge.length&&lang==="en"?"\n\nRelevant verified sources:\n"+knowledge.map(x=>`• ${x.title} (${x.publicationDate}) — ${x.sourceUrl}`).join("\n"):"");
  const sources=knowledge.map(x=>({title:x.title,url:x.sourceUrl,publicationDate:x.publicationDate}));
  const context={profile:profile?{name:profile.display_name,role:profile.role,preferredLanguage:profile.preferred_language,locality}:null,
  buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency,fulfilmentState:x.fulfilment_state,fulfilmentMethod:x.fulfilment_method,scheduledStart:x.scheduled_start,scheduledEnd:x.scheduled_end,collectionWindowStart:x.collection_window_start,collectionWindowEnd:x.collection_window_end})),
  sellerAllocations:allocations.map(x=>({status:x.status,orderStatus:x.order?.status,fulfilmentState:x.order?.fulfilment_state,scheduledStart:x.order?.scheduled_start,crop:x.listing?.produce_name,quantity:x.quantity_allocated,unitPrice:x.agreed_unit_price,currency:x.order?.currency??"ZAR"})),
  listings:listings.map(x=>({crop:x.produce_name,status:x.status,available:Math.max(0,x.quantity_available-x.quantity_sold-x.reserved_quantity),sold:x.quantity_sold,unit:x.unit,askingPrice:x.asking_price,currency:x.currency})),
- bookkeeping:ledger.map(x=>({type:x.entry_type,amount:x.amount,date:x.entry_date,paymentStatus:x.payment_status,source:x.entry_source})),
+ bookkeeping:ledger.slice(0,100).map(x=>({type:x.entry_type,amount:x.amount,date:x.entry_date,paymentStatus:x.payment_status,source:x.entry_source})),
+ bookkeepingSummary:bookkeepingStats,
  subscription:subscription?{plan:subscription.plan,status:subscription.status,currentPeriodEnd:subscription.current_period_end}:null,
  listingLimits:{free:10,pro:50,premium:200,activeListings:activeListingCount},
  agriculturalKnowledge:knowledge.map(x=>({title:x.title,topic:x.topic,cropCategory:x.cropCategory,geographicRelevance:x.geographicRelevance,source:x.source,sourceUrl:x.sourceUrl,publicationDate:x.publicationDate,lastVerifiedAt:x.lastVerifiedAt,summary:x.summary,caution:x.caution??null}))};
