@@ -21,6 +21,21 @@ describe("searchAgriculturalKnowledge", () => {
     expect(seasonal?.summary).toContain("not a forecast");
   });
 
+  it("retrieves Limpopo spinach production guidance", () => {
+    const results = searchAgriculturalKnowledge("spinach soil drainage acidity planting", "Vhembe, Limpopo");
+    expect(results[0]?.id).toBe("ldard-spinach-limpopo");
+  });
+
+  it("retrieves ARC poultry production guidance", () => {
+    const results = searchAgriculturalKnowledge("poultry broiler housing chicks brooding", "Limpopo");
+    expect(results.some((item) => item.id === "arc-poultry-beginners")).toBe(true);
+  });
+
+  it("retrieves local livestock record-keeping guidance", () => {
+    const results = searchAgriculturalKnowledge("cattle livestock breeding records grazing", "Limpopo");
+    expect(results.some((item) => item.id === "ldard-livestock-recordkeeping")).toBe(true);
+  });
+
   it("returns no documents for unrelated questions", () => {
     expect(searchAgriculturalKnowledge("how do I reset my password")).toEqual([]);
   });
