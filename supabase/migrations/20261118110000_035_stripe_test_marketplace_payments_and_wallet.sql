@@ -58,8 +58,8 @@ drop policy if exists "order participants read payment records" on public.order_
 create policy "order participants read payment records"
 on public.order_payments for select to authenticated
 using (
-  exists (select 1 from public.orders o where o.id = order_id and o.buyer_id = (select auth.uid()))
-  or exists (select 1 from public.order_allocations a where a.order_id = order_id and a.farmer_id = (select auth.uid()))
+  exists (select 1 from public.orders o where o.id = order_payments.order_id and o.buyer_id = (select auth.uid()))
+  or exists (select 1 from public.order_allocations a where a.order_id = order_payments.order_id and a.farmer_id = (select auth.uid()))
 );
 drop policy if exists "farmers read own wallet ledger" on public.farmer_wallet_ledger;
 create policy "farmers read own wallet ledger"
