@@ -18,55 +18,53 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.redirect(new URL("/login?next=/orders/" + orderId, request.url), 303);
-  }
+  if (!user) return NextResponse.redirect(new URL("/login?next=/orders/" + orderId, request.url), 303);
 
   const [{ data: sessionData }, { data: profile }] = await Promise.all([
     supabase.auth.getSession(),
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
   ]);
   const accessToken = sessionData.session?.access_token;
-  if (!accessToken || profile?.role !== "buyer") {
-    return redirectToOrder(request, orderId, "?payment_error=buyer_only");
-  }
+  if (!accessToken || profile?.role !== "buyer") return redirectToOrder(request, orderId, "?payment_error=buyer_only");
 
   const { data: order } = await supabase.from("orders")
     .select("id,buyer_id,status,currency,delivery_confirmed_at")
     .eq("id", orderId)
     .eq("buyer_id", user.id)
     .maybeSingle();
-
   if (!order) return redirectToOrder(request, orderId, "?payment_error=order_not_found");
   if (!["accepted", "fulfilled"].includes(order.status) || order.delivery_confirmed_at) {
     return redirectToOrder(request, orderId, "?payment_error=order_not_payable");
   }
   if (order.currency !== "ZAR") return redirectToOrder(request, orderId, "?payment_error=unsupported_currency");
 
-  const integrationUrl = process.env.INTEGRATION_API_URL?.replace(/\/+$/, "");
-  if (!integrationUrl || !integrationUrl.startsWith("https://")) {
+  const integrationUrl = process.env.RENDER_INTEGRATION_URL?.replace(/\/+$/, "");
+  const integrationToken = process.env.AGRIC_CONNECT_INTERNAL_TOKEN;
+  if (!integrationUrl || !integrationUrl.startsWith("https://") || !integrationToken) {
     return redirectToOrder(request, orderId, "?payment_error=payment_service_unavailable");
   }
 
   try {
-    const response = await fetch(integrationUrl + "/payments/checkout", {
+    const response = await fetch(integrationUrl + "/v1/checkout/orders/" + orderId, {
       method: "POST",
       headers: {
         Authorization: "Bearer " + accessToken,
+        "X-Integration-Token": integrationToken,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ order_id: orderId, payment_kind: paymentKind }),
+      body: JSON.stringify({ payment_kind: paymentKind }),
       cache: "no-store",
     });
     const result = await response.json() as { status?: string; checkout_url?: string };
-
-    if (response.ok && result.status === "open" && result.checkout_url?.startsWith("https://checkout.stripe.com/")) {
-      return NextResponse.redirect(result.checkout_url, 303);
+    if (response.ok && result.status === "open" && result.checkout_url) {
+      const checkoutUrl = new URL(result.checkout_url);
+      if (checkoutUrl.protocol === "https:" && checkoutUrl.hostname === "checkout.stripe.com") {
+        return NextResponse.redirect(checkoutUrl, 303);
+      }
     }
     if (response.ok && ["paid", "processing"].includes(result.status || "")) {
       return redirectToOrder(request, orderId, "?payment=processing");
     }
-
     console.error("Render marketplace Checkout adapter returned", response.status);
     return redirectToOrder(request, orderId, "?payment_error=checkout_failed");
   } catch (error) {
