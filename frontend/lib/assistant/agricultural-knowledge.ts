@@ -304,7 +304,53 @@ export const agriculturalKnowledge: AgriculturalKnowledgeDocument[] = [
     summary: "SANBI PlantZAfrica explains that Aloe propagation differs by species. General methods include sowing fresh seed in a free-draining medium, lightly covering it, protecting young seedlings from harsh sun and excess water, and using offsets or cuttings for species that produce them. Confirm the exact species and its conservation status before collecting or trading seed and cuttings. These horticultural notes do not establish medicinal efficacy or safe medicinal use.",
     keywords: ["Aloe", "Aloe arborescens", "Aloe ferox", "aloe propagation", "indigenous herbs", "succulent", "seed", "cuttings", "offsets", "SANBI", "PlantZAfrica"]
   },
-];
+
+  {
+    id: "sanbi-mutavhatsindi-conservation",
+    title: "Mutavhatsindi (Brackenridgea zanguebarica): Conservation Status",
+    topic: "rare medicinal plant identification, conservation and propagation limits",
+    cropCategory: "threatened indigenous medicinal plant",
+    geographicRelevance: ["Mafukani", "Mutale", "Vhembe", "Limpopo", "South Africa"],
+    language: "en",
+    source: "South African National Biodiversity Institute, PlantZAfrica",
+    sourceUrl: "https://plantzafrica.com/plantab/brackenzang.html",
+    publicationDate: "2011-04",
+    lastVerifiedAt: "2026-11-18",
+    verificationStatus: "verified",
+    summary: "SANBI PlantZAfrica identifies Brackenridgea zanguebarica (Mutavhatsindi) as critically endangered in South Africa, with a small population at Mafukani in Vhembe. The profile reports severe decline associated with bark and root removal and says propagation attempts have not succeeded; further research is needed. This is a conservation warning, not a home-propagation recipe. Do not collect wild bark, roots, seed or seedlings; any recovery work must be authorised and community-led.",
+    keywords: ["Mutavhatsindi", "Brackenridgea zanguebarica", "Mafukani", "Mutale", "Vhembe", "rare herb", "critically endangered", "medicinal plant", "conservation", "propagation"]
+  },
+  {
+    id: "sanbi-buddleja-salviifolia",
+    title: "Buddleja salviifolia: Growing an Indigenous Sagewood",
+    topic: "indigenous plant propagation from seed and cuttings",
+    cropCategory: "indigenous shrub",
+    geographicRelevance: ["South Africa", "Northern South Africa", "Limpopo"],
+    language: "en",
+    source: "South African National Biodiversity Institute, PlantZAfrica",
+    sourceUrl: "https://plantzafrica.com/plantab/buddlsalv.html",
+    publicationDate: "2001-07",
+    lastVerifiedAt: "2026-11-18",
+    verificationStatus: "verified",
+    summary: "SANBI PlantZAfrica describes Buddleja salviifolia as propagable from seed and cuttings. The profile describes hardwood cuttings rooted in washed river sand kept moist for several weeks, and fine seed raised in a fine seedling mix with careful watering from below. Protect young plants from frost during their first season. Confirm the species and adapt planting time to local conditions; traditional-use records do not establish medical safety or efficacy.",
+    keywords: ["Buddleja salviifolia", "sagewood", "indigenous shrub", "traditional herb", "seed", "cuttings", "propagation", "river sand", "Limpopo"]
+  },
+  {
+    id: "sanbi-crotalaria-natalitia",
+    title: "Crotalaria natalitia: Seed Propagation and Legume Use",
+    topic: "indigenous legume cultivation, seed sowing and soil fertility",
+    cropCategory: "indigenous legume",
+    geographicRelevance: ["Northern South Africa", "Limpopo", "Mpumalanga", "South Africa"],
+    language: "en",
+    source: "South African National Biodiversity Institute, PlantZAfrica",
+    sourceUrl: "https://plantzafrica.com/plantcd/crotalarianatnat.html",
+    publicationDate: "2012-08",
+    lastVerifiedAt: "2026-11-18",
+    verificationStatus: "verified",
+    summary: "SANBI PlantZAfrica describes Crotalaria natalitia var. natalitia as readily propagated from seed and suited to warm conditions. The profile notes its potential use in rotations or intercropping with finger millet and maize due to its legume nitrogen-fixing capacity. Its specific sowing and spacing details apply to this species and should not be transferred to other Crotalaria species. Confirm local suitability and do not assume medicinal or livestock-feed safety.",
+    keywords: ["Crotalaria natalitia", "indigenous legume", "seed sowing", "nitrogen fixation", "green manure", "finger millet", "maize", "traditional crop", "soil fertility"]
+  },
+ ];
 
 const STOP_WORDS = new Set(["the", "and", "for", "with", "what", "when", "how", "should", "can", "my", "in", "to", "a", "is", "of", "on", "me", "please"]);
 
