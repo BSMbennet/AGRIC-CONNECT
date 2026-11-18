@@ -30,7 +30,7 @@ nr:["Umsizi Wezolimo","Umsizi wepulazi nemakethe","Lotjha! Buza ngama-oda, ukuth
 };
 export function AssistantWidget({initialLanguage="en"}:{initialLanguage?:string}) {
  const router=useRouter();
- const [lang,setLang]=useState<Lang>(languages.some(x=>x[0]===initialLanguage)?initialLanguage as Lang:"en");
+ const [lang,setLang]=useState<Lang>(initialLanguage==="tsh"?"ve":languages.some(x=>x[0]===initialLanguage)?initialLanguage as Lang:"en");
  const [signedIn,setSignedIn]=useState<boolean|null>(null),[open,setOpen]=useState(false),[messages,setMessages]=useState<Msg[]>([]);
  const [draft,setDraft]=useState(""),[busy,setBusy]=useState(false),[listening,setListening]=useState(false),[notice,setNotice]=useState("");
  const speech=useRef<Speech|null>(null), t=words[lang], locale=useMemo(()=>languages.find(x=>x[0]===lang)?.[2]??"en-ZA",[lang]);
