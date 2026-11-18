@@ -1,39 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root { color-scheme: light; }
-* { box-sizing: border-box; }
-html, body { min-height: 100%; }
-body { margin: 0; background: #F7F8F2; color: #17251D; font-family: Arial, Helvetica, sans-serif; }
-button, input { font: inherit; }
-::selection { background: #DCEBDD; color: #174B35; }
-
-/* Design tokens: forest, leaf, earth, cream, gold */
-:root{--forest:#174B35;--leaf:#2F7D4B;--earth:#7A5230;--cream:#F7F8F2;--gold:#C9A24A;--scene:url("/agricultural-landscape.svg")}
-body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-
-/* Per-page agricultural scene. Small original SVGs; overlay keeps text readable. */
-.agri-page{
-  background-color:#f7faf7;
-  background-image:linear-gradient(rgba(247,250,247,.88),rgba(247,250,247,.94)),var(--scene);
-  background-position:center,center;background-size:cover,cover;background-attachment:scroll,fixed;
-  min-height:100vh;
-}
-@media (max-width:640px){.agri-page{background-attachment:scroll,scroll}}
-.scene-fields{--scene:url("/scenes/fields.svg")}
-.scene-market{--scene:url("/scenes/market.svg")}
-.scene-irrigation{--scene:url("/scenes/irrigation.svg")}
-.scene-harvest{--scene:url("/scenes/harvest.svg")}
-.scene-community{--scene:url("/scenes/community.svg")}
-.scene-knowledge{--scene:url("/scenes/knowledge.svg")}
-
-/* Subtle background drift; disabled for reduced motion and small screens */
-@media (min-width:641px) and (prefers-reduced-motion:no-preference){
-  .agri-page{animation:scene-drift 40s ease-in-out infinite alternate}
-}
-@keyframes scene-drift{from{background-position:center,48% 50%}to{background-position:center,52% 50%}}
-.card-lift{transition:transform .2s ease,box-shadow .2s ease}
-.card-lift:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(23,75,53,.12)}
-@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.card-lift:hover{transform:none}}
-:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+:root{color-scheme:light;--forest:#103D2B;--leaf:#39A96B;--lime:#B5D957;--cream:#F5F7F0;--ink:#17231D;--gold:#C9A24A;--scene:url("/agricultural-landscape.svg")}
+*{box-sizing:border-box}html,body{min-height:100%}html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;text-rendering:optimizeLegibility}
+button,input,select,textarea{font:inherit}::selection{background:#DCEBDD;color:var(--forest)}:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.agri-page{min-height:100vh;background-color:var(--cream);background-image:linear-gradient(rgba(245,247,240,.90),rgba(245,247,240,.94)),var(--scene);background-position:center,center;background-size:cover,cover;background-attachment:scroll,fixed}
+.scene-fields{--scene:url("/scenes/fields.svg")}.scene-market{--scene:url("/scenes/market.svg")}.scene-irrigation{--scene:url("/scenes/irrigation.svg")}.scene-harvest{--scene:url("/scenes/harvest.svg")}.scene-community{--scene:url("/scenes/community.svg")}.scene-knowledge{--scene:url("/scenes/knowledge.svg")}
+.hero-future{position:relative;overflow:hidden;color:#fff;background-color:var(--forest);background-image:linear-gradient(90deg,rgba(8,35,24,.94) 0%,rgba(10,47,31,.86) 47%,rgba(13,57,36,.48) 100%),url("/agri-hero.svg");background-position:center;background-size:cover}
+.hero-future::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 78% 24%,rgba(181,217,87,.22),transparent 27%),linear-gradient(180deg,transparent 70%,rgba(8,35,24,.28))}
+.hero-future>*{position:relative;z-index:1}.hero-panel{border:1px solid rgba(255,255,255,.22);background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.07));box-shadow:0 24px 70px rgba(0,0,0,.18);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.hero-chip{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
+.market-hero{color:white;background-color:var(--forest);background-image:linear-gradient(90deg,rgba(8,35,24,.92),rgba(10,47,31,.76)),url("/agri-hero.svg");background-size:cover;background-position:center 55%}
+.card-lift{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}.card-lift:hover{transform:translateY(-3px);border-color:rgba(57,169,107,.4);box-shadow:0 18px 42px rgba(16,61,43,.12)}
+.dashboard-disclosure{overflow:hidden;border:1px solid rgba(16,61,43,.10);border-radius:1.25rem;background:rgba(255,255,255,.96);box-shadow:0 8px 28px rgba(16,61,43,.045)}
+.dashboard-disclosure>summary{display:flex;min-height:58px;cursor:pointer;list-style:none;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1.1rem;color:var(--forest);font-size:.9rem;font-weight:700}
+.dashboard-disclosure>summary::-webkit-details-marker{display:none}.dashboard-disclosure>summary::after{content:"+";display:grid;width:1.7rem;height:1.7rem;flex:0 0 auto;place-items:center;border-radius:999px;background:#EEF5E9;color:var(--forest);font-size:1.1rem}
+.dashboard-disclosure[open]>summary::after{content:"−"}.dashboard-disclosure[open]>summary{border-bottom:1px solid rgba(16,61,43,.08)}.dashboard-disclosure>:not(summary){margin-left:1rem;margin-right:1rem}
+.reveal-up{animation:reveal-up .65s cubic-bezier(.2,.7,.2,1) both}.reveal-delay-1{animation-delay:.08s}.reveal-delay-2{animation-delay:.16s}.reveal-delay-3{animation-delay:.24s}
+@keyframes reveal-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1023px){body{padding-bottom:76px}}@media(max-width:640px){.agri-page{background-attachment:scroll,scroll}.hero-future{background-position:58% center}.dashboard-disclosure>:not(summary){margin-left:.75rem;margin-right:.75rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.card-lift:hover{transform:none}}
