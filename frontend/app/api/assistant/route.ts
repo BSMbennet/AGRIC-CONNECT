@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
         model,
         temperature: 0.2,
         max_tokens: 900,
+        stream: false,
+        chat_template_kwargs: { enable_thinking: false },
         messages: [
           { role: "system", content: system + "\n\n" + context },
           ...messages,
