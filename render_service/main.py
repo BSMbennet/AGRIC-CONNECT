@@ -140,7 +140,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SECRET_KEY") or os.getenv("SUPABASE_S
 SUPABASE_PUBLISHABLE_KEY = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") or SUPABASE_SERVICE_KEY
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "").rstrip("/")
+FRONTEND_BASE_URL = (os.getenv("AGRICNORTHX_APP_URL") or os.getenv("FRONTEND_BASE_URL", "")).rstrip("/")
 PROVIDER_WEBHOOK_SECRET = os.getenv("PROVIDER_WEBHOOK_SECRET", "")
 STRIPE_API_BASE = "https://api.stripe.com"
 STRIPE_API_VERSION = "2026-10-28.endive"
@@ -522,53 +522,16 @@ async def create_order_checkout(order_id: str, request: Request) -> dict[str, st
     if not payment_id or amount_minor < 50 or currency != "zar":
         raise HTTPException(status_code=502, detail="The payment amount could not be verified")
 
-    app_url = config["AGRICNORTHX_APP_URL"].rstrip("/")
-    params: dict[str, Any] = {
-        "mode": "payment",
-        "line_items": [{
-            "price_data": {
-                "currency": currency,
-                "unit_amount": amount_minor,
-                "product_data": {"name": "AgricNorthX order " + payment_kind},
-            },
-            "quantity": 1,
-        }],
-        "success_url": app_url + "/orders/" + order_id + "?payment=returned&session_id={CHECKOUT_SESSION_ID}",
-        "cancel_url": app_url + "/orders/" + order_id + "?payment=cancelled",
-        "client_reference_id": str(user["id"]),
-        "metadata": {
-            "payment_id": payment_id,
-            "order_id": order_id,
-            "buyer_id": str(user["id"]),
-            "payment_kind": payment_kind,
-        },
-        "payment_intent_data": {
-            "metadata": {"payment_id": payment_id, "order_id": order_id},
-        },
-        "integration_identifier": _integration_identifier("order", payment_id),
-    }
+    payment = get_order_payment(payment_id)
+    if not payment:
+        raise HTTPException(status_code=502, detail="The payment attempt could not be loaded")
 
-    stripe_client = StripeClient(stripe_key)
-    try:
-        session = await stripe_client.v1.checkout.sessions.create_async(
-            params=params,
-            options={"idempotency_key": "agricnorthx-checkout-" + payment_id},
-        )
-    except Exception as exc:
-        # Keep the attempt pending after an ambiguous network/API failure. Stripe
-        # idempotency lets a retry recover the same Checkout Session safely.
-        raise HTTPException(status_code=502, detail="Stripe could not create the test payment Checkout Session") from exc
-
-    session_id = getattr(session, "id", None)
-    checkout_url = getattr(session, "url", None)
-    if not session_id or not checkout_url:
-        raise HTTPException(status_code=502, detail="Stripe did not return a payment Checkout URL")
-
-    await _admin_patch_payment(config, payment_id, {
-        "stripe_checkout_session_id": session_id,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    })
-    return {"checkout_url": checkout_url}
+    checkout = create_order_checkout_session(payment, order_id, user)
+    if checkout.get("status") == "open" and checkout.get("checkout_url"):
+        return {"status": "open", "checkout_url": str(checkout["checkout_url"])}
+    if checkout.get("status") in ("paid", "processing"):
+        return {"status": str(checkout["status"])}
+    raise HTTPException(status_code=502, detail="Stripe did not return a usable Checkout Session")
 
 
 @app.post("/webhooks/stripe")
