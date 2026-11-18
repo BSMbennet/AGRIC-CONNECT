@@ -46,3 +46,24 @@ describe("reports", () => {
     expect(csv).toContain('"a,b"');
   });
 });
+
+import { cumulative, cropMargins, collectionRate, monthlyNet, profitMargin, topCounterparties } from "../../lib/bookkeeping/reports";
+describe("premium analytics", () => {
+  const t = [
+    tx({ occurred_on: "2026-10-05", amount: 1000, amount_settled: 600, counterparty: "Spar", crop: "Tomatoes" }),
+    tx({ occurred_on: "2026-11-05", amount: 500, amount_settled: 500, counterparty: "spar ", crop: "Tomatoes" }),
+    tx({ kind: "expense", category: "seeds", occurred_on: "2026-11-06", amount: 200, amount_settled: 200, crop: "Tomatoes", counterparty: "AgriSupply" }),
+  ];
+  it("computes monthly net and cumulative profit", () => {
+    const n = monthlyNet(t, "2026-11", 2);
+    expect(n.map((x) => x.net)).toEqual([1000, 300]);
+    expect(cumulative(n).map((x) => x.value)).toEqual([1000, 1300]);
+  });
+  it("computes margin without dividing by zero", () => {
+    expect(profitMargin(1500, 1300)).toBe(86.7);
+    expect(profitMargin(0, -50)).toBeNull();
+  });
+  it("computes the share of income already collected", () => expect(collectionRate(t)).toBe(73.3));
+  it("groups buyers case-insensitively and ranks them", () => expect(topCounterparties(t, "income")).toEqual([{ name: "Spar", amount: 1500 }]));
+  it("gives crop margins", () => expect(cropMargins(t)[0]).toMatchObject({ crop: "tomatoes", net: 1300, margin: 86.7 }));
+});

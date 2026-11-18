@@ -84,3 +84,43 @@ export function toCsv(txs: Tx[], labels: Record<string, string>): string {
   const rows = txs.map((t) => [t.occurred_on, t.kind, labels[t.category] ?? t.category, t.amount.toFixed(2), t.amount_settled.toFixed(2), fromCents(toCents(t.amount) - toCents(t.amount_settled)).toFixed(2), t.payment_method, t.crop, t.counterparty, t.notes]);
   return "﻿" + [head, ...rows].map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
 }
+
+/* ---------- Premium analytics (all derived from the user's own recorded entries) ---------- */
+
+export function monthlyNet(txs: Tx[], endMonth: string, months = 12) {
+  return monthlyTrend(txs, endMonth, months).map((m) => ({ ...m, net: fromCents(toCents(m.income) - toCents(m.expense)) }));
+}
+
+/** Running total of monthly profit. */
+export function cumulative(series: { month: string; net: number }[]) {
+  let run = 0;
+  return series.map((s) => { run += toCents(s.net); return { month: s.month, value: fromCents(run) }; });
+}
+
+/** Profit as a percentage of money in; null when there is no income to divide by. */
+export function profitMargin(income: number, net: number): number | null {
+  return income > 0 ? Math.round((net / income) * 1000) / 10 : null;
+}
+
+/** Share of recorded income already paid by buyers; null when no income. */
+export function collectionRate(txs: Tx[]): number | null {
+  let total = 0, settled = 0;
+  for (const t of txs) if (t.kind === "income") { total += toCents(t.amount); settled += toCents(t.amount_settled); }
+  return total > 0 ? Math.round((settled / total) * 1000) / 10 : null;
+}
+
+export function topCounterparties(txs: Tx[], kind: "income" | "expense", limit = 5) {
+  const m = new Map<string, { name: string; c: number }>();
+  for (const t of txs) {
+    if (t.kind !== kind || !t.counterparty) continue;
+    const key = t.counterparty.trim().toLowerCase();
+    const row = m.get(key) ?? { name: t.counterparty.trim(), c: 0 };
+    row.c += toCents(t.amount); m.set(key, row);
+  }
+  return [...m.values()].map((r) => ({ name: r.name, amount: fromCents(r.c) })).sort((a, b) => b.amount - a.amount).slice(0, limit);
+}
+
+/** Per-crop margin: net / income for crops that have income. */
+export function cropMargins(txs: Tx[]) {
+  return cropPerformance(txs).map((c) => ({ ...c, margin: profitMargin(c.income, c.net) }));
+}

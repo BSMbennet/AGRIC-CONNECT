@@ -52,6 +52,7 @@ export default async function BookkeepingPage({ searchParams }: { searchParams: 
           <div className="flex flex-wrap gap-2">
             <Link href="/bookkeeping/new" className="rounded-xl bg-forest px-4 py-2 text-sm font-bold text-white">Add entry</Link>
             <a href={`/bookkeeping/export?period=${period}`} className="rounded-xl border border-forest px-4 py-2 text-sm font-bold text-forest">Download for Excel (CSV)</a>
+            <Link href="/bookkeeping/insights" className="rounded-xl bg-gold px-4 py-2 text-sm font-bold text-forest">✦ Profit insights (Pro)</Link>
             <Link href={`/bookkeeping/report?period=${period}`} className="rounded-xl border border-forest px-4 py-2 text-sm font-bold text-forest">Printable report</Link>
           </div>
         </div>
