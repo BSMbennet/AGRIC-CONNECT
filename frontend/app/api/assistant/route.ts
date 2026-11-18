@@ -169,14 +169,25 @@ export async function POST(request: NextRequest) {
   if (request.headers.get("sec-fetch-site") === "cross-site") {
     return fail("Cross-site assistant requests are not allowed.", 403);
   }
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return fail("Send assistant messages as JSON.", 415);
+  }
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > 16_384) return fail("Your message is too large. Please shorten it and try again.", 413);
+  const rawBody = await request.text().catch(() => "");
+  if (rawBody.length > 16_384) return fail("Your message is too large. Please shorten it and try again.", 413);
+  let body: unknown;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return fail("Send a valid JSON message and try again.", 400);
+  }
 
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return fail("Sign in to use the AgricNorthX assistant.", 401);
 
-  const parsed = requestSchema.safeParse(await request.json().catch(() => null));
+  const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return fail("Send a valid message and try again.", 400);
   const latest = [...parsed.data.messages].reverse().find((message) => message.role === "user");
   if (!latest) return fail("Ask a question to continue.", 400);
