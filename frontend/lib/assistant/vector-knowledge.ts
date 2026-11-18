@@ -91,7 +91,7 @@ export async function searchVectorAgriculturalKnowledge(
   const payload=await response.json() as {data?:Array<{embedding?:number[]}>};
   const embedding=payload.data?.[0]?.embedding;
   if(!embedding||embedding.length!==1024||embedding.some(value=>!Number.isFinite(value)))return searchApprovedFullText(client,query,limit);
-  const localityTag=locality.split(",")[0]?.trim()||null;
+  const localityTag=locality.split(",").at(-1)?.trim()||null;
   const {data,error}=await client.rpc("match_agri_knowledge_chunks",{
     query_embedding:embedding,match_count:Math.max(1,Math.min(limit,8)),
     locality_filter:localityTag,crop_filter:null
