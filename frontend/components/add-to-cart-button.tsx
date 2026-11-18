@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-export function AddToCartButton({listingId, disabled=false}:{listingId:string;disabled?:boolean}) {
+export function AddToCartButton({listingId, sellerId, currentUserId, disabled=false}:{listingId:string;sellerId?:string|null;currentUserId?:string|null;disabled?:boolean}) {
   const [added,setAdded]=useState(false);
+  if (sellerId && currentUserId && sellerId === currentUserId) return <p className="mt-2 rounded-xl bg-slate-100 px-3 py-2.5 text-center text-xs font-semibold text-slate-600">This is your own listing — buyers can add it to their cart.</p>;
   function add() {
     try {
       const current=JSON.parse(localStorage.getItem("agricnorthx-cart")||"[]") as {listing_id:string;quantity:number;request_type:"standard"|"preorder";requested_harvest_date:string|null}[];
