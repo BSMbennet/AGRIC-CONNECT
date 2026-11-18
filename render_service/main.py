@@ -135,9 +135,6 @@ async def _admin_patch_payment(config: dict[str, str], payment_id: str, payload:
             raise HTTPException(status_code=502, detail="Unable to save the payment attempt")
 
 
-@app.get("/")
-async def root() -> dict[str, str]:
-
 SUPABASE_URL = (os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL") or "").rstrip("/")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SECRET_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY") or ""
 SUPABASE_PUBLISHABLE_KEY = os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") or SUPABASE_SERVICE_KEY
