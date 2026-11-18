@@ -9,11 +9,14 @@ const schema=z.object({
   language:z.enum(["en","ve","ts","nso","zu","xh","af","tn","st","ss","nr"])
 });
 const fail=(message:string,status:number)=>NextResponse.json({error:message},{status});
+const windows=new Map<string,{start:number;count:number}>();
+function rateLimited(userId:string){const now=Date.now(),current=windows.get(userId);if(!current||now-current.start>=60_000){windows.set(userId,{start:now,count:1});return false;}current.count+=1;return current.count>10;}
 
 export async function POST(request:NextRequest){
   const supabase=await createClient();
   const {data:{user},error}=await supabase.auth.getUser();
   if(error||!user)return fail("Sign in to use spoken responses.",401);
+  if(rateLimited(user.id))return fail("Spoken responses are limited to ten requests per minute. Please wait and try again.",429);
   let body:unknown;
   try{body=await request.json();}catch{return fail("Invalid speech request.",400);}
   const parsed=schema.safeParse(body);
