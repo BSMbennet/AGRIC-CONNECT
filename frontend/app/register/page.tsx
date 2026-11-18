@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppNav } from "@/components/app-nav";
 import { register } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams;
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-5 py-12">
+    <main className="agri-page min-h-screen"><AppNav/><section className="mx-auto flex min-h-[80vh] max-w-xl flex-col justify-center px-5 py-12">
       <Link href="/" className="mb-8 text-sm font-bold text-forest">← AgricNorthX</Link>
       <div className="rounded-3xl border border-emerald-900/10 bg-white p-7 shadow-soft sm:p-9">
         <h1 className="text-2xl font-bold text-forest">Join the local harvest exchange</h1>
@@ -25,6 +26,6 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
         </form>
         <p className="mt-6 text-center text-sm text-slate-600">Already registered? <Link href="/login" className="font-bold text-leaf">Sign in</Link></p>
       </div>
-    </main>
+    </section></main>
   );
 }
