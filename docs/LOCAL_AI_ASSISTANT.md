@@ -11,9 +11,10 @@ The floating assistant is integrated into the Next.js root layout for authentica
 ## Configure optional AI
 Set server-side environment variables in the existing Vercel project only:
 - AI_ASSISTANT_ENABLED=true
-- NVIDIA_NIM_API_KEY (secret; never expose as NEXT_PUBLIC)
-- NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
-- NVIDIA_NIM_MODEL=<the exact model identifier enabled for your account>
+- AI_ASSISTANT_API_KEY (secret; never expose as NEXT_PUBLIC)
+- AI_ASSISTANT_BASE_URL (OpenAI-compatible chat completions base URL)
+- AI_ASSISTANT_MODEL (exact model identifier)
+- NVIDIA_NIM_API_KEY, NVIDIA_NIM_BASE_URL and NVIDIA_NIM_MODEL remain supported as backward-compatible aliases for NVIDIA NIM.
 
 No paid service, GPU, subscription, or infrastructure is provisioned by this code. Without these settings the assistant still answers marketplace activity from the signed-in user's own records; generative agronomy answers are not enabled. When NIM is enabled, the configured provider receives a minimized account context (crop/listing names, order status, quantities, order values, role and locality) with the user's message. Phone numbers, buyer contact details and private fulfilment instructions are excluded. Review the selected provider's data terms before enabling it.
 
