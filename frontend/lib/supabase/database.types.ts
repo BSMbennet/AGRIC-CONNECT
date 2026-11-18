@@ -1189,6 +1189,10 @@ export type Database = {
         }
       }
       is_order_participant: { Args: { p_order_id: string }; Returns: boolean }
+      mark_order_out_for_delivery: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       reject_buyer_request: {
         Args: { p_request_id: string }
         Returns: undefined
