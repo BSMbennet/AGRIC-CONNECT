@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
 import { NavMenu, type NavItem } from "@/components/nav-menu";
 import { LanguageSelector } from "@/components/language-selector";
-import { Store, ClipboardList, LayoutDashboard, Wallet, CloudSun, Sprout, BarChart3, BookOpen, Tractor, Users, User, ShieldCheck, Layers3, Tag, Bell } from "lucide-react";
+import { Store, ClipboardList, LayoutDashboard, Wallet, CloudSun, Sprout, BarChart3, BookOpen, Users, User, ShieldCheck, Layers3, Tag, Bell } from "lucide-react";
 
 type Role = "farmer" | "buyer" | "agent" | "cooperative_manager" | "admin";
 type NavModel = { primary: NavItem[]; secondary: NavItem[] };
@@ -22,7 +22,7 @@ function navigationFor(role: Role | null, t: (key: string) => string): NavModel 
   if (role === "farmer") primary.push({ href: "/wallet", label: "Wallet", icon: Wallet });
   if (role === "farmer") secondary.push(
     { href: "/fields", label: "My fields", icon: Sprout }, { href: "/weather", label: "Weather planner", icon: CloudSun },
-    { href: "/farm-products", label: "Farm products", icon: Tractor }, { href: "/subscriptions", label: "Subscription plan", icon: Tag },
+    { href: "/farm-products", label: "Farm products", icon: Sprout }, { href: "/subscriptions", label: "Subscription plan", icon: Tag },
     { href: "/market-insights", label: "Market insights", icon: BarChart3 }, { href: "/pricing", label: "Pricing guide", icon: Tag },
     { href: "/bookkeeping", label: "Bookkeeping", icon: Layers3 }, { href: "/profile", label: t("profile"), icon: User },
   );
