@@ -38,8 +38,14 @@ def _test_stripe_key() -> str:
     return key
 
 
-def _integration_identifier(flow: str) -> str:
-    suffix = "".join(secrets.choice(string.ascii_lowercase) for _ in range(8))
+def _integration_identifier(flow: str, stable_seed: str | None = None) -> str:
+    if stable_seed:
+        # The seed is a random UUID created for this payment attempt, keeping
+        # the required eight-letter label stable across idempotent retries.
+        digest = hashlib.sha256(stable_seed.encode()).digest()
+        suffix = "".join(string.ascii_lowercase[value % 26] for value in digest[:8])
+    else:
+        suffix = "".join(secrets.choice(string.ascii_lowercase) for _ in range(8))
     return f"agricnorthx-{flow}-{suffix}"
 
 
@@ -272,7 +278,7 @@ async def create_order_checkout(order_id: str, request: Request) -> dict[str, st
         "payment_intent_data": {
             "metadata": {"payment_id": payment_id, "order_id": order_id},
         },
-        "integration_identifier": _integration_identifier("order"),
+        "integration_identifier": _integration_identifier("order", payment_id),
     }
 
     stripe_client = StripeClient(stripe_key)
@@ -282,19 +288,13 @@ async def create_order_checkout(order_id: str, request: Request) -> dict[str, st
             options={"idempotency_key": "agricnorthx-checkout-" + payment_id},
         )
     except Exception as exc:
-        await _admin_patch_payment(config, payment_id, {
-            "status": "failed",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        })
+        # Keep the attempt pending after an ambiguous network/API failure. Stripe
+        # idempotency lets a retry recover the same Checkout Session safely.
         raise HTTPException(status_code=502, detail="Stripe could not create the test payment Checkout Session") from exc
 
     session_id = getattr(session, "id", None)
     checkout_url = getattr(session, "url", None)
     if not session_id or not checkout_url:
-        await _admin_patch_payment(config, payment_id, {
-            "status": "failed",
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        })
         raise HTTPException(status_code=502, detail="Stripe did not return a payment Checkout URL")
 
     await _admin_patch_payment(config, payment_id, {
