@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +12,9 @@ const fail = (message: string, status: number) => NextResponse.json({ error: mes
 async function authenticatedClient() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- The memory migration is additive and not yet represented in generated database types.
-  return { supabase: supabase as any, user: error ? null : user };
+  // The assistant-memory tables are introduced by a staged migration and may not
+  // exist in the generated Database type yet. Keep the escape hatch typed.
+  return { supabase: supabase as unknown as SupabaseClient, user: error ? null : user };
 }
 
 export async function GET() {
