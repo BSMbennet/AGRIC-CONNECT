@@ -1,18 +1,5 @@
 import type { AgriculturalKnowledgeDocument } from "./agricultural-knowledge";
 
-type VectorMatch = {
-  chunk_id:string;
-  title:string;
-  publisher:string;
-  source_url:string;
-  published_on:string|null;
-  language:string;
-  heading:string|null;
-  content:string;
-  locality_tags:string[];
-  crop_tags:string[];
-  similarity:number;
-};
 type FullTextRow = {
   id:string;
   heading:string|null;
