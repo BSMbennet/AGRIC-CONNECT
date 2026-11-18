@@ -17,6 +17,7 @@ describe.skipIf(!enabled)("AGRIC AI authenticated marketplace and memory RLS",()
   let userB!:SupabaseClient;
   let userAId="";
   let conversationId="";
+  let preferenceCreated=false;
 
   beforeAll(async()=>{
     userA=createClient(url,anonKey,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -31,8 +32,18 @@ describe.skipIf(!enabled)("AGRIC AI authenticated marketplace and memory RLS",()
 
   afterAll(async()=>{
     if(userA&&conversationId)await userA.from("agri_ai_conversations").delete().eq("id",conversationId);
+    if(userA&&preferenceCreated)await userA.from("agri_ai_memory_preferences").delete().eq("user_id",userAId);
     if(userA)await userA.auth.signOut();
     if(userB)await userB.auth.signOut();
+  });
+
+  it("keeps the explicit memory-consent preference private to its owner",async()=>{
+    const saved=await userA.from("agri_ai_memory_preferences").upsert({user_id:userAId,enabled:true,consented_at:new Date().toISOString()},{onConflict:"user_id"}).select("user_id").single();
+    expect(saved.error).toBeNull();preferenceCreated=true;
+    const owner=await userA.from("agri_ai_memory_preferences").select("enabled").eq("user_id",userAId).single();
+    expect(owner.data?.enabled).toBe(true);
+    const other=await userB.from("agri_ai_memory_preferences").select("enabled").eq("user_id",userAId);
+    expect(other.error).toBeNull();expect(other.data).toEqual([]);
   });
 
   it("allows the owner to save and read a conversation but blocks a second account",async()=>{
