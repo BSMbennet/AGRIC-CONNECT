@@ -54,6 +54,7 @@ export async function POST(req:Request){
   supabase.from("produce_listings").select("produce_name,status,quantity_available,quantity_sold,reserved_quantity,unit,asking_price,currency,locality").eq("farmer_id",user.id).order("updated_at",{ascending:false}).limit(20)
  ]);
  const profile=(p.data??null) as Profile|null,orders=(o.data??[]) as unknown as Order[],allocations=(a.data??[]) as unknown as Allocation[],listings=(l.data??[]) as unknown as Listing[];
+ if(o.error||a.error||l.error)return NextResponse.json({error:"Your marketplace activity could not be loaded securely. Please try again."},{status:503});
  const lang=input.data.language, reply=localReply(lang,input.data.message,orders,allocations,listings);
  const context={profile:profile?{name:profile.display_name,role:profile.role,locality:[profile.locality,profile.municipality,profile.district].filter(Boolean).join(", ")}:null,
  buyerOrders:orders.map(x=>({id:x.id.slice(0,8),status:x.status,crop:x.listing?.produce_name,quantity:x.quantity_agreed,unit:x.unit,unitPrice:x.unit_price,currency:x.currency})),
