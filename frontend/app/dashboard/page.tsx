@@ -47,6 +47,11 @@ type BuyerOrder = {
   unit_price: number;
   status: string;
   created_at: string;
+  fulfilment_method?: string;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
+  fulfilment_location?: string | null;
+  delivery_fee?: number;
 };
 
 type BuyerRequestWithListing = BuyerRequest & {
