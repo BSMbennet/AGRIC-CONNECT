@@ -13,7 +13,7 @@ describe("detectAssistantLanguage", () => {
     ["Ke batla go itse ka diotara tsa me","tn"],
     ["Ke batla ho tseba ka liodara tsa ka","st"],
     ["Ngicela ungitjele ngema-oda ami","ss"],
-    ["Ngitjela ngama-oda wami","nr"]
+    ["Ngitjela ngama-oda wami, ngiyathokoza","nr"]
   ])("detects %s as %s", (text, expected) => {
     expect(detectAssistantLanguage(text).language).toBe(expected);
   });
