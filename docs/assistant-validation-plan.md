@@ -10,7 +10,8 @@ This checklist is the release gate for the assistant. A language label or succes
 - Agricultural source registry and approved text chunks with full-text retrieval and locality/crop tags.
 - Source links are returned separately with the assistant answer.
 - Database-backed limit of 12 assistant requests per user per minute.
-- NVIDIA NIM is the configured model provider. The server reads its API key only from environment variables.
+- Private marketplace totals and user messages are not sent to an external model. Marketplace questions are answered by deterministic database calculations; crop questions retrieve approved source summaries.
+- NVIDIA NIM credentials exist in Vercel, but the hosted API Catalog documentation describes trial/prototyping use and says production use requires an NVIDIA AI Enterprise subscription. The assistant therefore does not call that provider until the production licence and data-processing terms are verified.
 - The UI deliberately exposes typed input only. No speech recognition or spoken output is claimed.
 - Tshivenda, Xitsonga and Sepedi output is labelled experimental pending native-speaker review.
 
