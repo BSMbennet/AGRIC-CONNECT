@@ -75,5 +75,5 @@ export async function createCartRequests(formData:FormData){
  }
  const rows=parsed.data.items.map(item=>({listing_id:item.listing_id,buyer_id:user.id,quantity_requested:item.quantity,proposed_price:null,message:parsed.data.message||null,buyer_name:parsed.data.buyer_name,contact_number:parsed.data.contact_number,fulfilment_preference:parsed.data.fulfilment_preference,delivery_location:parsed.data.fulfilment_preference==="delivery"?parsed.data.delivery_location:null,request_type:item.request_type,requested_harvest_date:item.request_type==="preorder"?item.requested_harvest_date:null}));
  const {error}=await supabase.from("buyer_requests").insert(rows);if(error)redirect("/cart?error=request");
- revalidatePath("/dashboard");revalidatePath("/cart");redirect("/dashboard?requested=1");
+ revalidatePath("/dashboard");revalidatePath("/cart");redirect("/dashboard?requested=1&cart_requested=1");
 }
