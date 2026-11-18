@@ -28,6 +28,7 @@ export type Database = {
           order_instructions: string | null
           proposed_price: number | null
           quantity_requested: number
+          rejection_reason: string | null
           request_type: string
           requested_harvest_date: string | null
           status: Database["public"]["Enums"]["request_status"]
@@ -45,6 +46,7 @@ export type Database = {
           order_instructions?: string | null
           proposed_price?: number | null
           quantity_requested: number
+          rejection_reason?: string | null
           request_type?: string
           requested_harvest_date?: string | null
           status?: Database["public"]["Enums"]["request_status"]
@@ -62,6 +64,7 @@ export type Database = {
           order_instructions?: string | null
           proposed_price?: number | null
           quantity_requested?: number
+          rejection_reason?: string | null
           request_type?: string
           requested_harvest_date?: string | null
           status?: Database["public"]["Enums"]["request_status"]
@@ -184,6 +187,168 @@ export type Database = {
         }
         Relationships: []
       }
+      farm_field_profiles: {
+        Row: {
+          created_at: string
+          drainage: string
+          farmer_id: string
+          field_name: string
+          field_notes: string | null
+          id: string
+          locality: string
+          previous_crop: string | null
+          soil_ph: number | null
+          soil_ph_source: string
+          soil_test_date: string | null
+          soil_texture: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          drainage?: string
+          farmer_id: string
+          field_name: string
+          field_notes?: string | null
+          id?: string
+          locality: string
+          previous_crop?: string | null
+          soil_ph?: number | null
+          soil_ph_source?: string
+          soil_test_date?: string | null
+          soil_texture?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          drainage?: string
+          farmer_id?: string
+          field_name?: string
+          field_notes?: string | null
+          id?: string
+          locality?: string
+          previous_crop?: string | null
+          soil_ph?: number | null
+          soil_ph_source?: string
+          soil_test_date?: string | null
+          soil_texture?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_field_profiles_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farmer_product_content: {
+        Row: {
+          description: string
+          product_id: string
+          safety_notes: string
+          updated_at: string
+          usage_guidance: string
+        }
+        Insert: {
+          description: string
+          product_id: string
+          safety_notes?: string
+          updated_at?: string
+          usage_guidance?: string
+        }
+        Update: {
+          description?: string
+          product_id?: string
+          safety_notes?: string
+          updated_at?: string
+          usage_guidance?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_product_content_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "farmer_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farmer_products: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          required_plan: string
+          summary: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          required_plan?: string
+          summary: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          required_plan?: string
+          summary?: string
+        }
+        Relationships: []
+      }
+      farmer_subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          farmer_id: string
+          id: string
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          farmer_id: string
+          id?: string
+          plan: string
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          farmer_id?: string
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_subscriptions_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       indigenous_knowledge_posts: {
         Row: {
           attribution: string | null
@@ -243,6 +408,93 @@ export type Database = {
           },
         ]
       }
+      listing_private_details: {
+        Row: {
+          contact_phone: string
+          farmer_id: string
+          fulfilment_details: string
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_phone: string
+          farmer_id: string
+          fulfilment_details: string
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_phone?: string
+          farmer_id?: string
+          fulfilment_details?: string
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_private_details_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_private_details_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "produce_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          notification_type: string
+          order_id: string | null
+          read_at: string | null
+          recipient_id: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          notification_type: string
+          order_id?: string | null
+          read_at?: string | null
+          recipient_id: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          notification_type?: string
+          order_id?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_allocations: {
         Row: {
           agreed_unit_price: number
@@ -288,6 +540,51 @@ export type Database = {
           },
           {
             foreignKeyName: "order_allocations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_comments: {
+        Row: {
+          author_display_name: string
+          author_id: string
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          author_display_name: string
+          author_id: string
+          author_role: string
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          author_display_name?: string
+          author_id?: string
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_comments_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -343,6 +640,54 @@ export type Database = {
           },
         ]
       }
+      order_schedule_events: {
+        Row: {
+          actor_profile_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          new_schedule: Json
+          note: string | null
+          order_id: string
+          previous_schedule: Json | null
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          new_schedule?: Json
+          note?: string | null
+          order_id: string
+          previous_schedule?: Json | null
+        }
+        Update: {
+          actor_profile_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          new_schedule?: Json
+          note?: string | null
+          order_id?: string
+          previous_schedule?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_schedule_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_schedule_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           buyer_contact_number: string | null
@@ -354,12 +699,20 @@ export type Database = {
           collection_window_start: string | null
           created_at: string
           currency: string
+          delivery_fee: number
+          delivery_fee_accepted_at: string | null
           delivery_location: string | null
+          fulfilment_location: string | null
+          fulfilment_method: string
           fulfilment_preference: string
+          fulfilment_state: string
           id: string
           listing_id: string | null
           order_instructions: string | null
           quantity_agreed: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          seller_instructions: string | null
           status: Database["public"]["Enums"]["order_status"]
           unit: string
           unit_price: number
@@ -375,12 +728,20 @@ export type Database = {
           collection_window_start?: string | null
           created_at?: string
           currency?: string
+          delivery_fee?: number
+          delivery_fee_accepted_at?: string | null
           delivery_location?: string | null
+          fulfilment_location?: string | null
+          fulfilment_method?: string
           fulfilment_preference?: string
+          fulfilment_state?: string
           id?: string
           listing_id?: string | null
           order_instructions?: string | null
           quantity_agreed: number
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          seller_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           unit: string
           unit_price: number
@@ -396,12 +757,20 @@ export type Database = {
           collection_window_start?: string | null
           created_at?: string
           currency?: string
+          delivery_fee?: number
+          delivery_fee_accepted_at?: string | null
           delivery_location?: string | null
+          fulfilment_location?: string | null
+          fulfilment_method?: string
           fulfilment_preference?: string
+          fulfilment_state?: string
           id?: string
           listing_id?: string | null
           order_instructions?: string | null
           quantity_agreed?: number
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          seller_instructions?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           unit?: string
           unit_price?: number
@@ -532,22 +901,49 @@ export type Database = {
           },
         ]
       }
-      listing_private_details: {
-        Row: { listing_id: string; farmer_id: string; contact_phone: string; fulfilment_details: string; updated_at: string }
-        Insert: { listing_id: string; farmer_id: string; contact_phone: string; fulfilment_details: string; updated_at?: string }
-        Update: { listing_id?: string; farmer_id?: string; contact_phone?: string; fulfilment_details?: string; updated_at?: string }
-        Relationships: [
-          { foreignKeyName: "listing_private_details_listing_id_fkey"; columns: ["listing_id"]; isOneToOne: true; referencedRelation: "produce_listings"; referencedColumns: ["id"] },
-          { foreignKeyName: "listing_private_details_farmer_id_fkey"; columns: ["farmer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }
-        ]
-      }
       product_reviews: {
-        Row: { id: string; order_id: string; listing_id: string; buyer_id: string; rating: number; review_text: string; created_at: string }
-        Insert: { id?: string; order_id: string; listing_id: string; buyer_id: string; rating: number; review_text: string; created_at?: string }
-        Update: { id?: string; order_id?: string; listing_id?: string; buyer_id?: string; rating?: number; review_text?: string; created_at?: string }
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          order_id: string
+          rating: number
+          review_text: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          order_id: string
+          rating: number
+          review_text: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          order_id?: string
+          rating?: number
+          review_text?: string
+        }
         Relationships: [
-          { foreignKeyName: "product_reviews_order_id_fkey"; columns: ["order_id"]; isOneToOne: false; referencedRelation: "orders"; referencedColumns: ["id"] },
-          { foreignKeyName: "product_reviews_listing_id_fkey"; columns: ["listing_id"]; isOneToOne: false; referencedRelation: "produce_listings"; referencedColumns: ["id"] }
+          {
+            foreignKeyName: "product_reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "produce_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -621,16 +1017,29 @@ export type Database = {
       accept_buyer_request: {
         Args: { p_request_id: string }
         Returns: {
+          buyer_contact_number: string | null
           buyer_id: string
+          buyer_name: string | null
           collection_method: string | null
           collection_point: string | null
           collection_window_end: string | null
           collection_window_start: string | null
           created_at: string
           currency: string
+          delivery_fee: number
+          delivery_fee_accepted_at: string | null
+          delivery_location: string | null
+          fulfilment_location: string | null
+          fulfilment_method: string
+          fulfilment_preference: string
+          fulfilment_state: string
           id: string
           listing_id: string | null
+          order_instructions: string | null
           quantity_agreed: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          seller_instructions: string | null
           status: Database["public"]["Enums"]["order_status"]
           unit: string
           unit_price: number
@@ -643,19 +1052,86 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      create_aggregate_order: {
-        Args: { p_allocations: Json; p_buyer_id: string }
+      accept_buyer_request_with_schedule: {
+        Args: {
+          p_delivery_fee: number
+          p_fulfilment_location: string
+          p_fulfilment_method: string
+          p_request_id: string
+          p_scheduled_end: string
+          p_scheduled_start: string
+          p_seller_instructions: string
+        }
         Returns: {
+          buyer_contact_number: string | null
           buyer_id: string
+          buyer_name: string | null
           collection_method: string | null
           collection_point: string | null
           collection_window_end: string | null
           collection_window_start: string | null
           created_at: string
           currency: string
+          delivery_fee: number
+          delivery_fee_accepted_at: string | null
+          delivery_location: string | null
+          fulfilment_location: string | null
+          fulfilment_method: string
+          fulfilment_preference: string
+          fulfilment_state: string
           id: string
           listing_id: string | null
+          order_instructions: string | null
           quantity_agreed: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          seller_instructions: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      confirm_order_delivery_fee: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      confirm_preorder_request: {
+        Args: { p_request_id: string }
+        Returns: string
+      }
+      create_aggregate_order: {
+        Args: { p_allocations: Json; p_buyer_id: string }
+        Returns: {
+          buyer_contact_number: string | null
+          buyer_id: string
+          buyer_name: string | null
+          collection_method: string | null
+          collection_point: string | null
+          collection_window_end: string | null
+          collection_window_start: string | null
+          created_at: string
+          currency: string
+          delivery_fee: number
+          delivery_fee_accepted_at: string | null
+          delivery_location: string | null
+          fulfilment_location: string | null
+          fulfilment_method: string
+          fulfilment_preference: string
+          fulfilment_state: string
+          id: string
+          listing_id: string | null
+          order_instructions: string | null
+          quantity_agreed: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          seller_instructions: string | null
           status: Database["public"]["Enums"]["order_status"]
           unit: string
           unit_price: number
@@ -677,16 +1153,29 @@ export type Database = {
       fulfill_order_allocation: {
         Args: { p_allocation_id: string }
         Returns: {
+          buyer_contact_number: string | null
           buyer_id: string
+          buyer_name: string | null
           collection_method: string | null
           collection_point: string | null
           collection_window_end: string | null
           collection_window_start: string | null
           created_at: string
           currency: string
+          delivery_fee: number
+          delivery_fee_accepted_at: string | null
+          delivery_location: string | null
+          fulfilment_location: string | null
+          fulfilment_method: string
+          fulfilment_preference: string
+          fulfilment_state: string
           id: string
           listing_id: string | null
+          order_instructions: string | null
           quantity_agreed: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          seller_instructions: string | null
           status: Database["public"]["Enums"]["order_status"]
           unit: string
           unit_price: number
@@ -699,18 +1188,75 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      switch_account_role: { Args: { p_role: Database["public"]["Enums"]["user_role"] }; Returns: undefined }
+      is_order_participant: { Args: { p_order_id: string }; Returns: boolean }
       reject_buyer_request: {
         Args: { p_request_id: string }
         Returns: undefined
       }
-      confirm_preorder_request: {
-        Args: { p_request_id: string }
-        Returns: string
+      reject_buyer_request_with_reason: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
+      switch_account_role: {
+        Args: { p_role: Database["public"]["Enums"]["user_role"] }
+        Returns: undefined
       }
       update_buyer_order_details: {
-        Args: { p_order_id: string; p_buyer_name: string; p_contact_number: string; p_fulfilment_preference: string; p_delivery_location: string; p_order_instructions: string }
+        Args: {
+          p_buyer_name: string
+          p_contact_number: string
+          p_delivery_location: string
+          p_fulfilment_preference: string
+          p_order_id: string
+          p_order_instructions: string
+        }
         Returns: undefined
+      }
+      update_order_fulfilment_schedule: {
+        Args: {
+          p_delivery_fee: number
+          p_fulfilment_location: string
+          p_fulfilment_method: string
+          p_order_id: string
+          p_scheduled_end: string
+          p_scheduled_start: string
+          p_seller_instructions: string
+        }
+        Returns: {
+          buyer_contact_number: string | null
+          buyer_id: string
+          buyer_name: string | null
+          collection_method: string | null
+          collection_point: string | null
+          collection_window_end: string | null
+          collection_window_start: string | null
+          created_at: string
+          currency: string
+          delivery_fee: number
+          delivery_fee_accepted_at: string | null
+          delivery_location: string | null
+          fulfilment_location: string | null
+          fulfilment_method: string
+          fulfilment_preference: string
+          fulfilment_state: string
+          id: string
+          listing_id: string | null
+          order_instructions: string | null
+          quantity_agreed: number
+          scheduled_end: string | null
+          scheduled_start: string | null
+          seller_instructions: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          unit: string
+          unit_price: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
