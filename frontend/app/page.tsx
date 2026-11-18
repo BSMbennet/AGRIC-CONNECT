@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sprout, ShoppingBasket, Truck, ShieldCheck, MapPin, CloudSun, BarChart3, BookOpen } from "lucide-react";\nimport { AppNav } from "@/components/app-nav";
+import { ArrowRight, Sprout, ShoppingBasket, Truck, ShieldCheck, MapPin, CloudSun, BarChart3, BookOpen } from "lucide-react";
+import { AppNav } from "@/components/app-nav";
 
 const highlights=[
   {icon:Sprout,title:"List your harvest",text:"Farmers and community agents can publish available produce."},
