@@ -48,7 +48,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   });
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
+    <main className="min-h-screen agri-page">
       <header className="border-b border-emerald-900/10 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center gap-2 font-bold text-forest"><Sprout size={22} /> AgricNorthX</Link>
