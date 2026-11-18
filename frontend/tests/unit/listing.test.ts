@@ -44,6 +44,6 @@ describe("listingSchema", () => {
 
   it("rejects negative prices and unsupported units", () => {
     expect(listingSchema.safeParse({ ...validListing, asking_price: -1 }).success).toBe(false);
-    expect(listingSchema.safeParse({ ...validListing, unit: "ton" }).success).toBe(false);
+    expect(listingSchema.safeParse({ ...validListing, unit: "piece" }).success).toBe(false);
   });
 });
