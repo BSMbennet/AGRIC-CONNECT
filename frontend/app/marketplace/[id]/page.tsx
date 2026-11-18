@@ -70,7 +70,7 @@ export default async function ListingDetailPage({
   const canRequest = !!user && profile?.role === "buyer" && listing.farmer_id !== user.id && isAvailableNow;
 
   return (
-    <main className="min-h-screen bg-[#f7faf7]">
+    <main className="min-h-screen agri-page">
       <AppNav active="marketplace" />
       <section className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
         <Link href="/marketplace" className="text-sm font-bold text-leaf">← Back to marketplace</Link>
