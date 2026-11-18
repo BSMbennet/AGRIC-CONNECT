@@ -103,7 +103,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
                 <h3 className="mt-4 text-xl font-bold text-forest"><Link href={`/marketplace/${item.id}`} className="hover:text-leaf">{item.produce_name}</Link></h3>
                 <p className="mt-1 flex items-center gap-1 text-sm text-slate-500"><MapPin size={14} /> {item.locality}{item.municipality ? `, ${item.municipality}` : ""}</p>
                 <p className="mt-5 text-2xl font-bold text-forest">R{Number(item.asking_price).toFixed(2)} <span className="text-xs font-medium text-slate-500">/ {item.price_unit}</span></p>
-                <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>
+                <p className="mt-2 text-xs text-slate-500">Available from {item.available_from}</p>{item.expires_at&&<p className="mt-1 text-xs font-semibold text-amber-700">Listing expires {new Intl.DateTimeFormat("en-ZA",{dateStyle:"medium",timeStyle:"short"}).format(new Date(item.expires_at))}</p>}
                 {item.quality_notes && <p className="mt-3 line-clamp-2 text-sm leading-5 text-slate-600">{item.quality_notes}</p>}
                 <Link href={`/marketplace/${item.id}`} className="mt-5 inline-flex items-center justify-center rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-leaf">View produce details</Link>
                 <AddToCartButton listingId={item.id} />
