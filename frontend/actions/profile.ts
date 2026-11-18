@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";\nimport { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export async function updateProfile(formData: FormData) {
   const display_name = String(formData.get("display_name") || "").trim();
