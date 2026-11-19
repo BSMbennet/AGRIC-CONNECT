@@ -184,3 +184,26 @@ export async function updateListingStatus(formData: FormData) {
   revalidatePath(`/marketplace/${listingId}`);
   redirect("/dashboard?listing_updated=1");
 }
+
+/** Remove a photo from, or make a photo the main picture of, one of the signed-in farmer's own listings. */
+export async function updateListingPhotos(input: { listingId: string; op: "remove" | "primary"; url: string }): Promise<{ ok: boolean; error?: string }> {
+  const { listingId, op, url } = input;
+  if (!/^[0-9a-f-]{36}$/i.test(listingId) || !["remove", "primary"].includes(op) || typeof url !== "string" || !url || url.length > 2048) {
+    return { ok: false, error: "Invalid request." };
+  }
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Please sign in again." };
+  const { data: listing } = await supabase.from("produce_listings").select("id,image_urls").eq("id", listingId).eq("farmer_id", user.id).maybeSingle();
+  if (!listing) return { ok: false, error: "Listing not found." };
+  const current: string[] = Array.isArray(listing.image_urls) ? listing.image_urls : [];
+  if (!current.includes(url)) return { ok: false, error: "That photo is no longer on this listing. Refresh and try again." };
+  const next = op === "remove" ? current.filter((u) => u !== url) : [url, ...current.filter((u) => u !== url)];
+  const { error } = await supabase.from("produce_listings").update({ image_urls: next, updated_at: new Date().toISOString() }).eq("id", listingId).eq("farmer_id", user.id);
+  if (error) return { ok: false, error: "Could not update the photos. Please try again." };
+  revalidatePath("/marketplace");
+  revalidatePath("/marketplace/" + listingId);
+  revalidatePath("/listings/" + listingId + "/photos");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
