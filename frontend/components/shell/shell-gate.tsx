@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/actions/auth";
 import { LanguageSelector } from "@/components/language-selector";
 import { ShellFrame } from "@/components/shell/shell-frame";
-import { initialsOf, isShellRole, ROLE_LABELS, shellNav } from "@/lib/shell-nav";
+import { initialsOf, isShellRole, shellNav, translateNav } from "@/lib/shell-nav";
 
 /**
  * Wraps every page. Signed-in users with a known role get the app shell (sidebar, top bar, mobile nav);
@@ -22,12 +22,12 @@ export async function ShellGate({ children }: { children: React.ReactNode }) {
     const { count, error: nErr } = await supabase.from("notifications").select("id", { count: "exact", head: true }).eq("recipient_id", user.id).is("read_at", null);
     if (nErr) console.error("[shell] unread count failed", nErr.code);
 
-    const [locale, t] = await Promise.all([getLocale(), getTranslations("app")]);
+    const [locale, t, tn, ts, tr] = await Promise.all([getLocale(), getTranslations("app"), getTranslations("nav"), getTranslations("shell"), getTranslations("roles")]);
     const name = (profile.display_name as string | null)?.trim() || "Your account";
-    const nav = shellNav(profile.role);
+    const nav = translateNav(shellNav(profile.role), (k) => tn(k));
     return (
-      <ShellFrame groups={nav.groups} tabs={nav.tabs} unread={count ?? 0} signOut={logout}
-        user={{ name, roleLabel: ROLE_LABELS[profile.role], initials: initialsOf(name) }}
+      <ShellFrame groups={nav.groups} tabs={nav.tabs} unread={count ?? 0} signOut={logout} labels={{ home: ts("home"), mainNav: ts("mainNav"), quickNav: ts("quickNav"), searchLabel: ts("searchLabel"), searchPlaceholder: ts("searchPlaceholder"), searchMarketplace: ts("searchMarketplace"), notifications: ts("notifications"), notificationsUnread: ts("notificationsUnread", { count: count ?? 0 }), accountMenu: ts("accountMenu"), profileSettings: ts("profileSettings"), signOut: ts("signOut"), openMenu: ts("openMenu"), closeMenu: ts("closeMenu"), menu: ts("menu"), notice: locale === "en" ? null : t("translationNotice") }}
+        user={{ name, roleLabel: tr(profile.role), initials: initialsOf(name) }}
         languageSelector={<LanguageSelector value={locale} label={t("language")} />}>
         {children}
       </ShellFrame>

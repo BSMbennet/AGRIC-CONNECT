@@ -16,3 +16,20 @@ describe("locale scaffolding", () => {
     expect(ve._reviewed).toBe(false);
   });
 });
+
+import { shellNav, NAV_KEYS } from "../../lib/shell-nav";
+
+describe("shell navigation is translatable", () => {
+  for (const role of ["farmer", "buyer", "agent", "cooperative_manager", "admin"] as const) {
+    it(`every ${role} nav label has a nav.* key in en and ve`, () => {
+      const nav = shellNav(role);
+      const labels = [...nav.groups.flatMap((g) => [g.title, ...g.items.map((i) => i.label)]), ...nav.tabs.map((i) => i.label)];
+      for (const l of labels) {
+        const key = NAV_KEYS[l];
+        expect(key, `no NAV_KEYS entry for "${l}"`).toBeTruthy();
+        expect((en as any).nav[key], `en nav.${key}`).toBeTruthy();
+        expect((ve as any).nav[key], `ve nav.${key}`).toBeTruthy();
+      }
+    });
+  }
+});

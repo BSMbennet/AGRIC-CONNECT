@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -62,6 +63,7 @@ type BuyerRequestWithListing = BuyerRequest & {
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ error?: string; requested?: string; rejected?: string; listing_updated?: string; preorder_confirmed?: string; cart_requested?: string }> }) {
   const params = await searchParams;
+  const [t, tr] = await Promise.all([getTranslations("dashboard"), getTranslations("roles")]);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -111,12 +113,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <section className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-leaf">{profile.role.replaceAll("_", " ")} workspace</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-forest">Welcome back, {profile.display_name}</h1>
-            <p className="mt-1 text-sm text-slate-500">{profile.locality || "Vhembe"}, Limpopo</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-leaf">{t("workspace", { role: tr(profile.role) })}</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-forest">{t("welcome", { name: profile.display_name })}</h1>
+            <p className="mt-1 text-sm text-slate-500">{t("location", { locality: profile.locality || "Vhembe" })}</p>
           </div>
           <Link href={isFarmer ? "/listings/new" : profile.role === "buyer" ? "/marketplace" : profile.role === "agent" ? "/agent/register-farmer" : "/admin"} className="inline-flex items-center rounded-xl bg-forest px-4 py-2.5 text-sm font-semibold text-white hover:bg-leaf">
-            {isFarmer ? "Add produce" : profile.role === "buyer" ? "Find produce" : profile.role === "agent" ? "Register farmer" : "Admin console"}
+            {isFarmer ? t("addProduce") : profile.role === "buyer" ? t("findProduce") : profile.role === "agent" ? t("registerFarmer") : t("adminConsole")}
           </Link>
         </div>
 
@@ -129,62 +131,62 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {isFarmer ? <>
             <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
-              <p className="text-sm text-slate-500">Active listings</p>
+              <p className="text-sm text-slate-500">{t("activeListings")}</p>
               <p className="mt-2 text-3xl font-bold text-forest">{Number.isFinite(listingCount) ? listingCount : 0}<span className="ml-1 text-sm font-medium text-slate-400">/ {listingLimit}</span></p>
               <p className="mt-1 text-xs capitalize text-slate-500">{farmerPlan?.plan ?? "Free"} plan</p>
             </article>
             <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
-              <p className="text-sm text-slate-500">Requests to review</p>
+              <p className="text-sm text-slate-500">{t("requestsToReview")}</p>
               <p className="mt-2 text-3xl font-bold text-forest">{pendingRequests.length}</p>
-              <p className="mt-1 text-xs text-slate-500">{confirmedPreorders.length} confirmed pre-orders</p>
+              <p className="mt-1 text-xs text-slate-500">{t("confirmedPreorders", { count: confirmedPreorders.length })}</p>
             </article>
             <article className="rounded-2xl border border-emerald-900/10 bg-white p-5">
-              <p className="text-sm text-slate-500">Orders to fulfil</p>
+              <p className="text-sm text-slate-500">{t("ordersToFulfil")}</p>
               <p className="mt-2 text-3xl font-bold text-forest">{farmerAllocations.length}</p>
-              <p className="mt-1 text-xs text-slate-500">Your current allocations</p>
+              <p className="mt-1 text-xs text-slate-500">{t("currentAllocations")}</p>
             </article>
           </> : profile.role === "buyer" ? <>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Buyer requests</p><p className="mt-2 text-3xl font-bold text-forest">{buyerRequestCount ?? 0}</p></article>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Orders</p><p className="mt-2 text-3xl font-bold text-forest">{buyerOrders.length}</p></article>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Notifications</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">Unread updates</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("buyerRequests")}</p><p className="mt-2 text-3xl font-bold text-forest">{buyerRequestCount ?? 0}</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("orders")}</p><p className="mt-2 text-3xl font-bold text-forest">{buyerOrders.length}</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("notifications")}</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">{t("unreadUpdates")}</p></article>
           </> : profile.role === "agent" ? <>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Farmers you assist</p><p className="mt-2 text-3xl font-bold text-forest">{assignedFarmers?.length ?? 0}</p></article>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Notifications</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">Unread updates</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("farmersYouAssist")}</p><p className="mt-2 text-3xl font-bold text-forest">{assignedFarmers?.length ?? 0}</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("notifications")}</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">{t("unreadUpdates")}</p></article>
           </> : <>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Platform</p><p className="mt-2 text-xl font-bold text-forest">Admin workspace</p></article>
-            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">Notifications</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">Unread updates</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("platform")}</p><p className="mt-2 text-xl font-bold text-forest">{t("adminWorkspace")}</p></article>
+            <article className="rounded-2xl border border-emerald-900/10 bg-white p-5"><p className="text-sm text-slate-500">{t("notifications")}</p><p className="mt-2 text-3xl font-bold text-forest">{(notifications ?? []).filter((n) => !n.read_at).length}</p><p className="mt-1 text-xs text-slate-500">{t("unreadUpdates")}</p></article>
           </>}
         </div>
 
         {isFarmer && <FarmerEarnings />}
 
         <section className="mt-8">
-          <h2 className="text-lg font-bold text-forest">Quick actions</h2>
+          <h2 className="text-lg font-bold text-forest">{t("quickActions")}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {isFarmer ? <>
-              <Link href="/listings/new" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">＋ Add produce <span className="mt-1 block text-xs font-normal text-slate-500">Publish a new harvest listing</span></Link>
-              <Link href="/wallet" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">Wallet <span className="mt-1 block text-xs font-normal text-slate-500">View sales and payment ledger</span></Link>
-              <Link href="/subscriptions" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">My plan <span className="mt-1 block text-xs font-normal text-slate-500">Manage listing limits</span></Link>
+              <Link href="/listings/new" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaAddProduce")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaAddProduceHint")}</span></Link>
+              <Link href="/wallet" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaWallet")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaWalletHint")}</span></Link>
+              <Link href="/subscriptions" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaPlan")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaPlanHint")}</span></Link>
             </> : profile.role === "buyer" ? <>
-              <Link href="/marketplace" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">Browse marketplace <span className="mt-1 block text-xs font-normal text-slate-500">Find local produce</span></Link>
-              <Link href="/orders" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">My orders <span className="mt-1 block text-xs font-normal text-slate-500">Track fulfilment and payments</span></Link>
-              <Link href="/coop/aggregate" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">Combine supply <span className="mt-1 block text-xs font-normal text-slate-500">Coordinate cooperative orders</span></Link>
+              <Link href="/marketplace" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaBrowse")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaBrowseHint")}</span></Link>
+              <Link href="/orders" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaOrders")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaOrdersHint")}</span></Link>
+              <Link href="/coop/aggregate" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaCombine")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaCombineHint")}</span></Link>
             </> : profile.role === "agent" ? <>
-              <Link href="/agent/register-farmer" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">Register a farmer <span className="mt-1 block text-xs font-normal text-slate-500">Add a farmer to your network</span></Link>
-              <Link href="/marketplace" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">Marketplace <span className="mt-1 block text-xs font-normal text-slate-500">View active produce</span></Link>
-            </> : <Link href="/admin" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">Open admin console <span className="mt-1 block text-xs font-normal text-slate-500">Manage platform operations</span></Link>}
+              <Link href="/agent/register-farmer" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaRegister")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaRegisterHint")}</span></Link>
+              <Link href="/marketplace" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaMarketplace")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaMarketplaceHint")}</span></Link>
+            </> : <Link href="/admin" className="rounded-xl border border-emerald-900/10 bg-white px-4 py-4 text-sm font-semibold text-forest hover:border-leaf">{t("qaAdmin")} <span className="mt-1 block text-xs font-normal text-slate-500">{t("qaAdminHint")}</span></Link>}
           </div>
         </section>
 
         <section id="notifications" className="mt-8 rounded-2xl border border-emerald-900/10 bg-white shadow-sm">
           <div className="flex items-center justify-between px-5 py-4">
-            <div><h2 className="font-bold text-forest">Recent notifications</h2><p className="mt-1 text-xs text-slate-500">{(notifications ?? []).filter((n) => !n.read_at).length} unread</p></div>
-            <Link href="#notifications" className="text-xs font-semibold text-leaf">View updates</Link>
+            <div><h2 className="font-bold text-forest">{t("recentNotifications")}</h2><p className="mt-1 text-xs text-slate-500">{t("unreadCount", { count: (notifications ?? []).filter((n) => !n.read_at).length })}</p></div>
+            <Link href="#notifications" className="text-xs font-semibold text-leaf">{t("viewUpdates")}</Link>
           </div>
           {notifications?.length ? <ul className="divide-y divide-slate-100 px-5">{notifications.slice(0, 3).map((notification) => <li key={notification.id} className="flex items-start justify-between gap-3 py-3"><div className="min-w-0"><p className="text-sm font-medium text-forest">{notification.title}</p><p className="mt-1 line-clamp-1 text-xs text-slate-500">{notification.body}</p><p className="mt-1 text-[11px] text-slate-400">{new Date(notification.created_at).toLocaleDateString("en-ZA", { timeZone: "Africa/Johannesburg" })}</p></div><div className="flex shrink-0 flex-col items-end gap-2">{notification.order_id && <Link href={`/orders/${notification.order_id}`} className="text-xs font-semibold text-leaf">Order →</Link>}{!notification.read_at && <form action={markNotificationRead}><input type="hidden" name="notification_id" value={notification.id}/><button className="text-[11px] font-semibold text-slate-400 underline">Mark read</button></form>}</div></li>)}</ul> : <p className="px-5 pb-5 text-sm text-slate-500">You’re all caught up. New updates will appear here.</p>}
         </section>
 
-        {isFarmer && <section className="mt-8"><div className="flex items-center justify-between"><h2 className="text-lg font-bold text-forest">Your produce</h2><Link href="/listings/new" className="text-xs font-semibold text-leaf">Add listing →</Link></div>{myListings?.length ? <div className="mt-3 divide-y divide-emerald-900/10 rounded-2xl border border-emerald-900/10 bg-white px-4">{myListings.slice(0, 4).map((item) => <div key={item.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-forest">{item.produce_name}</p><p className="mt-1 text-xs text-slate-500">{Math.max(0, Number(item.quantity_available) - Number(item.reserved_quantity) - Number(item.quantity_sold)).toLocaleString()} {item.unit} available · R{Number(item.asking_price).toFixed(2)}</p></div><div className="flex shrink-0 flex-wrap items-center justify-end gap-3"><Link href={`/marketplace/${item.id}`} className="text-xs font-semibold text-leaf">View →</Link><Link href={`/listings/${item.id}/photos`} className="text-xs font-semibold text-leaf">Edit photos</Link>{(item.status === "active" || item.status === "paused") && <form action={updateListingStatus}><input type="hidden" name="listing_id" value={item.id}/><input type="hidden" name="status" value={item.status === "active" ? "paused" : "active"}/><button className="text-xs font-semibold text-slate-500 underline">{item.status === "active" ? "Pause" : "Reactivate"}</button></form>}</div></div>)}</div> : <p className="mt-3 rounded-xl bg-white p-4 text-sm text-slate-500">No produce listed yet. <Link href="/listings/new" className="font-semibold text-leaf">Add your first listing.</Link></p>}</section>}
+        {isFarmer && <section className="mt-8"><div className="flex items-center justify-between"><h2 className="text-lg font-bold text-forest">{t("yourProduce")}</h2><Link href="/listings/new" className="text-xs font-semibold text-leaf">{t("addListing")}</Link></div>{myListings?.length ? <div className="mt-3 divide-y divide-emerald-900/10 rounded-2xl border border-emerald-900/10 bg-white px-4">{myListings.slice(0, 4).map((item) => <div key={item.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-semibold text-forest">{item.produce_name}</p><p className="mt-1 text-xs text-slate-500">{Math.max(0, Number(item.quantity_available) - Number(item.reserved_quantity) - Number(item.quantity_sold)).toLocaleString()} {item.unit} available · R{Number(item.asking_price).toFixed(2)}</p></div><div className="flex shrink-0 flex-wrap items-center justify-end gap-3"><Link href={`/marketplace/${item.id}`} className="text-xs font-semibold text-leaf">View →</Link><Link href={`/listings/${item.id}/photos`} className="text-xs font-semibold text-leaf">Edit photos</Link>{(item.status === "active" || item.status === "paused") && <form action={updateListingStatus}><input type="hidden" name="listing_id" value={item.id}/><input type="hidden" name="status" value={item.status === "active" ? "paused" : "active"}/><button className="text-xs font-semibold text-slate-500 underline">{item.status === "active" ? "Pause" : "Reactivate"}</button></form>}</div></div>)}</div> : <p className="mt-3 rounded-xl bg-white p-4 text-sm text-slate-500">No produce listed yet. <Link href="/listings/new" className="font-semibold text-leaf">Add your first listing.</Link></p>}</section>}
 
         {profile.role === "agent" && <section className="mt-8"><h2 className="text-lg font-bold text-forest">Farmers you assist</h2>{assignedFarmers?.length ? <div className="mt-3 divide-y divide-emerald-900/10 rounded-2xl border border-emerald-900/10 bg-white px-4">{assignedFarmers.slice(0, 4).map((farmer) => <div key={farmer.id} className="flex items-center justify-between py-3"><div><p className="text-sm font-semibold text-forest">{farmer.display_name}</p><p className="text-xs text-slate-500">{farmer.locality || "Vhembe"}</p></div><Link href={`/agent/farmers/${farmer.id}/listing`} className="text-xs font-semibold text-leaf">Add produce →</Link></div>)}</div> : <p className="mt-3 rounded-xl bg-white p-4 text-sm text-slate-500">No farmers registered yet.</p>}</section>}
 
@@ -200,7 +202,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
         {isFarmer && farmerAllocations.length === 0 && <details id="orders" className="dashboard-disclosure mt-4"><summary>Orders to fulfil <span className="ml-2 text-xs font-medium text-slate-400">0</span></summary><p className="px-4 py-4 text-sm text-slate-500">When a buyer order is accepted, its fulfilment details will appear here.</p></details>}
 
-        <div className="mt-8 border-t border-emerald-900/10 pt-4"><Link href="/privacy" className="text-xs text-slate-500 underline">Privacy notice</Link></div>
+        <div className="mt-8 border-t border-emerald-900/10 pt-4"><Link href="/privacy" className="text-xs text-slate-500 underline">{t("privacy")}</Link></div>
       </section>
     </main>
   );

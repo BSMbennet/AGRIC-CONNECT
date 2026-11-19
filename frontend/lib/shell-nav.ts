@@ -73,3 +73,20 @@ export const initialsOf = (name: string) => (name.trim().split(/\s+/).slice(0, 2
 
 /** Active when the path equals the link or is nested under it. */
 export const isActivePath = (pathname: string, href: string) => pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
+
+/** Message keys (under "nav.") for each English label and group title, so the shell can be translated server-side. */
+export const NAV_KEYS: Record<string, string> = {
+  "Overview": "overview", "My farm": "myFarm", "Money & insights": "moneyInsights", "Learn & community": "learnCommunity", "Sourcing": "sourcing",
+  "Field work": "fieldWork", "Cooperative": "cooperative", "Administration": "administration",
+  "Dashboard": "dashboard", "Marketplace": "marketplace", "My fields": "myFields", "Weather planner": "weather", "My products": "myProducts",
+  "Wallet": "wallet", "Bookkeeping": "bookkeeping", "Market insights": "marketInsights", "Pricing guide": "pricing", "Subscription plan": "subscription",
+  "Community knowledge": "knowledge", "AI farming assistant": "assistant", "My cart": "cart", "Combine supply": "combineSupply",
+  "Register farmer": "registerFarmer", "Aggregate supply": "aggregateSupply", "Admin console": "adminConsole",
+};
+
+/** Returns a copy of the nav with labels and titles passed through `tr(key)`; unknown labels stay as they are. */
+export function translateNav(nav: ShellNav, tr: (key: string) => string): ShellNav {
+  const word = (en: string) => (NAV_KEYS[en] ? tr(NAV_KEYS[en]) : en);
+  const item = (i: ShellItem): ShellItem => ({ ...i, label: word(i.label) });
+  return { groups: nav.groups.map((g) => ({ title: word(g.title), items: g.items.map(item) })), tabs: nav.tabs.map(item) };
+}

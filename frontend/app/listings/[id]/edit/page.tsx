@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ListingEditForm, type EditableListing } from "@/components/listing-edit-form";
@@ -13,6 +14,7 @@ const ERRORS: Record<string, string> = {
 };
 
 export default async function EditListingPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string }> }) {
+  const tp = await getTranslations("products");
   const { id } = await params; const sp = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -38,7 +40,7 @@ export default async function EditListingPage({ params, searchParams }: { params
       <div className="mt-6"><ListingEditForm listing={listing} /></div>
       <ListingPhotoUploader listingId={l.id} existingUrls={l.image_urls ?? []} />
       <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border border-rose-200 bg-white p-5">
-        <p className="text-sm text-slate-600">Remove this product from the marketplace.</p><RemoveListingButton listingId={l.id} name={l.produce_name} />
+        <p className="text-sm text-slate-600">Remove this product from the marketplace.</p><RemoveListingButton listingId={l.id} name={l.produce_name} confirmText={tp("removeConfirm", { name: l.produce_name })} label={tp("remove")} ariaLabel={tp("removeAria", { name: l.produce_name })} />
         <Link href={"/marketplace/" + l.id} className="ml-auto text-sm font-semibold text-leaf">View public listing →</Link>
       </div>
     </main>
