@@ -29,7 +29,7 @@ export function shellNav(role: ShellRole): ShellNav {
         { title: "My farm", items: [
           { href: "/fields", label: "My fields", icon: "sprout" },
           { href: "/weather", label: "Weather planner", icon: "cloud-sun" },
-          { href: "/farm-products", label: "Farm products", icon: "package" },
+          { href: "/farm-products", label: "My products", icon: "package" },
         ] },
         { title: "Money & insights", items: [
           { href: "/wallet", label: "Wallet", icon: "wallet" },

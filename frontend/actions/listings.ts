@@ -207,3 +207,56 @@ export async function updateListingPhotos(input: { listingId: string; op: "remov
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+const editSchema = listingSchema.omit({ client_submission_id: true, farmer_id: true });
+
+/** Edit every field of one of the signed-in farmer's own listings (photos are edited on the same page). */
+export async function updateListing(formData: FormData) {
+  const listingId = String(formData.get("listing_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(listingId)) redirect("/farm-products?error=listing");
+  const back = (code: string): never => redirect("/listings/" + listingId + "/edit?error=" + code);
+  const parsed = editSchema.safeParse({
+    category: formData.get("category"), is_organic: formData.get("is_organic"), produce_name: formData.get("produce_name"),
+    quantity_available: formData.get("quantity_available"), unit: formData.get("unit"), asking_price: formData.get("asking_price"),
+    price_unit: formData.get("price_unit"), available_from: formData.get("available_from"), harvest_date: formData.get("harvest_date"),
+    contact_phone: formData.get("contact_phone"), fulfilment_details: formData.get("fulfilment_details"),
+    expires_at: formData.get("expires_at") || "", quality_notes: formData.get("quality_notes") || "",
+    locality: formData.get("locality"), municipality: formData.get("municipality") || "", district: formData.get("district"),
+  });
+  if (!parsed.success) return back("invalid");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: listing } = await supabase.from("produce_listings").select("id,reserved_quantity,quantity_sold").eq("id", listingId).eq("farmer_id", user.id).maybeSingle();
+  if (!listing) redirect("/farm-products?error=listing");
+  const committed = Number(listing.reserved_quantity ?? 0) + Number(listing.quantity_sold ?? 0);
+  if (parsed.data.quantity_available < committed) return back("quantity");
+  const d = parsed.data;
+  const { error } = await supabase.from("produce_listings").update({
+    category: d.category, is_organic: d.is_organic, produce_name: d.produce_name, quantity_available: d.quantity_available,
+    unit: d.unit, asking_price: d.asking_price, price_unit: d.price_unit, available_from: d.available_from,
+    harvest_date: d.harvest_date || d.available_from, expires_at: d.expires_at ? new Date(d.expires_at).toISOString() : null,
+    quality_notes: d.quality_notes || null, locality: d.locality, municipality: d.municipality || null, district: d.district,
+    updated_at: new Date().toISOString(),
+  }).eq("id", listingId).eq("farmer_id", user.id);
+  if (error) { console.error("[listings] update failed", { code: error.code, message: error.message }); return back("save"); }
+  const { error: privateError } = await supabase.from("listing_private_details").upsert({
+    listing_id: listingId, farmer_id: user.id, contact_phone: d.contact_phone, fulfilment_details: d.fulfilment_details, updated_at: new Date().toISOString(),
+  });
+  if (privateError) { console.error("[listings] private details update failed", { code: privateError.code }); return back("save"); }
+  revalidatePath("/marketplace"); revalidatePath("/marketplace/" + listingId); revalidatePath("/farm-products"); revalidatePath("/dashboard");
+  redirect("/listings/" + listingId + "/edit?saved=1");
+}
+
+/** Remove one of the signed-in farmer's own listings (deleted, or paused if it already has order history). */
+export async function removeListing(formData: FormData) {
+  const listingId = String(formData.get("listing_id") || "");
+  if (!/^[0-9a-f-]{36}$/i.test(listingId)) redirect("/farm-products?error=listing");
+  const supabase = (await createClient()) as unknown as SupabaseClient;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data, error } = await supabase.rpc("remove_my_listing", { p_listing_id: listingId });
+  if (error) { console.error("[listings] remove failed", { code: error.code, message: error.message }); redirect("/farm-products?error=remove"); }
+  revalidatePath("/marketplace"); revalidatePath("/farm-products"); revalidatePath("/dashboard");
+  redirect("/farm-products?removed=" + (data === "paused" ? "paused" : "deleted"));
+}
