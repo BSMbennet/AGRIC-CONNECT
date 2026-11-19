@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Indigenous free-range chickens">
+<rect width="800" height="450" fill="#E2EED8"/>
+<circle cx="660" cy="86" r="46" fill="#F6D77A" opacity=".9"/>
+<path d="M0 300 Q160 220 320 285 T640 270 T800 290 V450 H0Z" fill="#A9CF8F"/>
+<path d="M0 350 Q200 290 400 345 T800 330 V450 H0Z" fill="#7DB765"/>
+<g transform="translate(330 300) scale(1)"><ellipse cx="0" cy="0" rx="62" ry="46" fill="#B5651D"/><circle cx="52" cy="-44" r="26" fill="#B5651D"/><path d="M44 -74 q8 -18 16 0 q8 -14 14 4z" fill="#D9412F"/><path d="M76 -44 l22 8 l-22 8z" fill="#F2A63B"/><circle cx="58" cy="-48" r="4" fill="#16241D"/><path d="M-60 -10 q-40 -20 -50 -60 q40 10 60 40z" fill="#8A4C14"/><path d="M-10 44 v38 M12 44 v38" stroke="#E0A33F" stroke-width="7"/></g><g transform="translate(500 310) scale(0.85)"><ellipse cx="0" cy="0" rx="62" ry="46" fill="#8A5A2B"/><circle cx="52" cy="-44" r="26" fill="#8A5A2B"/><path d="M44 -74 q8 -18 16 0 q8 -14 14 4z" fill="#D9412F"/><path d="M76 -44 l22 8 l-22 8z" fill="#F2A63B"/><circle cx="58" cy="-48" r="4" fill="#16241D"/><path d="M-60 -10 q-40 -20 -50 -60 q40 10 60 40z" fill="#8A4C14"/><path d="M-10 44 v38 M12 44 v38" stroke="#E0A33F" stroke-width="7"/></g>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Bags of composted manure">
+<rect width="800" height="450" fill="#E9E2D0"/>
+<circle cx="660" cy="86" r="46" fill="#F6D77A" opacity=".9"/>
+<path d="M0 300 Q160 220 320 285 T640 270 T800 290 V450 H0Z" fill="#B7C98B"/>
+<path d="M0 350 Q200 290 400 345 T800 330 V450 H0Z" fill="#8DAF5F"/>
+<g transform="translate(260 250)"><path d="M0 0 H120 L132 150 H-12Z" fill="#C9B287"/><path d="M0 0 H120 L112 -18 H8Z" fill="#B09A6E"/><rect x="20" y="50" width="80" height="50" rx="8" fill="#7C5A2E"/><path d="M34 82 q26 -24 52 0" stroke="#CFE3D5" stroke-width="6" fill="none"/></g><g transform="translate(420 250)"><path d="M0 0 H120 L132 150 H-12Z" fill="#C9B287"/><path d="M0 0 H120 L112 -18 H8Z" fill="#B09A6E"/><rect x="20" y="50" width="80" height="50" rx="8" fill="#7C5A2E"/><path d="M34 82 q26 -24 52 0" stroke="#CFE3D5" stroke-width="6" fill="none"/></g>
+</svg>

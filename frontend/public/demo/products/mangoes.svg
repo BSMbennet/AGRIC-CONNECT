@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Ripe mangoes">
+<rect width="800" height="450" fill="#FBE9C8"/>
+<circle cx="660" cy="86" r="46" fill="#F6D77A" opacity=".9"/>
+<path d="M0 300 Q160 220 320 285 T640 270 T800 290 V450 H0Z" fill="#CBD98B"/>
+<path d="M0 350 Q200 290 400 345 T800 330 V450 H0Z" fill="#9CBF62"/>
+<g transform="translate(290 290) rotate(-10)"><path d="M0 -70 C60 -70 80 0 55 50 C30 95 -40 90 -60 40 C-80 -10 -50 -70 0 -70Z" fill="#F2A63B"/><path d="M-30 -50 C-45 -20 -45 20 -30 50" stroke="#E5524A" stroke-width="14" opacity=".55" fill="none" stroke-linecap="round"/><path d="M0 -70 C10 -90 30 -95 40 -88 C30 -78 14 -72 0 -70Z" fill="#3E8E41"/></g><g transform="translate(400 250) rotate(8)"><path d="M0 -70 C60 -70 80 0 55 50 C30 95 -40 90 -60 40 C-80 -10 -50 -70 0 -70Z" fill="#F2A63B"/><path d="M-30 -50 C-45 -20 -45 20 -30 50" stroke="#E5524A" stroke-width="14" opacity=".55" fill="none" stroke-linecap="round"/><path d="M0 -70 C10 -90 30 -95 40 -88 C30 -78 14 -72 0 -70Z" fill="#3E8E41"/></g><g transform="translate(510 290) rotate(15)"><path d="M0 -70 C60 -70 80 0 55 50 C30 95 -40 90 -60 40 C-80 -10 -50 -70 0 -70Z" fill="#F2A63B"/><path d="M-30 -50 C-45 -20 -45 20 -30 50" stroke="#E5524A" stroke-width="14" opacity=".55" fill="none" stroke-linecap="round"/><path d="M0 -70 C10 -90 30 -95 40 -88 C30 -78 14 -72 0 -70Z" fill="#3E8E41"/></g>
+</svg>

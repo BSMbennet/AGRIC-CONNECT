@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Butternut squash">
+<rect width="800" height="450" fill="#F3EBD3"/>
+<circle cx="660" cy="86" r="46" fill="#F6D77A" opacity=".9"/>
+<path d="M0 300 Q160 220 320 285 T640 270 T800 290 V450 H0Z" fill="#C9D58F"/>
+<path d="M0 350 Q200 290 400 345 T800 330 V450 H0Z" fill="#9DB86A"/>
+<g transform="translate(330 260) rotate(-14)"><path d="M-30 -110 C-26 -130 26 -130 30 -110 L34 -40 C70 -20 80 60 40 100 C0 130 -40 130 -60 100 C-90 50 -60 -20 -34 -40Z" fill="#E1A04A"/><path d="M-6 -118 L0 -150 L10 -118" fill="#6C8F3E"/><path d="M-10 -80 C-14 -20 -14 40 -16 100" stroke="#C98838" stroke-width="4" fill="none"/></g><g transform="translate(470 270) rotate(10)"><path d="M-30 -110 C-26 -130 26 -130 30 -110 L34 -40 C70 -20 80 60 40 100 C0 130 -40 130 -60 100 C-90 50 -60 -20 -34 -40Z" fill="#E1A04A"/><path d="M-6 -118 L0 -150 L10 -118" fill="#6C8F3E"/><path d="M-10 -80 C-14 -20 -14 40 -16 100" stroke="#C98838" stroke-width="4" fill="none"/></g>
+</svg>
