@@ -26,6 +26,11 @@ begin
     into v_role, v_loc, v_muni, v_dist from public.profiles where id = v_id;
   if v_role is distinct from 'farmer' then raise exception 'That account is not a farmer (role: %).', coalesce(v_role,'no profile'); end if;
 
+  -- The free plan allows 10 active listings. Sample listings would trip that limit on an account that already
+  -- has listings, so the limit trigger is switched off for this script only and switched back on at the end
+  -- (this block is one transaction: if anything fails, everything including this change is rolled back).
+  alter table public.produce_listings disable trigger farmer_listing_limit_guard;
+
   -- 1) Marketplace listings (one per product; updated in place on re-run)
   for r in select * from (values
     ('Vegetables','Tomatoes',        'kg',   'kg',   520, 180, 18.00, true,  '/demo/products/tomatoes.svg',  'Firm, vine-ripened tomatoes. Graded and packed in crates.'),
@@ -86,6 +91,8 @@ begin
       );
     end loop;
   end loop;
+
+  alter table public.produce_listings enable trigger farmer_listing_limit_guard;
 
   raise notice 'Sample farm data loaded for % (listings + 12 months of bookkeeping).', v_email;
 end
